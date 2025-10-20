@@ -2,40 +2,46 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kampfbericht Tool - Firebase Test</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kampfbericht-Tool</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
-body { font-family: Arial, sans-serif; margin: 2rem; background: #f5f5f5; }
-section { background: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-textarea { width: 100%; height: 150px; padding: 10px; font-family: monospace; }
-button { padding: 8px 16px; border: none; border-radius: 6px; background: #007bff; color: white; cursor: pointer; margin: 0.5rem 0; }
-button:hover { background: #0056b3; }
-table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
-th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-th { background: #eee; }
-.coord-section { margin-bottom: 2rem; background:#eef; padding:1rem; border-radius:8px; }
-h3 { margin-bottom:0.5rem; }
-#loginSection, #hostSection, #mainSection { display:none; }
+body{font-family:Arial,Helvetica,sans-serif;margin:20px;}
+input,button,textarea{margin:5px 0;padding:5px;font-size:1em;}
+table{border-collapse:collapse;width:100%;margin-bottom:20px;}
+th,td{border:1px solid #ccc;padding:4px;text-align:left;}
+.coord-section{border:1px solid #ccc;padding:10px;margin:10px 0;}
 </style>
 </head>
 <body>
+<h1>⚔️ Kampfbericht-Tool</h1>
 
-<h1>Kampfbericht Tool (Firebase)</h1>
-
+<!-- Registrierung & Login -->
 <section id="registerSection">
-  <h2>🔐 Registrierung / Login</h2>
-  <input type="text" id="regName" placeholder="Ingame-Name"><br>
-  <input type="password" id="regPass" placeholder="Passwort"><br>
-  <button id="registerBtn">Registrieren</button>
-  <button id="loginBtn">Login</button>
+  <h2>🔑 Anmeldung / Registrierung</h2>
+  <input type="text" id="regName" placeholder="Name">
+  <input type="password" id="regPass" placeholder="Passwort">
+  <div>
+    <button id="registerBtn">Registrieren</button>
+    <button id="loginBtn">Login</button>
+  </div>
   <p id="regStatus"></p>
 </section>
 
-<section id="hostSection" style="margin-top:20px;">
+<!-- Hauptbereich -->
+<section id="mainSection" style="display:none;">
+  <h2>Kampfbericht einfügen</h2>
+  <textarea id="reportText" rows="12" cols="80" placeholder="Bericht hier einfügen"></textarea><br>
+  <button id="analyzeBtn">Bericht speichern</button>
+  <h2>📊 Datenbank Übersicht</h2>
+  <div id="output"></div>
+</section>
+
+<!-- Hostbereich -->
+<section id="hostSection" style="margin-top:30px;">
   <h2>🛡 Hostbereich</h2>
   <input type="password" id="hostPass" placeholder="Host Passwort">
   <button id="hostLoginBtn">Login</button>
@@ -43,248 +49,166 @@ h3 { margin-bottom:0.5rem; }
   <div id="hostControls" style="display:none;">
     <h3>Benutzerverwaltung</h3>
     <div id="userList"></div>
-
     <h3>CSV hochladen</h3>
     <input type="file" id="csvFile" accept=".csv">
     <button id="loadCsv">CSV laden</button>
   </div>
 </section>
 
-
-<section id="mainSection">
-  <h2>📝 Kampfbericht hinzufügen</h2>
-  <textarea id="reportText" placeholder="Füge hier deinen Kampfbericht ein..."></textarea><br>
-  <button id="analyzeBtn">Bericht speichern</button>
-</section>
-
-<section id="outputSection">
-  <h2>📊 Datenbank Übersicht</h2>
-  <div id="output">Noch keine Daten vorhanden.</div>
-</section>
-
 <script>
-  <script>
-document.addEventListener("DOMContentLoaded", function() {
-// ===================== Firebase Config =====================
+document.addEventListener("DOMContentLoaded", async function(){
+console.log("Script gestartet");
 
-// Hier Firebase-Konfiguration einfügen:
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyAW5DmnfORhv5oY3azmpNJ4NHniYUGFnsQ",
-
-  authDomain: "ktool-aa787.firebaseapp.com",
-
-  projectId: "ktool-aa787",
-
-  storageBucket: "ktool-aa787.firebasestorage.app",
-
-  messagingSenderId: "528761267115",
-
-  appId: "1:528761267115:web:826f6284db2a2f784d28ee"
-
+const firebaseConfig={
+  apiKey:"AIzaSyAW5DmnfORhv5oY3azmpNJ4NHniYUGFnsQ",
+  authDomain:"ktool-aa787.firebaseapp.com",
+  projectId:"ktool-aa787",
+  storageBucket:"ktool-aa787.firebasestorage.app",
+  messagingSenderId:"528761267115",
+  appId:"1:528761267115:web:826f6284db2a2f784d28ee"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-// ===================== Testkonto integrieren =====================
-const TEST_ACCOUNT = {username:"Testspieler", password:"test123"};
-// Prüfen, ob Testkonto existiert, sonst erstellen
+// -------- Testkonto sicherstellen --------
+const TEST_ACCOUNT={username:"Testspieler",password:"test123"};
 async function ensureTestAccount(){
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('username','==',TEST_ACCOUNT.username).get();
-    if(snapshot.empty){
-        await usersRef.add({username:TEST_ACCOUNT.username,status:'pending'});
-    }
+  const snap=await db.collection('users').where('username','==',TEST_ACCOUNT.username).get();
+  if(snap.empty){await db.collection('users').add({username:TEST_ACCOUNT.username,status:'pending',password:TEST_ACCOUNT.password});}
 }
 ensureTestAccount();
 
-// ===================== Registrierung / Login =====================
-document.getElementById('registerBtn').addEventListener('click', async () => {
-    const name = document.getElementById('regName').value.trim();
-    const pass = document.getElementById('regPass').value.trim();
-    if(!name||!pass) return alert("Name und Passwort ausfüllen!");
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('username','==',name).get();
-    if(!snapshot.empty) return alert("Benutzername existiert!");
-    await usersRef.add({username:name,status:'pending',password:pass});
-    document.getElementById('regStatus').innerText = "Registrierung erfolgreich. Host muss freischalten.";
+// -------- Registrierung --------
+document.getElementById('registerBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('regName').value.trim();
+  const pass=document.getElementById('regPass').value.trim();
+  if(!name||!pass)return alert("Name und Passwort ausfüllen!");
+  const snap=await db.collection('users').where('username','==',name).get();
+  if(!snap.empty)return alert("Benutzer existiert bereits");
+  await db.collection('users').add({username:name,password:pass,status:'pending'});
+  document.getElementById('regStatus').innerText="Registrierung erfolgreich. Host muss freischalten.";
 });
 
-// Login Mitglieder
-document.getElementById('loginBtn').addEventListener('click', async () => {
-    const name = document.getElementById('regName').value.trim();
-    const pass = document.getElementById('regPass').value.trim();
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('username','==',name).get();
-    if(snapshot.empty) return alert("Benutzer existiert nicht");
-    const userDoc = snapshot.docs[0];
-    const userData = userDoc.data();
-    if(userData.status!=='active') return alert("Benutzer nicht freigeschaltet oder gesperrt");
-    if(userData.password!==pass) return alert("Falsches Passwort");
-    window.currentUser = {id:userDoc.id, username:name};
-    document.getElementById('registerSection').style.display='none';
-    document.getElementById('mainSection').style.display='block';
-    renderReports();
+// -------- Login --------
+document.getElementById('loginBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('regName').value.trim();
+  const pass=document.getElementById('regPass').value.trim();
+  const snap=await db.collection('users').where('username','==',name).get();
+  if(snap.empty)return alert("Unbekannter Benutzer");
+  const doc=snap.docs[0];const data=doc.data();
+  if(data.status!=='active')return alert("Nicht freigeschaltet oder gesperrt");
+  if(data.password!==pass)return alert("Falsches Passwort");
+  window.currentUser={id:doc.id,username:name};
+  document.getElementById('registerSection').style.display='none';
+  document.getElementById('mainSection').style.display='block';
+  renderReports();
 });
 
-// ===================== Host Login =====================
-const HOST_PASSWORD = "admin123"; // Passwort anpassen
-document.getElementById('hostLoginBtn').addEventListener('click', () => {
-    const pass = document.getElementById('hostPass').value.trim();
-    if(pass!==HOST_PASSWORD) return alert("Falsches Host Passwort");
-    document.getElementById('hostControls').style.display='block';
-    renderUsers();
+// -------- Host Login --------
+const HOST_PASSWORD="admin123";
+document.getElementById('hostLoginBtn').addEventListener('click',()=>{
+  const pass=document.getElementById('hostPass').value.trim();
+  if(pass!==HOST_PASSWORD)return alert("Falsches Host-Passwort");
+  document.getElementById('hostControls').style.display='block';
+  renderUsers();
 });
 
-// ===================== Benutzerverwaltung Host =====================
+// -------- Benutzerverwaltung --------
 async function renderUsers(){
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.get();
-    let html="<table><tr><th>Name</th><th>Status</th><th>Aktionen</th></tr>";
-    snapshot.forEach(doc=>{
-        const u = doc.data();
-        html+=`<tr><td>${u.username}</td><td>${u.status}</td>
-        <td>
-        <button onclick="updateUser('${doc.id}','active')">Freischalten</button>
-        <button onclick="updateUser('${doc.id}','blocked')">Sperren</button>
-        <button onclick="updateUser('${doc.id}','pending')">Ablehnen</button>
-        <button onclick="updateUser('${doc.id}','deleted')">Löschen</button>
-        </td></tr>`;
-    });
-    html+="</table>";
-    document.getElementById('userList').innerHTML=html;
+  const snap=await db.collection('users').get();
+  let html="<table><tr><th>Name</th><th>Status</th><th>Aktionen</th></tr>";
+  snap.forEach(doc=>{
+    const u=doc.data();
+    html+=`<tr><td>${u.username}</td><td>${u.status}</td>
+    <td>
+    <button onclick="updateUser('${doc.id}','active')">Freischalten</button>
+    <button onclick="updateUser('${doc.id}','blocked')">Sperren</button>
+    <button onclick="updateUser('${doc.id}','pending')">Ablehnen</button>
+    <button onclick="updateUser('${doc.id}','deleted')">Löschen</button>
+    </td></tr>`;
+  });
+  html+="</table>";
+  document.getElementById('userList').innerHTML=html;
 }
+window.updateUser=async(id,status)=>{await db.collection('users').doc(id).update({status});renderUsers();};
 
-window.updateUser = async (id,status)=>{
-    await db.collection('users').doc(id).update({status});
-    renderUsers();
-};
-
-// ===================== CSV hochladen =====================
-document.getElementById('loadCsv').addEventListener('click', () => {
-    const file = document.getElementById('csvFile').files[0];
-    if(!file) return alert("Bitte CSV auswählen");
-    Papa.parse(file, {header:true,dynamicTyping:true,complete:async (results)=>{
-        await db.collection('csv').doc('hostData').set({data:results.data});
-        alert("CSV gespeichert");
-    }});
+// -------- CSV Upload --------
+document.getElementById('loadCsv').addEventListener('click',()=>{
+  const file=document.getElementById('csvFile').files[0];
+  if(!file)return alert("Bitte CSV wählen");
+  Papa.parse(file,{header:true,dynamicTyping:true,complete:async(res)=>{
+    await db.collection('csv').doc('hostData').set({data:res.data});
+    alert("CSV gespeichert");
+  }});
 });
 
-// ===================== Kampfbericht speichern =====================
-document.getElementById('analyzeBtn').addEventListener('click', async () => {
-    const text = document.getElementById('reportText').value.trim();
-    if(!text) return alert("Bitte Bericht einfügen!");
-    const report = parseReport(text);
-    report.userId = window.currentUser.id;
-    report.username = window.currentUser.username;
-    await db.collection('reports').add(report);
-    document.getElementById('reportText').value='';
+// -------- Bericht speichern --------
+document.getElementById('analyzeBtn').addEventListener('click',async()=>{
+  const text=document.getElementById('reportText').value.trim();
+  if(!text)return alert("Bericht einfügen!");
+  const r=parseReport(text);
+  r.userId=window.currentUser.id;r.username=window.currentUser.username;
+  await db.collection('reports').add(r);
+  document.getElementById('reportText').value='';
 });
 
-// ===================== Kampfbericht parsen =====================
+// -------- Bericht parser --------
 function parseReport(text){
-    const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-    const dateMatch = lines[0].match(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/);
-    const date = dateMatch ? new Date(dateMatch[0].split('.').reverse().join('-')) : new Date();
-    const coordMatch = lines.find(l=>l.includes('Einheiten des Angreifers')||l.includes('Einheiten des Verteidigers'))?.match(/\((\d+:\d+:\d+)\)/);
-    const coord = coordMatch ? coordMatch[1] : 'Unbekannt';
-
-    const unitPattern = /^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
-    let units={};
-    for(let line of lines){
-        const m=line.match(unitPattern);
-        if(m) units[m[1].trim()]={gesamt:+m[2],verluste:+m[3]};
-    }
-
-    let buildings={};
-    const buildingStart = lines.indexOf('Gebäude');
-    if(buildingStart>=0){
-        for(let i=buildingStart+1;i<lines.length;i++){
-            if(lines[i].trim()==='') break;
-            const b=lines[i].split('\t');
-            if(b.length>=2) buildings[b[0].trim()]=parseInt(b[1].replace(/\D/g,''))||1;
-        }
-    }
-
-    let researches={};
-    const researchStart = lines.indexOf('Forschungen');
-    if(researchStart>=0){
-        for(let i=researchStart+1;i<lines.length;i++){
-            if(lines[i].trim()==='') break;
-            const r=lines[i].split('\t');
-            if(r.length>=2) researches[r[0].trim()]=parseInt(r[1].replace(/\D/g,''))||1;
-        }
-    }
-
-    return {date, coord, units, buildings, researches};
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const dateMatch=lines[0].match(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/);
+  const date=dateMatch?new Date(dateMatch[0].split('.').reverse().join('-')):new Date();
+  const coordMatch=lines.find(l=>l.includes('Einheiten des Angreifers')||l.includes('Einheiten des Verteidigers'))?.match(/\((\d+:\d+:\d+)\)/);
+  const coord=coordMatch?coordMatch[1]:'Unbekannt';
+  const unitPattern=/^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
+  let units={};
+  for(let line of lines){const m=line.match(unitPattern);if(m)units[m[1].trim()]={gesamt:+m[2],verluste:+m[3]};}
+  let buildings={},bStart=lines.indexOf('Gebäude');
+  if(bStart>=0){for(let i=bStart+1;i<lines.length;i++){if(lines[i]==='')break;const p=lines[i].split('\t');if(p.length>=2)buildings[p[0].trim()]=parseInt(p[1].replace(/\D/g,''))||1;}}
+  let researches={},rStart=lines.indexOf('Forschungen');
+  if(rStart>=0){for(let i=rStart+1;i<lines.length;i++){if(lines[i]==='')break;const p=lines[i].split('\t');if(p.length>=2)researches[p[0].trim()]=parseInt(p[1].replace(/\D/g,''))||1;}}
+  return {date,coord,units,buildings,researches};
 }
 
-// ===================== Datenbank Anzeige live =====================
+// -------- Anzeige --------
 function renderReports(){
-    db.collection('reports').orderBy('date','desc').onSnapshot(snapshot=>{
-        const reports=[];
-        snapshot.forEach(doc=>{
-            reports.push(doc.data());
-        });
-        displayReports(reports);
-    });
+  db.collection('reports').orderBy('date','desc').onSnapshot(snap=>{
+    const arr=[];snap.forEach(d=>arr.push(d.data()));displayReports(arr);
+  });
+}
+async function displayReports(reps){
+  const grouped={};
+  for(const r of reps){if(!grouped[r.coord])grouped[r.coord]=[];grouped[r.coord].push(r);}
+  let html="";
+  for(const coord in grouped){
+    const repList=grouped[coord];html+=`<div class="coord-section"><h3>📍 ${coord}</h3>`;
+    // Einheiten
+    let max={},loss={};
+    for(const rep of repList){
+      for(const u in rep.units){
+        if(!max[u]||rep.units[u].gesamt>max[u])max[u]=rep.units[u].gesamt;
+        loss[u]=(loss[u]||0)+rep.units[u].verluste;
+      }
+    }
+    html+='<h4>💂 Einheiten</h4><table><tr><th>Einheit</th><th>Aktuell</th><th>Verluste</th></tr>';
+    for(const u in max){const cur=Math.max(max[u]-loss[u],0);html+=`<tr><td>${u}</td><td>${cur}</td><td>${loss[u]}</td></tr>`;}
+    html+='</table>';
+    // Gebäude
+    let build={};
+    for(const r of [...repList].reverse()){for(const b in r.buildings){build[b]=Math.max(r.buildings[b],build[b]||1);}}
+    html+='<h4>🏰 Gebäude</h4><table><tr><th>Gebäude</th><th>Stufe</th></tr>';
+    for(const b in build){html+=`<tr><td>${b}</td><td>${build[b]}</td></tr>`;}
+    html+='</table>';
+    // Forschungen
+    let res={};
+    for(const r of repList){for(const k in r.researches){res[k]=Math.max(r.researches[k]||0,res[k]||0);}}
+    html+='<h4>🔬 Forschungen</h4><table><tr><th>Forschung</th><th>Stufe</th></tr>';
+    for(const k in res){html+=`<tr><td>${k}</td><td>${res[k]}</td></tr>`;}
+    html+='</table></div>';
+  }
+  document.getElementById('output').innerHTML=html;
 }
 
-async function displayReports(reports){
-    const htmlReports = {};
-    for(const r of reports){
-        if(!htmlReports[r.coord]) htmlReports[r.coord]=[];
-        htmlReports[r.coord].push(r);
-    }
-
-    let html="";
-    for(const coord in htmlReports){
-        const repList = htmlReports[coord];
-        html+=`<div class="coord-section"><h3>📍 ${coord}</h3>`;
-
-        // Einheiten
-        let unitMax={}, unitLoss={};
-        for(const rep of repList){
-            for(const u in rep.units){
-                if(!unitMax[u]||rep.units[u].gesamt>unitMax[u]) unitMax[u]=rep.units[u].gesamt;
-                if(!unitLoss[u]) unitLoss[u]=0;
-                unitLoss[u]+=rep.units[u].verluste;
-            }
-        }
-        html+='<h4>💂 Einheiten</h4><table><tr><th>Einheit</th><th>Aktuell</th><th>Verluste</th></tr>';
-        for(const u in unitMax){
-            const cur = Math.max(unitMax[u]-unitLoss[u],0);
-            html+=`<tr><td>${u}</td><td>${cur}</td><td>${unitLoss[u]}</td></tr>`;
-        }
-        html+='</table>';
-
-        // Gebäude
-        let buildingState={};
-        for(const r of [...repList].reverse()){
-            for(const b in r.buildings) buildingState[b]=Math.max(r.buildings[b],buildingState[b]||1);
-        }
-        html+='<h4>🏰 Gebäude</h4><table><tr><th>Gebäude</th><th>Stufe</th></tr>';
-        for(const b in buildingState) html+=`<tr><td>${b}</td><td>${buildingState[b]}</td></tr>`;
-        html+='</table>';
-
-        // Forschungen
-        let researchState={};
-        for(const r of repList){
-            for(const res in r.researches) researchState[res] = Math.max(r.researches[res]||0, r.researches[res]);
-        }
-        html+='<h4>🔬 Forschungen</h4><table><tr><th>Forschung</th><th>Stufe</th></tr>';
-        for(const res in researchState) html+=`<tr><td>${res}</td><td>${researchState[res]}</td></tr>`;
-        html+='</table>';
-
-        html+='</div>';
-    }
-    document.getElementById('output').innerHTML = html;
-}
-}); // Ende von DOMContentLoaded
+}); // DOMContentLoaded Ende
 </script>
 </body>
 </html>
-
-
