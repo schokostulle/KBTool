@@ -35,16 +35,21 @@ h3 { margin-bottom:0.5rem; }
   <p id="regStatus"></p>
 </section>
 
-<section id="hostSection">
+<section id="hostSection" style="margin-top:20px;">
   <h2>🛡 Hostbereich</h2>
-  <input type="password" id="hostPass" placeholder="Host Passwort"><button id="hostLoginBtn">Login</button>
-  <div id="hostControls" style="display:none">
+  <input type="password" id="hostPass" placeholder="Host Passwort">
+  <button id="hostLoginBtn">Login</button>
+
+  <div id="hostControls" style="display:none;">
     <h3>Benutzerverwaltung</h3>
     <div id="userList"></div>
+
     <h3>CSV hochladen</h3>
-    <input type="file" id="csvFile" accept=".csv"><button id="loadCsv">CSV laden</button>
+    <input type="file" id="csvFile" accept=".csv">
+    <button id="loadCsv">CSV laden</button>
   </div>
 </section>
+
 
 <section id="mainSection">
   <h2>📝 Kampfbericht hinzufügen</h2>
@@ -58,7 +63,10 @@ h3 { margin-bottom:0.5rem; }
 </section>
 
 <script>
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
 // ===================== Firebase Config =====================
+
 // Hier Firebase-Konfiguration einfügen:
 
 const firebaseConfig = {
@@ -274,7 +282,9 @@ async function displayReports(reports){
     }
     document.getElementById('output').innerHTML = html;
 }
+}); // Ende von DOMContentLoaded
 </script>
 </body>
 </html>
+
 
