@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Inselreservierungen</title>
+<title>Allianz Dashboard – Reservierungen (mit Firebase)</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #f9fafb;
@@ -15,94 +17,55 @@
     --radius: 10px;
   }
 
-  body {
-    font-family: "Inter", system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 2rem;
-  }
-
+  body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
   h1 { font-size: 1.8rem; margin-bottom: 1rem; }
-  h2 { font-size: 1.3rem; margin-bottom: .5rem; }
-
-  button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    padding: 6px 10px;
-    cursor: pointer;
-  }
+  button { background: var(--accent); color: white; border: none; border-radius: var(--radius); padding: 6px 10px; cursor: pointer; }
   button:hover { background: var(--accent-hover); }
   .back-btn { background: #6b7280; margin-bottom: 1rem; }
   .back-btn:hover { background: #4b5563; }
 
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 1rem;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; border-radius: var(--radius); overflow: hidden; }
+  th, td { border-bottom: 1px solid var(--border); padding: 8px 10px; font-size: 14px; }
+  th { background: #f3f4f6; font-weight: 600; text-align: left; }
 
-  th, td {
-    border-bottom: 1px solid var(--border);
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 14px;
-  }
-  th { background: #f3f4f6; font-weight: 600; }
+  tr.requested { background: #fff7d6; }
+  tr.approved  { background: #d1fae5; }
+  tr.denied    { background: #fee2e2; }
 
-  tr.requested { background: #fff7d6; }   /* Gelb = Reserviert */
-  tr.approved  { background: #d1fae5; }   /* Grün = Bestätigt */
-  tr.denied    { background: #fee2e2; }   /* Rot = Abgelehnt */
-
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .filter-bar select, .filter-bar input {
-    padding: 5px 8px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-  }
-
-  .admin-controls button {
-    margin-left: 4px;
-    background: #6b7280;
-  }
-  .admin-controls button:hover {
-    background: #4b5563;
-  }
+  .filter-bar { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .filter-bar input { padding: 6px 8px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .admin-controls button { margin-left: 4px; background: #6b7280; }
+  .admin-controls button:hover { background: #4b5563; }
 </style>
 </head>
 <body>
 
-<h1>Allianz Dashboard</h1>
+<h1>🏝 Inselreservierungen (Firebase)</h1>
 
-<!-- === Dashboard === -->
-<div id="dashboard">
-  <button onclick="showPage('inselView')">🏝 Inselübersicht</button>
+<div class="filter-bar">
+  <input type="text" id="playerName" placeholder="Dein Spielername" />
+  <label><input type="checkbox" id="isAdmin"> Admin-Modus</label>
+  <button onclick="resetReservations()">🔄 Alle löschen (Admin)</button>
 </div>
 
-<!-- === Inselübersicht === -->
-<div id="inselView" class="hidden">
-  <button class="back-btn" onclick="showPage('dashboard')">⬅️ Zurück</button>
-  <h2>🏝 Inselübersicht</h2>
-
-  <div class="filter-bar">
-    <input type="text" id="playerName" placeholder="Dein Spielername" />
-    <label><input type="checkbox" id="isAdmin"> Admin-Modus</label>
-    <button onclick="resetReservations()">🔄 Alle löschen (Admin)</button>
-  </div>
-
-  <div id="inselTable"></div>
-</div>
+<div id="inselTable"></div>
 
 <script>
-  // Beispiel-Datenbasis
+  /* ==== 🔧 Firebase Setup ==== */
+  const firebaseConfig = {
+  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
+  authDomain: "ik-tool.firebaseapp.com",
+  projectId: "ik-tool",
+  storageBucket: "ik-tool.firebasestorage.app",
+  messagingSenderId: "212260982227",
+  appId: "1:212260982227:web:84bfe35c83387c1879f326"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const reservationsRef = db.collection("reservations");
+
+  /* ==== Beispiel CSV Datenbasis ==== */
   const csvData = [
     { Ozean:"1", Inselgruppe:"12", Insel:"1", "Spielername":"SpielerA", "Allianzname":"Blau", Punkte:1200 },
     { Ozean:"1", Inselgruppe:"13", Insel:"2", "Spielername":"SpielerB", "Allianzname":"Blau", Punkte:900 },
@@ -110,21 +73,21 @@
     { Ozean:"2", Inselgruppe:"22", Insel:"4", "Spielername":"SpielerD", "Allianzname":"Rot", Punkte:700 }
   ];
 
-  let reservations = {}; // key = unique island ID, value = {user, status}
+  // Lokaler Cache
+  let reservations = {};
 
-  function showPage(page) {
-    document.querySelectorAll("#dashboard, #inselView")
-      .forEach(el => el.classList.add("hidden"));
-    document.getElementById(page).classList.remove("hidden");
-    if (page === "inselView") renderInselTable();
-  }
+  // Echtzeit-Listener auf Firestore
+  reservationsRef.onSnapshot(snapshot => {
+    reservations = {};
+    snapshot.forEach(doc => reservations[doc.id] = doc.data());
+    renderInselTable();
+  });
 
-  // Insel-Tabelle rendern
+  // Tabelle rendern
   function renderInselTable() {
     const div = document.getElementById("inselTable");
     let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
-
-    csvData.forEach((r) => {
+    csvData.forEach(r => {
       const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
       const res = reservations[key];
       let cls = "";
@@ -144,23 +107,19 @@
         <td>${renderActionButton(key, res)}</td>
       </tr>`;
     });
-
     html += "</tbody></table>";
     div.innerHTML = html;
   }
 
-  // Aktion je Zeile (Button)
+  // Button-Logik
   function renderActionButton(key, res) {
     const user = document.getElementById("playerName").value.trim();
     const admin = document.getElementById("isAdmin").checked;
     if (!user) return `<button disabled>🔒 Name nötig</button>`;
 
-    // Frei
     if (!res || res.status === "denied") {
       return `<button onclick="reserveIsland('${key}','${user}')">Reservieren</button>`;
     }
-
-    // Reserviert (wartend)
     if (res.status === "requested") {
       if (res.user === user)
         return `<button disabled>Reserviert (wartet)</button>`;
@@ -171,58 +130,46 @@
         </div>`;
       return `<button disabled>Reserviert von ${res.user}</button>`;
     }
-
-    // Bestätigt
     if (res.status === "approved") {
       if (res.user === user)
         return `<button disabled>✅ Bestätigt</button>`;
       return `<button disabled>Reserviert von ${res.user}</button>`;
     }
-
-    // Abgelehnt
-    if (res.status === "denied") {
-      return `<button onclick="reserveIsland('${key}','${user}')">Reservieren</button>`;
-    }
-
     return "-";
   }
 
-  // Spieler reserviert Insel
-  function reserveIsland(key, user) {
-    const res = reservations[key];
-    if (res && res.status !== "denied") {
+  // Reservieren
+  async function reserveIsland(key, user) {
+    const doc = await reservationsRef.doc(key).get();
+    if (doc.exists && doc.data().status !== "denied") {
       alert("Diese Insel ist bereits reserviert oder bestätigt!");
       return;
     }
-    reservations[key] = { user, status: "requested" };
-    renderInselTable();
+    await reservationsRef.doc(key).set({ user, status: "requested", timestamp: new Date() });
   }
 
   // Admin genehmigt
-  function approve(key) {
-    if (reservations[key]) {
-      reservations[key].status = "approved";
-      renderInselTable();
-    }
+  async function approve(key) {
+    await reservationsRef.doc(key).update({ status: "approved" });
   }
 
-  // Admin lehnt ab -> Insel wird wieder frei
-  function deny(key) {
-    if (reservations[key]) {
-      reservations[key].status = "denied";
-      renderInselTable();
-    }
+  // Admin lehnt ab
+  async function deny(key) {
+    await reservationsRef.doc(key).update({ status: "denied" });
   }
 
-  // Admin-Reset
-  function resetReservations() {
+  // Admin löscht alles
+  async function resetReservations() {
     if (!document.getElementById("isAdmin").checked) {
       alert("Nur Admin darf zurücksetzen!");
       return;
     }
     if (!confirm("Alle Reservierungen wirklich löschen?")) return;
-    reservations = {};
-    renderInselTable();
+    const snapshot = await reservationsRef.get();
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    alert("Alle Reservierungen gelöscht.");
   }
 </script>
 </body>
