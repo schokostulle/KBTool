@@ -1,201 +1,163 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kampftool – Prototyp</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f6f7f9;
-    margin: 0;
-    padding: 0;
-  }
-  header {
-    background: #1e3a8a;
-    color: white;
-    padding: 10px 20px;
-  }
-  h1 { margin: 0; font-size: 20px; }
-  section {
-    padding: 20px;
-  }
-  input, button, textarea {
-    margin: 5px 0;
-    padding: 8px;
-  }
-  button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  button:hover { background: #1d4ed8; }
-  #main, #hostPanel { display: none; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    background: white;
-  }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 6px;
-    text-align: center;
-  }
-  th { background: #e5e7eb; }
-</style>
+  <meta charset="UTF-8">
+  <title>Allianz-Kampfberichte</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 100px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+    .hidden { display: none; }
+  </style>
+  <!-- Firebase Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<header>
-  <h1>Kampftool – Firebase Version</h1>
-</header>
 
-<!-- LOGIN -->
-<section id="login">
-  <h2>Login</h2>
-  <input type="email" id="email" placeholder="E-Mail"><br>
-  <input type="password" id="password" placeholder="Passwort"><br>
-  <button id="loginBtn">Anmelden</button>
+<h1>Allianz-Kampfberichte</h1>
+
+<!-- Registrierung / Login -->
+<div id="authDiv">
+  <h3>Registrieren</h3>
+  <input type="email" id="regEmail" placeholder="Email">
+  <input type="password" id="regPass" placeholder="Passwort">
   <button id="registerBtn">Registrieren</button>
-  <p id="loginMessage"></p>
-</section>
 
-<!-- USER MAIN -->
-<section id="main" style="display:none;">
-  <h2>Mitgliederbereich</h2>
-  <p>Eingeloggt als: <span id="userEmail"></span></p>
-  <button id="logoutBtn">Abmelden</button>
+  <h3>Login</h3>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPass" placeholder="Passwort">
+  <button id="loginBtn">Login</button>
+</div>
 
-  <h3>CSV-Daten (vom Host)</h3>
-  <table id="dataTable">
+<!-- Kampfberichte -->
+<div id="reportDiv" class="hidden">
+  <h3>Kampfbericht einfügen</h3>
+  <textarea id="reportText" placeholder="Kampfbericht hier einfügen"></textarea>
+  <button id="submitReportBtn">Absenden</button>
+
+  <h3>Alle Berichte</h3>
+  <div id="reportsTable"></div>
+
+  <h3>Aggregierte Übersicht</h3>
+  <table id="aggregateTable">
     <thead>
-      <tr id="csvHeader"></tr>
+      <tr>
+        <th>Einheit/Gebäude</th>
+        <th>Anzahl / Level</th>
+      </tr>
     </thead>
-    <tbody id="csvBody">
-      <tr><td colspan="5">Noch keine Daten vorhanden</td></tr>
-    </tbody>
+    <tbody></tbody>
   </table>
-</section>
 
-<!-- HOST PANEL -->
-<section id="hostPanel" style="display:none;">
-  <h2>Host-Bereich</h2>
-  <input type="file" id="csvFile" accept=".csv">
-  <button id="uploadCsvBtn">CSV hochladen</button>
-  <p id="uploadStatus"></p>
-</section>
-
-<!-- =============== Firebase SDKs =============== -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <button id="logoutBtn">Logout</button>
+</div>
 
 <script>
-// === Firebase Konfiguration einfügen ===
-const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.appspot.com",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
-};
-firebase.initializeApp(firebaseConfig);
-console.log("Firebase App geladen:", firebase.apps.length > 0);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+  // ====== Firebase Config ======
+  const firebaseConfig = {
+    apiKey: "DEINE_API_KEY",
+    authDomain: "DEIN_PROJEKT.firebaseapp.com",
+    projectId: "DEIN_PROJEKT",
+    storageBucket: "DEIN_PROJEKT.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
 
-// ============== LOGIN / REGISTRIERUNG ==============
-const loginSection = document.getElementById("login");
-const mainSection = document.getElementById("main");
-const hostPanel = document.getElementById("hostPanel");
-const loginMsg = document.getElementById("loginMessage");
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
-  try {
-    await auth.createUserWithEmailAndPassword(email, pass);
-    loginMsg.textContent = "Registrierung erfolgreich. Du bist angemeldet.";
-  } catch (err) {
-    loginMsg.textContent = err.message;
-  }
-});
+  const authDiv = document.getElementById("authDiv");
+  const reportDiv = document.getElementById("reportDiv");
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
-  try {
-    await auth.signInWithEmailAndPassword(email, pass);
-  } catch (err) {
-    loginMsg.textContent = err.message;
-  }
-});
+  // ====== Registrierung ======
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    const email = document.getElementById("regEmail").value;
+    const pass = document.getElementById("regPass").value;
+    try {
+      await auth.createUserWithEmailAndPassword(email, pass);
+      alert("Registrierung erfolgreich!");
+    } catch (e) { alert(e.message); }
+  });
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  await auth.signOut();
-});
+  // ====== Login ======
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPass").value;
+    try {
+      await auth.signInWithEmailAndPassword(email, pass);
+    } catch (e) { alert(e.message); }
+  });
 
-// ============== AUTH STATE LISTENER ==============
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loginSection.style.display = "none";
-    mainSection.style.display = "block";
-    document.getElementById("userEmail").textContent = user.email;
+  // ====== Logout ======
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    auth.signOut();
+  });
 
-    if (user.email === "schokostulle.777@gmail.com") { // Host-Konto
-      hostPanel.style.display = "block";
+  // ====== Auth State Listener ======
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      authDiv.classList.add("hidden");
+      reportDiv.classList.remove("hidden");
+      renderReports();
     } else {
-      hostPanel.style.display = "none";
-    }
-
-    loadCsvData();
-  } else {
-    loginSection.style.display = "block";
-    mainSection.style.display = "none";
-    hostPanel.style.display = "none";
-  }
-});
-
-// ============== CSV HOCHLADEN (HOST) ==============
-document.getElementById("uploadCsvBtn").addEventListener("click", () => {
-  const file = document.getElementById("csvFile").files[0];
-  if (!file) return alert("Bitte CSV-Datei auswählen!");
-
-  Papa.parse(file, {
-    header: true,
-    dynamicTyping: true,
-    complete: async (result) => {
-      await db.collection("csvData").doc("latest").set({
-        uploaded: new Date(),
-        data: result.data
-      });
-      document.getElementById("uploadStatus").textContent = "CSV erfolgreich gespeichert.";
-      loadCsvData();
+      authDiv.classList.remove("hidden");
+      reportDiv.classList.add("hidden");
     }
   });
-});
 
-// ============== CSV LADEN UND ANZEIGEN ==============
-async function loadCsvData() {
-  const docRef = db.collection("csvData").doc("latest");
-  const docSnap = await docRef.get();
-  if (!docSnap.exists) return;
+  // ====== Kampfbericht absenden ======
+  document.getElementById("submitReportBtn").addEventListener("click", async () => {
+    const text = document.getElementById("reportText").value;
+    const user = auth.currentUser;
+    if (!user) return alert("Bitte einloggen!");
+    await db.collection("reports").add({
+      userId: user.uid,
+      text,
+      date: new Date()
+    });
+    document.getElementById("reportText").value = "";
+    renderReports();
+  });
 
-  const csv = docSnap.data().data;
-  if (!csv || csv.length === 0) return;
+  // ====== Reports anzeigen & aggregieren ======
+  async function renderReports() {
+    const snapshot = await db.collection("reports").orderBy("date", "desc").get();
+    const reportsTable = document.getElementById("reportsTable");
+    const aggregateTableBody = document.querySelector("#aggregateTable tbody");
+    reportsTable.innerHTML = "";
+    aggregateTableBody.innerHTML = "";
 
-  const headers = Object.keys(csv[0]);
-  document.getElementById("csvHeader").innerHTML = headers.map(h => `<th>${h}</th>`).join("");
-  document.getElementById("csvBody").innerHTML = csv.map(row => {
-    return `<tr>${headers.map(h => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`;
-  }).join("");
-}
+    const aggregate = {}; // z.B. {"Fregatte": 0, "Hauptgebäude": 0}
+
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      reportsTable.innerHTML += `<p><strong>${data.date.toDate().toLocaleString()}</strong>: ${data.text}</p>`;
+
+      // ====== Einfache Parsing-Logik ======
+      const lines = data.text.split("\n");
+      lines.forEach(line => {
+        const match = line.match(/(\w+)[:\s]*\d+/);
+        if (match) {
+          const key = match[1];
+          const valueMatch = line.match(/\d+/g);
+          if (valueMatch) {
+            const value = parseInt(valueMatch[valueMatch.length-1]);
+            aggregate[key] = (aggregate[key] || 0) + value;
+          }
+        }
+      });
+    });
+
+    // Aggregierte Tabelle
+    for (const [key, value] of Object.entries(aggregate)) {
+      aggregateTableBody.innerHTML += `<tr><td>${key}</td><td>${value}</td></tr>`;
+    }
+  }
 </script>
+
 </body>
 </html>
