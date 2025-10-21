@@ -181,7 +181,8 @@ function fakeEmail(name){
     .replace(/[^\w]+/g,"_")
     + "@alliancesystem.fake";
 }
-
+auth.onAuthStateChanged((u) => console.log("Auth State Changed:", u));
+auth.onAuthError = (e) => console.error("Auth Error:", e);
 auth.onAuthStateChanged(async (u)=>{
   if(!u) return;
 
