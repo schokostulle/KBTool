@@ -20,7 +20,7 @@
 
 <!-- Admin Login -->
 <div id="loginDiv">
-  <input type="text" id="adminName" placeholder="Admin Name">
+  <input type="text" id="adminName" placeholder="Admin Name / Benutzername">
   <input type="password" id="adminPass" placeholder="Admin Passwort">
   <button id="loginBtn">Login als Admin</button>
 </div>
@@ -53,16 +53,18 @@
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
 
-  // ===== Admin Login (für Test) =====
+  // ===== Admin Login mit einfachem Namen =====
   document.getElementById("loginBtn").addEventListener("click", () => {
-    const name = document.getElementById("adminName").value;
-    const pass = document.getElementById("adminPass").value;
-    if(name === "admin" && pass === "passwort123"){ // Testpasswort
+    const name = document.getElementById("adminName").value.trim();
+    const pass = document.getElementById("adminPass").value.trim();
+    
+    // Einfacher Testzugang
+    if(name === "Admin" && pass === "passwort123"){
       loginDiv.classList.add("hidden");
       adminPanel.classList.remove("hidden");
       loadCSV();
     } else {
-      alert("Falscher Admin-Name oder Passwort");
+      alert("Falscher Name oder Passwort");
     }
   });
 
@@ -72,7 +74,7 @@
     loginDiv.classList.remove("hidden");
   });
 
-  // ===== CSV Upload =====
+  // ===== CSV Upload und Ersetzen =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if(!file) return alert("Bitte CSV auswählen!");
@@ -97,7 +99,7 @@
     reader.readAsText(file);
   });
 
-  // ===== CSV Tabelle anzeigen =====
+  // ===== CSV Tabelle laden und anzeigen =====
   async function loadCSV(){
     const doc = await db.collection("baseData").doc("csvFile").get();
     if(!doc.exists){ document.getElementById("csvTable").innerHTML = "Keine Daten"; return; }
