@@ -105,6 +105,7 @@ const firebaseConfig = {
   appId: "1:212260982227:web:84bfe35c83387c1879f326"
 };
 firebase.initializeApp(firebaseConfig);
+console.log("Firebase App geladen:", firebase.apps.length > 0);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
