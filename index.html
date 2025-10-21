@@ -179,19 +179,68 @@ function handleCSVFileInput(file){
 }
 
 // ---------- Reports ----------
-function parseReport(text){
-  // Sehr simpler Parser; wir werden diesen in Schritt 2 verbessern.
-  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const dateMatch = lines[0] && lines[0].match(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/);
-  const date = dateMatch ? dateMatch[0] : new Date().toISOString();
-  const coordMatch = lines.find(l=>l.includes('Einheiten des Angreifers')||l.includes('Einheiten des Verteidigers'))?.match(/\((\d+:\d+:\d+)\)/);
-  const coord = coordMatch ? coordMatch[1] : 'Unbekannt';
-  // Suche Einheiten mit "Name  gesamt  verluste" (sehr heuristisch)
-  const unitPattern = /^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
-  let units = {};
-  for(const ln of lines){
-    const m = ln.match(unitPattern);
-    if(m){ units[m[1].trim()] = { gesamt: +m[2], verluste: +m[3] }; }
+function parseReport(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const report = {
+    date: null,
+    coord: null,
+    attacker: null,
+    defender: null,
+    units: {},
+    destroyedBuildings: {},
+    researches: {},
+    raw: text
+  };
+
+  // Datum
+  for (const l of lines) {
+    const m = l.match(/\b(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})\b/);
+    if (m) { report.date = `${m[1]} ${m[2]}`; break; }
+  }
+
+  // Koordinate & Spieler
+  for (const l of lines) {
+    const m = l.match(/\((\d+:\d+:\d+)\)/);
+    if (m) { report.coord = m[1]; break; }
+  }
+  const atk = lines.find(l => /^Angreifer[:]?/i.test(l));
+  const def = lines.find(l => /^Verteidiger[:]?/i.test(l));
+  if (atk) report.attacker = atk.replace(/^Angreifer[:]?/i, '').trim().replace(/\(.*\)/, '').trim();
+  if (def) report.defender = def.replace(/^Verteidiger[:]?/i, '').trim().replace(/\(.*\)/, '').trim();
+
+  // Einheitenabschnitt erkennen
+  const unitRegex = /^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
+  for (const l of lines) {
+    const m = l.match(unitRegex);
+    if (m) {
+      const name = m[1].trim();
+      report.units[name] = { gesamt: parseInt(m[2]), verluste: parseInt(m[3]) };
+    }
+  }
+
+  // Gebäudezerstörung
+  for (const l of lines) {
+    const m = l.match(/^([A-Za-zÄÖÜäöüß\s]+)\s+Stufe\s+(\d+)\s*[→\-–>]+\s*(\d+)/);
+    if (m) {
+      const name = m[1].trim();
+      report.destroyedBuildings[name] = { from: +m[2], to: +m[3] };
+    }
+  }
+
+  // Forschungen
+  for (const l of lines) {
+    const m = l.match(/^([A-Za-zÄÖÜäöüß\s]+)\s+Stufe\s+(\d+)$/);
+    if (m && !report.destroyedBuildings[m[1].trim()]) {
+      report.researches[m[1].trim()] = parseInt(m[2]);
+    }
+  }
+
+  // Fallbacks
+  if (!report.date) report.date = new Date().toISOString();
+  if (!report.coord) report.coord = "Unbekannt";
+
+  return report;
+}
   }
   // Gebäude / Forschungen - TODO später strukturierter
   const buildings = {}; const researches = {};
