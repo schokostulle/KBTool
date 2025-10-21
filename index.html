@@ -2,216 +2,181 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Filterbare Insel-Tabelle</title>
+<title>Allianz Dashboard</title>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<!-- ========== DESIGN ========== -->
 <style>
-  :root {
-    --bg: #0b1020;          /* dezenter Darkmodus */
-    --card: #11172a;
-    --border: #1f2a44;
-    --text: #e6ebff;
-    --muted: #9db0ff;
-    --accent: #5b8cff;
-    --accent-2: #7aa2ff;
-    --danger: #ef4444;
-    --success: #22c55e;
-    --warn: #facc15;
-    --radius: 12px;
-    --shadow: 0 6px 24px rgba(0,0,0,0.35);
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: radial-gradient(1200px 500px at 20% -10%, #2a3a75 0%, transparent 70%), var(--bg);
-    color: var(--text);
-    padding: 24px;
-  }
-  h1 { font-size: 1.8rem; margin: 0 0 12px; }
-  .muted { color: var(--muted); }
+:root {
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --danger: #ef4444;
+  --success: #16a34a;
+  --warn: #facc15;
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --danger: #f87171;
+  --success: #22c55e;
+  --warn: #fcd34d;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 2rem;
+  transition: background 0.3s, color 0.3s;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  transition: background 0.3s, border-color 0.3s;
+}
+input, button {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  padding: 8px 12px;
+  transition: all 0.2s;
+}
+[data-theme="dark"] input {
+  background: #1e293b;
+  color: var(--text);
+  border-color: var(--border);
+}
+button {
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  border: none;
+}
+button:hover { background: var(--accent-hover); }
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+button.ghost:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.hidden { display: none; }
+h1 { margin-top: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th, td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+}
+th {
+  background: var(--card);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+tr.requested { background: rgba(250,204,21,0.15); }
+tr.approved { background: rgba(22,163,74,0.12); }
+tr.denied { background: rgba(239,68,68,0.12); }
 
-  .card {
-    background: linear-gradient(180deg, #121a32, #0e152b 30%, #0e152b 100%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-  }
+.note { font-size: 13px; color: var(--text-muted); }
 
-  input, button {
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: #0c1327;
-    color: var(--text);
-    padding: 10px 12px;
-  }
-  button {
-    background: linear-gradient(180deg, var(--accent), var(--accent-2));
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button.ghost {
-    background: #0c1327;
-    border: 1px solid var(--border);
-  }
-  button:disabled { opacity: .6; cursor: not-allowed; }
-
-  .nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 16px; }
-  .nav button { padding: 10px 12px; }
-
-  .hidden { display: none; }
-
-  /* Table */
-  .table-wrap { position: relative; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    overflow: hidden;
-    border-radius: 12px;
-  }
-  thead { position: sticky; top: 0; z-index: 2; }
-  th, td {
-    font-size: 14px;
-    border-bottom: 1px solid var(--border);
-    padding: 10px;
-    text-align: left;
-    white-space: nowrap;
-  }
-  th {
-    background: #0f1833;
-    position: relative;
-    user-select: none;
-    cursor: pointer;
-  }
-  tbody tr.requested { background: rgba(250, 204, 21, 0.12); }
-  tbody tr.approved  { background: rgba(34, 197, 94, 0.12); }
-  tbody tr.denied    { background: rgba(239, 68, 68, 0.12); }
-
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  .dot-free { background: #9aa3c7; }
-  .dot-requested { background: var(--warn); }
-  .dot-approved { background: var(--success); }
-  .dot-denied { background: var(--danger); }
-
-  /* Column Filter Dropdown */
-  .col-filter {
-    position: absolute;
-    min-width: 240px;
-    background: #0a1124;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    padding: 10px;
-    z-index: 10;
-  }
-  .col-filter h4 { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
-  .filter-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .options-box {
-    max-height: 220px;
-    overflow: auto;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px;
-    background: #0d1630;
-  }
-  .option-row { display: flex; align-items: center; gap: 8px; padding: 4px 2px; font-size: 13px; }
-  .option-row input { width: 16px; height: 16px; }
-
-  .toolbar { display:flex; gap: 8px; align-items:center; margin: 8px 0 12px; }
-  .badge { padding: 4px 8px; border:1px solid var(--border); border-radius: 999px; font-size: 12px; background:#0c1327; }
-  .spacer { flex: 1; }
-
-  .legend { font-size: 13px; color: var(--muted); display:flex; gap:14px; align-items:center; }
-  .legend span { display:flex; align-items:center; gap:6px; }
-
-  .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+/* Dropdown-Filter minimalistisch */
+.col-filter {
+  position: absolute;
+  min-width: 220px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 8px;
+  z-index: 10;
+}
+.options-box {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+}
+.option-row { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 3px 0; }
+.filter-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.dot-free { background: #9aa3c7; }
+.dot-requested { background: var(--warn); }
+.dot-approved { background: var(--success); }
+.dot-denied { background: var(--danger); }
 </style>
 </head>
 <body>
 
 <h1>🏝 Allianz Dashboard</h1>
-<p class="muted">Admin-Rollen, CSV-Upload, Reservierungen & filterbare Tabelle</p>
+<button class="ghost" id="themeToggle" style="float:right" onclick="toggleTheme()">🌙</button>
 
 <!-- LOGIN -->
 <div id="loginView" class="card">
   <h2>Login / Registrierung</h2>
-  <div style="display:flex; gap:8px; flex-wrap:wrap">
-    <input id="username" placeholder="Ingame-Name" />
-    <input id="password" type="password" placeholder="Passwort" />
+  <input id="username" placeholder="Ingame-Name" />
+  <input id="password" type="password" placeholder="Passwort" />
+  <div style="margin-top:8px;">
     <button onclick="login()">Anmelden</button>
     <button class="ghost" onclick="register()">Registrieren</button>
   </div>
 </div>
 
-<!-- MAIN -->
+<!-- APP -->
 <div id="appView" class="hidden">
   <div class="card">
-    Angemeldet als <b id="userDisplay">—</b> (<span id="roleDisplay">—</span>)
+    Angemeldet als <b id="userDisplay">–</b> (<span id="roleDisplay">–</span>)
     <div class="nav">
       <button onclick="showPage('tableView')">📊 Insel-Tabelle</button>
-      <button onclick="showPage('mapView')">🗺 Inselkarte</button>
+      <button onclick="showPage('mapView')">🗺 Karte</button>
       <button id="adminTab" class="hidden" onclick="showPage('adminView')">⚙️ Rollenverwaltung</button>
       <button id="csvTab" class="hidden" onclick="showPage('csvView')">📤 CSV Upload</button>
-      <span class="spacer"></span>
+      <span style="flex:1"></span>
       <button class="ghost" onclick="logout()">🚪 Abmelden</button>
     </div>
   </div>
 
-  <!-- Tabelle -->
-  <div id="tableView" class="card" style="margin-top:12px;">
-    <div class="toolbar">
-      <div class="legend">
-        <span><i class="status-dot dot-free"></i>frei</span>
-        <span><i class="status-dot dot-requested"></i>reserviert</span>
-        <span><i class="status-dot dot-approved"></i>bestätigt</span>
-        <span><i class="status-dot dot-denied"></i>abgelehnt</span>
-      </div>
-      <span class="spacer"></span>
-      <button class="ghost" onclick="resetAllFilters()">Filter zurücksetzen</button>
-    </div>
-    <div class="table-wrap">
-      <table id="islandTable">
-        <thead>
-          <tr id="tableHeaderRow">
-            <!-- Header wird dynamisch gebaut -->
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Rows werden dynamisch gebaut -->
-        </tbody>
-      </table>
-      <!-- Dropdown Container -->
-      <div id="filterDropdown" class="col-filter hidden"></div>
-    </div>
-    <div id="tableStatus" class="note"></div>
-  </div>
-
-  <!-- Karte -->
-  <div id="mapView" class="card hidden" style="margin-top:12px;">
-    <h3>🗺 Inselkarte</h3>
-    <canvas id="mapCanvas" width="900" height="560"></canvas>
-  </div>
-
-  <!-- Rollenverwaltung -->
-  <div id="adminView" class="card hidden" style="margin-top:12px;">
-    <h3>⚙️ Rollenverwaltung</h3>
-    <div id="userTable"></div>
-  </div>
-
-  <!-- CSV Upload -->
-  <div id="csvView" class="card hidden" style="margin-top:12px;">
-    <h3>📤 CSV hochladen (nur Admin)</h3>
+  <div id="tableView" class="card"><h3>📊 Inseln</h3><div id="tableContainer"></div></div>
+  <div id="mapView" class="card hidden"><h3>🗺 Inselkarte</h3><canvas id="mapCanvas" width="900" height="560"></canvas></div>
+  <div id="adminView" class="card hidden"><h3>⚙️ Rollenverwaltung</h3><div id="userTable"></div></div>
+  <div id="csvView" class="card hidden">
+    <h3>📤 CSV hochladen (Admin)</h3>
     <input type="file" id="csvInput" accept=".csv" />
-    <button onclick="uploadCSV()">CSV Hochladen & Ersetzen</button>
+    <button onclick="uploadCSV()">Hochladen</button>
     <div id="csvStatus" class="note"></div>
-    <p class="note">Erwartete Spaltenreihenfolge (Semikolon-getrennt): Ozean;Inselgruppe;Insel;Inselname;Spieler ID;Spielername;Allianz ID;Allianz Kürzel;Allianzname;Punkte</p>
   </div>
 </div>
 
 <script>
-/* ===================== Firebase Setup ===================== */
+/* ===== Firebase Setup ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
   authDomain: "ik-tool.firebaseapp.com",
@@ -227,313 +192,152 @@ const usersRef = db.collection("users");
 const islandsRef = db.collection("islands");
 const reservationsRef = db.collection("reservations");
 
-/* ===================== App State ===================== */
+/* ===== App State ===== */
 let currentUser = null;
 let currentRole = "member";
-let csvData = [];            // Voller Datensatz (aus Firestore)
-let viewData = [];           // Gefilterter + sortierter Datensatz
-let reservations = {};       // key -> {user, status}
-const headers = [
-  { key:"Ozean", label:"Oz", type:"number" },
-  { key:"Inselgruppe", label:"IG", type:"number" },
-  { key:"Insel", label:"I", type:"number" },
-  { key:"Spielername", label:"Spieler", type:"text" },
-  { key:"Allianzname", label:"Allianz", type:"text" },
-  { key:"Punkte", label:"Punkte", type:"number" },
-  { key:"__reserved_by", label:"Reserviert von", type:"text", readonly:true },
-  { key:"__action", label:"Aktion", type:"text", readonly:true }
-];
+let csvData = [];
+let reservations = {};
 
-/* Filterzustand pro Spalte (Set der erlaubten Werte); null = kein Filter */
-const columnFilters = {};
-headers.forEach(h => columnFilters[h.key] = null);
+/* ===== Theme Toggle ===== */
+document.addEventListener("DOMContentLoaded", ()=>{
+  const pref = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', pref);
+  document.getElementById('themeToggle').textContent = pref==='dark'?'☀️':'🌙';
+});
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.getElementById('themeToggle').textContent = next==='dark'?'☀️':'🌙';
+}
 
-/* Sortierzustand */
-let sortState = { key: null, dir: 1 };
+/* ===== Auth ===== */
+function fakeEmail(n){ return n.toLowerCase().replace(/\s+/g,"_")+"@alliancesystem.fake"; }
+async function login(){
+  const n=document.getElementById("username").value.trim();
+  const p=document.getElementById("password").value.trim();
+  if(!n||!p)return alert("Bitte Ingame-Name & Passwort angeben!");
+  try{await auth.signInWithEmailAndPassword(fakeEmail(n),p);}catch(e){alert(e.message);}
+}
+async function register(){
+  const n=document.getElementById("username").value.trim();
+  const p=document.getElementById("password").value.trim();
+  if(!n||!p)return alert("Bitte Ingame-Name & Passwort angeben!");
+  const adminExists=!(await usersRef.where("role","==","admin").get()).empty;
+  try{
+    await auth.createUserWithEmailAndPassword(fakeEmail(n),p);
+    await usersRef.doc(n).set({ingameName:n,role:adminExists?"member":"admin"});
+    alert(adminExists?"Registriert als Mitglied.":"Du bist der erste Admin!");
+  }catch(e){alert(e.message);}
+}
+async function logout(){await auth.signOut();location.reload();}
 
-/* ===================== Auth ===================== */
-function fakeEmail(name){ return name.toLowerCase().replace(/\s+/g,"_")+"@alliancesystem.fake"; }
-
-auth.onAuthStateChanged(async user => {
-  if (!user) return;
-  const ingameName = user.email.split("@")[0].replace(/_/g," ");
-  let role = "member";
-  const doc = await usersRef.doc(ingameName).get();
-  if (doc.exists && doc.data().role) role = doc.data().role; else await usersRef.doc(ingameName).set({ ingameName, role }, { merge:true });
-
-  currentUser = { ...user, ingameName };
-  currentRole = role;
-
+auth.onAuthStateChanged(async u=>{
+  if(!u)return;
+  const name=u.email.split("@")[0].replace(/_/g," ");
+  let role="member";
+  const doc=await usersRef.doc(name).get();
+  if(doc.exists&&doc.data().role)role=doc.data().role;else await usersRef.doc(name).set({ingameName:name,role},{merge:true});
+  currentUser={...u,ingameName:name};currentRole=role;
   document.getElementById("loginView").classList.add("hidden");
   document.getElementById("appView").classList.remove("hidden");
-  document.getElementById("userDisplay").textContent = ingameName;
-  document.getElementById("roleDisplay").textContent = role;
-  if (role === "admin") {
-    document.getElementById("adminTab").classList.remove("hidden");
-    document.getElementById("csvTab").classList.remove("hidden");
-    listenUsers();
-  } else {
-    document.getElementById("adminTab").classList.add("hidden");
-    document.getElementById("csvTab").classList.add("hidden");
-  }
-
-  await loadCSVFromFirestore();
-  listenReservations();
-  buildTableHeader();
-  applyFiltersAndRender();
+  document.getElementById("userDisplay").textContent=name;
+  document.getElementById("roleDisplay").textContent=role;
+  if(role==="admin"){document.getElementById("adminTab").classList.remove("hidden");document.getElementById("csvTab").classList.remove("hidden");listenUsers();}
+  loadCSV();listenReservations();
 });
 
-async function login() {
-  const name = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
-  const email = fakeEmail(name);
-  try { await auth.signInWithEmailAndPassword(email, pass); } catch(e){ alert(e.message); }
-}
-async function register() {
-  const name = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
-  const email = fakeEmail(name);
-  const adminExists = !(await usersRef.where("role","==","admin").get()).empty;
-  try {
-    await auth.createUserWithEmailAndPassword(email, pass);
-    await usersRef.doc(name).set({ ingameName:name, role: adminExists ? "member" : "admin" });
-    alert(adminExists ? "Registriert als Mitglied." : "Du bist der erste Admin!");
-  } catch(e) { alert(e.message); }
-}
-async function logout(){ await auth.signOut(); location.reload(); }
-
-/* ===================== CSV Laden/Speichern ===================== */
-async function loadCSVFromFirestore() {
-  const snap = await islandsRef.get();
-  csvData = snap.docs.map(d => d.data());
-  // Sicherstellen: Werte ohne Anführungszeichen + Trimmen
-  csvData = csvData.map(row => {
-    const cleaned = {};
-    Object.keys(row).forEach(k => {
-      const v = row[k];
-      if (typeof v === "string") cleaned[k] = v.replace(/^"|"$/g,"").trim();
-      else cleaned[k] = v;
-    });
-    return cleaned;
-  });
-  viewData = [...csvData];
-}
+/* ===== CSV ===== */
 async function uploadCSV(){
-  if (currentRole !== "admin") return alert("Nur Admin darf CSV hochladen!");
-  const file = document.getElementById("csvInput").files[0];
-  if (!file) return alert("Bitte CSV auswählen!");
-  document.getElementById("csvStatus").textContent = "CSV wird verarbeitet...";
-  const text = await file.text();
-
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const rows = lines.map(line => line.split(";").map(x => x.replace(/^"|"$/g,"").trim()));
-  const mapped = rows.map(cols => ({
-    Ozean: cols[0] || "", Inselgruppe: cols[1] || "", Insel: cols[2] || "", Inselname: cols[3] || "",
-    "Spieler ID": cols[4] || "", Spielername: cols[5] || "", "Allianz ID": cols[6] || "",
-    "Allianz Kürzel": cols[7] || "", Allianzname: cols[8] || "", Punkte: cols[9] || ""
-  }));
-
-  // Ersetzen in Firestore
-  const old = await islandsRef.get();
-  const batchDel = db.batch();
-  old.forEach(doc => batchDel.delete(doc.ref));
-  await batchDel.commit();
-
-  const batchSet = db.batch();
-  mapped.forEach((r, i) => {
-    const id = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`;
-    batchSet.set(islandsRef.doc(id), r);
-  });
-  await batchSet.commit();
-
-  document.getElementById("csvStatus").textContent = "CSV erfolgreich hochgeladen!";
-  await loadCSVFromFirestore();
-  resetAllFilters();
-  applyFiltersAndRender();
+  if(currentRole!=="admin")return alert("Nur Admin darf CSV hochladen!");
+  const f=document.getElementById("csvInput").files[0];
+  if(!f)return alert("Keine CSV gewählt!");
+  document.getElementById("csvStatus").textContent="Wird verarbeitet...";
+  const t=await f.text();
+  const rows=t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(r=>r.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
+  const mapped=rows.map(c=>({Ozean:c[0],Inselgruppe:c[1],Insel:c[2],Inselname:c[3],SpielerID:c[4],Spielername:c[5],AllianzID:c[6],AllianzKuerzel:c[7],Allianzname:c[8],Punkte:c[9]}));
+  const old=await islandsRef.get();const b=db.batch();old.forEach(d=>b.delete(d.ref));await b.commit();
+  const b2=db.batch();mapped.forEach((r,i)=>b2.set(islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`),r));await b2.commit();
+  document.getElementById("csvStatus").textContent="CSV hochgeladen!";loadCSV();
 }
+async function loadCSV(){const s=await islandsRef.get();csvData=s.docs.map(d=>d.data());renderTable();}
 
-/* ===================== Reservations (Realtime) ===================== */
+/* ===== Reservierungen ===== */
 function listenReservations(){
-  reservationsRef.onSnapshot(snap => {
-    reservations = {};
-    snap.forEach(doc => { reservations[doc.id] = doc.data(); });
-    // Neu rendern (Statusfarben / „Reserviert von“ Spalte)
-    applyFiltersAndRender();
-    if (!document.getElementById("mapView").classList.contains("hidden")) drawMap();
-  });
+  reservationsRef.onSnapshot(s=>{reservations={};s.forEach(d=>reservations[d.id]=d.data());renderTable();if(!document.getElementById("mapView").classList.contains("hidden"))drawMap();});
 }
-async function reserve(key){
-  const doc = await reservationsRef.doc(key).get();
-  if (doc.exists && doc.data().status !== "denied") return alert("Bereits reserviert!");
-  await reservationsRef.doc(key).set({ user: currentUser.ingameName, status:"requested", timestamp: new Date() });
-}
-async function approve(key){ if (currentRole!=="admin") return; await reservationsRef.doc(key).update({ status:"approved" }); }
-async function deny(key){ if (currentRole!=="admin") return; await reservationsRef.doc(key).update({ status:"denied" }); }
+async function reserve(k){await reservationsRef.doc(k).set({user:currentUser.ingameName,status:"requested"});}
+async function approve(k){if(currentRole!=="admin")return;await reservationsRef.doc(k).update({status:"approved"});}
+async function deny(k){if(currentRole!=="admin")return;await reservationsRef.doc(k).update({status:"denied"});}
 
-/* ===================== User Verwaltung ===================== */
+/* ===== Tabelle ===== */
+function renderTable(){
+  const div=document.getElementById("tableContainer");
+  if(!csvData.length){div.innerHTML="<p>Keine Daten.</p>";return;}
+  let html="<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
+  csvData.forEach(r=>{
+    const key=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
+    const res=reservations[key];
+    const cls=res?.status||"";
+    html+=`<tr class="${cls}"><td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td>
+    <td>${r.Spielername||"-"}</td><td>${r.Allianzname||"-"}</td><td>${r.Punkte||"-"}</td>
+    <td>${res?.user||"-"}</td><td>${actionCell(key,res)}</td></tr>`;
+  });
+  html+="</tbody></table>";
+  div.innerHTML=html;
+}
+function actionCell(k,res){
+  if(!currentUser)return"<button disabled>Login nötig</button>";
+  if(!res||res.status==="denied")return`<button onclick="reserve('${k}')">Reservieren</button>`;
+  if(res.status==="requested"){
+    if(res.user===currentUser.ingameName)return`<button disabled>Reserviert</button>`;
+    if(currentRole==="admin")return`<button onclick="approve('${k}')">✔️</button><button class="ghost" onclick="deny('${k}')">✖️</button>`;
+    return`<button disabled>${res.user}</button>`;
+  }
+  if(res.status==="approved"){
+    if(res.user===currentUser.ingameName)return`<button disabled>✅</button>`;
+    return`<button disabled>${res.user}</button>`;
+  }
+  return"-";
+}
+
+/* ===== Users ===== */
 function listenUsers(){
-  usersRef.onSnapshot(snap => {
-    const users = [];
-    snap.forEach(d => users.push({ id:d.id, ...d.data() }));
-    const div = document.getElementById("userTable");
-    let html = `<table><thead><tr><th>Name</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody>`;
-    users.forEach(u => {
-      html += `<tr><td>${u.ingameName}</td><td>${u.role}</td>
-      <td>${u.ingameName===currentUser.ingameName?'<button disabled>👑 Du</button>':
-        (u.role==='admin'
-          ? `<button class="ghost" onclick="setRole('${u.ingameName}','member')">⬇️ zu Mitglied</button>`
-          : `<button onclick="setRole('${u.ingameName}','admin')">⬆️ zu Admin</button>`)}
-      </td></tr>`;
+  usersRef.onSnapshot(s=>{
+    let h="<table><tr><th>Name</th><th>Rolle</th><th>Aktion</th></tr>";
+    s.forEach(d=>{
+      const u=d.data();
+      h+=`<tr><td>${u.ingameName}</td><td>${u.role}</td><td>${roleBtns(u)}</td></tr>`;
     });
-    html += `</tbody></table>`;
-    div.innerHTML = html;
+    h+="</table>";document.getElementById("userTable").innerHTML=h;
   });
 }
-async function setRole(name, role){ await usersRef.doc(name).update({ role }); }
-
-/* ===================== UI Routing ===================== */
-function showPage(id){
-  ["tableView","mapView","adminView","csvView","dashboardView"].forEach(v => document.getElementById(v).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  if (id==="mapView") drawMap();
+function roleBtns(u){
+  if(u.ingameName===currentUser.ingameName)return"<button disabled>👑</button>";
+  if(u.role==="admin")return`<button class="ghost" onclick="setRole('${u.ingameName}','member')">⬇️ Mitglied</button>`;
+  return`<button onclick="setRole('${u.ingameName}','admin')">⬆️ Admin</button>`;
 }
+async function setRole(n,r){await usersRef.doc(n).update({role:r});}
 
-/* ===================== Tabelle – Header/Body/Filter ===================== */
-function buildTableHeader(){
-  const tr = document.getElementById("tableHeaderRow");
-  tr.innerHTML = "";
-  headers.forEach((h, idx) => {
-    const th = document.createElement("th");
-    th.textContent = h.label;
-    th.dataset.key = h.key;
-    th.onclick = (e) => onHeaderClick(e, h, th);
-    tr.appendChild(th);
-  });
-
-  // Klick außerhalb schließt Dropdown
-  document.addEventListener("click", (e) => {
-    const dd = document.getElementById("filterDropdown");
-    if (dd.classList.contains("hidden")) return;
-    if (!dd.contains(e.target) && !e.target.closest("th")) dd.classList.add("hidden");
+/* ===== Map ===== */
+function drawMap(){
+  const c=document.getElementById("mapCanvas");const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  csvData.forEach(r=>{
+    const key=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;const res=reservations[key];
+    const x=(parseInt(r.Inselgruppe)||0)*6%(c.width-30)+20;
+    const y=(parseInt(r.Ozean)||0)*90%(c.height-30)+20;
+    let col="#9aa3c7";
+    if(res?.status==="requested")col="#facc15";
+    else if(res?.status==="approved")col="#22c55e";
+    else if(res?.status==="denied")col="#ef4444";
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();ctx.strokeStyle="#2b3b6d";ctx.lineWidth=1;ctx.stroke();
   });
 }
-
-function onHeaderClick(evt, header, thEl){
-  const key = header.key;
-  // Wenn Spalte filterbar ist → Dropdown; bei readonly Spalten nur Sortierung ignorieren
-  if (!header.readonly) showColumnFilterDropdown(header, thEl);
-  setSort(key);
-}
-
-function setSort(key){
-  if (sortState.key === key) sortState.dir *= -1;
-  else { sortState.key = key; sortState.dir = 1; }
-  applyFiltersAndRender();
-}
-
-function applyFiltersAndRender(){
-  // 1) Filter anwenden
-  viewData = csvData.filter(row => {
-    // enrich with reservation fields
-    const key = `${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    row.__reserved_by = reservations[key]?.user || "";
-    row.__status = reservations[key]?.status || "";
-    // check all filters
-    for (const h of headers) {
-      const fset = columnFilters[h.key];
-      if (!fset) continue; // no filter
-      const val = (row[h.key] ?? row.__reserved_by ?? "").toString();
-      if (!fset.has(val)) return false;
-    }
-    return true;
-  });
-
-  // 2) Sortieren
-  if (sortState.key) {
-    const { key, dir } = sortState;
-    const h = headers.find(x => x.key === key);
-    viewData.sort((a,b) => {
-      const va = a[key] ?? (key==="__reserved_by"?a.__reserved_by:"");
-      const vb = b[key] ?? (key==="__reserved_by"?b.__reserved_by:"");
-      if (h?.type === "number") {
-        const na = Number(va) || 0, nb = Number(vb) || 0;
-        return (na-nb)*dir;
-      } else {
-        return va.toString().localeCompare(vb.toString(), 'de', { numeric:true }) * dir;
-      }
-    });
-  }
-
-  renderTableBody();
-  updateStatusLine();
-}
-
-function renderTableBody(){
-  const tb = document.getElementById("tableBody");
-  tb.innerHTML = "";
-  viewData.forEach(row => {
-    const key = `${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res = reservations[key];
-    const tr = document.createElement("tr");
-    if (res?.status) tr.classList.add(res.status);
-
-    // Zellen
-    headers.forEach(h => {
-      const td = document.createElement("td");
-      if (h.key === "__reserved_by") {
-        td.textContent = res?.user || "-";
-      } else if (h.key === "__action") {
-        td.innerHTML = renderActionCell(key, res);
-      } else {
-        td.textContent = (row[h.key] ?? "").toString();
-      }
-      tb.appendChild(tr);
-      tr.appendChild(td);
-    });
-  });
-}
-
-function renderActionCell(key, res){
-  if (!currentUser) return `<button disabled>Login nötig</button>`;
-  if (!res || res.status === "denied") {
-    return `<button onclick="reserve('${key}')">Reservieren</button>`;
-  }
-  if (res.status === "requested") {
-    if (res.user === currentUser.ingameName) return `<button disabled>Reserviert (wartet)</button>`;
-    if (currentRole === "admin") return `<button onclick="approve('${key}')">✔️</button> <button class="ghost" onclick="deny('${key}')">✖️</button>`;
-    return `<button disabled>Reserviert von ${res.user}</button>`;
-  }
-  if (res.status === "approved") {
-    if (res.user === currentUser.ingameName) return `<button disabled>✅ Bestätigt</button>`;
-    return `<button disabled>Reserviert von ${res.user}</button>`;
-  }
-  return "-";
-}
-
-function updateStatusLine(){
-  const total = csvData.length;
-  const shown = viewData.length;
-  const activeFilters = Object.values(columnFilters).filter(s => s && s.size>0).length;
-  document.getElementById("tableStatus").textContent =
-    `${shown} von ${total} Einträgen angezeigt • Aktive Filter: ${activeFilters}` +
-    (sortState.key ? ` • Sortiert nach: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})` : "");
-}
-
-/* ---------- Column Filter Dropdown ---------- */
-function showColumnFilterDropdown(header, thEl){
-  const key = header.key;
-  const dd = document.getElementById("filterDropdown");
-  dd.innerHTML = ""; // reset
-  dd.classList.remove("hidden");
-
-  // Position unter dem Header
-  const rect = thEl.getBoundingClientRect();
-  const wrapRect = document.querySelector(".table-wrap").getBoundingClientRect();
-  dd.style.left = (rect.left - wrapRect.left) + "px";
-  dd.style.top  = (rect.bottom - wrapRect.top + 4) + "px";
-
-  // Werte für diese Spalte sammeln (aus ungefilterten csvData, um vollständige Liste zu zeigen)
-  const values = new Set(csvData.map(r => (r[key] ?? "").toString()));
-  // für "Reserviert von" gäbe es __reserved_by, aber diese Spalte ist readonly und hat kein Dr
+function showPage(id){["tableView","mapView","adminView","csvView"].forEach(v=>document.getElementById(v).classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="mapView")drawMap();}
+</script>
+</body>
+</html>
