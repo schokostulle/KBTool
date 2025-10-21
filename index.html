@@ -114,18 +114,19 @@ async function register() {
   if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
   const email = fakeEmail(name);
 
+  const isAdminExists = await doesAdminExist();
   try {
-    const isAdminExists = await doesAdminExist();
     await auth.createUserWithEmailAndPassword(email, pass);
-    await usersRef.doc(name).set({
-      ingameName: name,
-      role: isAdminExists ? "member" : "admin"
-    });
-
-    alert(isAdminExists ? "Registrierung erfolgreich als Mitglied!" : "Du bist der erste Admin!");
-  } catch (err) {
-    alert(err.message);
+  } catch(e) {
+    // falls der Nutzer schon existiert, einfach einloggen
+    try { await auth.signInWithEmailAndPassword(email, pass); } catch(err) { alert(err.message); return; }
   }
+
+  // Wenn kein Admin existiert, Rolle anpassen oder neu setzen
+  const role = isAdminExists ? "member" : "admin";
+  await usersRef.doc(name).set({ ingameName: name, role }, { merge: true });
+
+  alert(role === "admin" ? "Du bist jetzt der erste Admin!" : "Registrierung erfolgreich.");
 }
 
 /* ==== Auth Listener ==== */
