@@ -225,27 +225,22 @@ async function register() {
   const p = document.getElementById("password").value.trim();
   if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
   if (!/^[a-zA-Z0-9 _-]+$/.test(n))
-    return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
+    return alert("Ungültiger Ingame-Name.");
 
   try {
-    // Benutzer anlegen
     await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
     const uid = auth.currentUser.uid;
 
-    // Prüfe, ob meta/config bereits existiert
     const cfgRef = metaRef.doc("config");
     let firstAdmin = false;
     try {
-      // Versuch, Dokument anzulegen → klappt nur einmal
       await cfgRef.create({ adminInitialized: true, createdAt: new Date() });
       firstAdmin = true;
-      console.log("🟢 Meta-Dokument neu erstellt → erster Benutzer erkannt.");
+      console.log("🟢 Erstes Meta-Dokument angelegt – Bootstrap erfolgreich.");
     } catch (e) {
-      console.log("ℹ️ Meta-Dokument existiert bereits:", e.code);
-      firstAdmin = false;
+      console.log("ℹ️ Meta-Config existiert bereits:", e.code);
     }
 
-    // Benutzer in Firestore eintragen
     await usersRef.doc(uid).set({
       uid,
       ingameName: n,
