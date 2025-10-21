@@ -2,56 +2,64 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Reservierungen (mit Firebase)</title>
+<title>Allianz Dashboard – Rollenverwaltung</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
-  :root {
-    --bg: #f9fafb;
-    --card: #ffffff;
-    --border: #e5e7eb;
-    --text: #111827;
-    --accent: #2563eb;
-    --accent-hover: #1d4ed8;
-    --shadow: 0 3px 8px rgba(0,0,0,0.08);
-    --radius: 10px;
+  body { font-family: "Inter", sans-serif; background: #f9fafb; color: #111827; padding: 2rem; }
+  h1 { font-size: 1.8rem; }
+  input, button {
+    padding: 8px; margin: 6px 0; border-radius: 8px; border: 1px solid #d1d5db;
   }
+  button { background: #2563eb; color: white; cursor: pointer; }
+  button:hover { background: #1d4ed8; }
+  .hidden { display: none; }
+  .card { background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 1rem; }
+  .nav { margin-bottom: 1rem; }
+  .nav button { margin-right: 6px; }
 
-  body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
-  h1 { font-size: 1.8rem; margin-bottom: 1rem; }
-  button { background: var(--accent); color: white; border: none; border-radius: var(--radius); padding: 6px 10px; cursor: pointer; }
-  button:hover { background: var(--accent-hover); }
-  .back-btn { background: #6b7280; margin-bottom: 1rem; }
-  .back-btn:hover { background: #4b5563; }
-
-  table { border-collapse: collapse; width: 100%; margin-top: 1rem; border-radius: var(--radius); overflow: hidden; }
-  th, td { border-bottom: 1px solid var(--border); padding: 8px 10px; font-size: 14px; }
-  th { background: #f3f4f6; font-weight: 600; text-align: left; }
-
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  th, td { border-bottom: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
   tr.requested { background: #fff7d6; }
-  tr.approved  { background: #d1fae5; }
-  tr.denied    { background: #fee2e2; }
-
-  .filter-bar { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-  .filter-bar input { padding: 6px 8px; border-radius: var(--radius); border: 1px solid var(--border); }
-  .admin-controls button { margin-left: 4px; background: #6b7280; }
-  .admin-controls button:hover { background: #4b5563; }
+  tr.approved { background: #d1fae5; }
+  tr.denied { background: #fee2e2; }
 </style>
 </head>
 <body>
 
-<h1>🏝 Inselreservierungen (Firebase)</h1>
+<h1>🏝 Allianz Dashboard</h1>
 
-<div class="filter-bar">
-  <input type="text" id="playerName" placeholder="Dein Spielername" />
-  <label><input type="checkbox" id="isAdmin"> Admin-Modus</label>
-  <button onclick="resetReservations()">🔄 Alle löschen (Admin)</button>
+<!-- === LOGIN === -->
+<div id="loginDiv" class="card">
+  <h2>Login / Registrierung</h2>
+  <input type="text" id="username" placeholder="Ingame-Name" /><br>
+  <input type="password" id="password" placeholder="Passwort" /><br>
+  <button onclick="login()">Anmelden</button>
+  <button onclick="register()">Registrieren</button>
 </div>
 
-<div id="inselTable"></div>
+<!-- === MAIN === -->
+<div id="mainDiv" class="hidden">
+  <p>Angemeldet als <b id="userDisplay"></b> (<span id="roleDisplay"></span>)</p>
+  <div class="nav">
+    <button onclick="showPage('reservationsView')">🏝 Inselübersicht</button>
+    <button id="adminTab" class="hidden" onclick="showPage('adminView')">⚙️ Rollenverwaltung</button>
+    <button onclick="logout()">🚪 Abmelden</button>
+  </div>
+
+  <div id="reservationsView">
+    <div id="inselTable"></div>
+  </div>
+
+  <div id="adminView" class="hidden">
+    <h2>⚙️ Rollenverwaltung</h2>
+    <div id="userTable"></div>
+  </div>
+</div>
 
 <script>
-  /* ==== 🔧 Firebase Setup ==== */
+  /* ==== Firebase Setup ==== */
   const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
   authDomain: "ik-tool.firebaseapp.com",
@@ -62,10 +70,17 @@
 };
 
   firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
   const db = firebase.firestore();
+  const usersRef = db.collection("users");
   const reservationsRef = db.collection("reservations");
 
-  /* ==== Beispiel CSV Datenbasis ==== */
+  /* ==== Fake-Mail Helper ==== */
+  function fakeEmail(name) {
+    return name.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
+  }
+
+  /* ==== Beispiel-Inseln ==== */
   const csvData = [
     { Ozean:"1", Inselgruppe:"12", Insel:"1", "Spielername":"SpielerA", "Allianzname":"Blau", Punkte:1200 },
     { Ozean:"1", Inselgruppe:"13", Insel:"2", "Spielername":"SpielerB", "Allianzname":"Blau", Punkte:900 },
@@ -73,103 +88,183 @@
     { Ozean:"2", Inselgruppe:"22", Insel:"4", "Spielername":"SpielerD", "Allianzname":"Rot", Punkte:700 }
   ];
 
-  // Lokaler Cache
-  let reservations = {};
+  let currentUser = null;
+  let currentRole = "member";
 
-  // Echtzeit-Listener auf Firestore
-  reservationsRef.onSnapshot(snapshot => {
-    reservations = {};
-    snapshot.forEach(doc => reservations[doc.id] = doc.data());
-    renderInselTable();
+  /* ==== Auth Listener ==== */
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      const ingameName = user.email.split("@")[0].replace(/_/g, " ");
+      const userDoc = await usersRef.doc(ingameName).get();
+      currentUser = { ...user, ingameName };
+      currentRole = userDoc.exists ? userDoc.data().role : "member";
+
+      document.getElementById("loginDiv").classList.add("hidden");
+      document.getElementById("mainDiv").classList.remove("hidden");
+      document.getElementById("userDisplay").textContent = ingameName;
+      document.getElementById("roleDisplay").textContent = currentRole;
+
+      if (currentRole === "admin") {
+        document.getElementById("adminTab").classList.remove("hidden");
+        listenUsers();
+      } else {
+        document.getElementById("adminTab").classList.add("hidden");
+      }
+
+      listenReservations();
+      showPage("reservationsView");
+    } else {
+      document.getElementById("loginDiv").classList.remove("hidden");
+      document.getElementById("mainDiv").classList.add("hidden");
+    }
   });
 
-  // Tabelle rendern
-  function renderInselTable() {
+  /* ==== Registrierung ==== */
+  async function register() {
+    const name = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
+    const email = fakeEmail(name);
+
+    try {
+      await auth.createUserWithEmailAndPassword(email, pass);
+      await usersRef.doc(name).set({ role: "member", ingameName: name });
+      alert("Registrierung erfolgreich! Du kannst dich jetzt anmelden.");
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  /* ==== Login ==== */
+  async function login() {
+    const name = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
+    const email = fakeEmail(name);
+
+    try {
+      await auth.signInWithEmailAndPassword(email, pass);
+    } catch (err) {
+      alert("Login fehlgeschlagen: " + err.message);
+    }
+  }
+
+  async function logout() { await auth.signOut(); }
+
+  /* ==== Navigation ==== */
+  function showPage(id) {
+    document.getElementById("reservationsView").classList.add("hidden");
+    document.getElementById("adminView").classList.add("hidden");
+    document.getElementById(id).classList.remove("hidden");
+  }
+
+  /* ==== Reservation Listener ==== */
+  function listenReservations() {
+    reservationsRef.onSnapshot(snapshot => {
+      const reservations = {};
+      snapshot.forEach(doc => reservations[doc.id] = doc.data());
+      renderInselTable(reservations);
+    });
+  }
+
+  /* ==== Tabelle Inseln ==== */
+  function renderInselTable(reservations) {
     const div = document.getElementById("inselTable");
     let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
     csvData.forEach(r => {
       const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
       const res = reservations[key];
       let cls = "";
-      let reservedBy = res?.user || "";
       if (res?.status === "requested") cls = "requested";
       else if (res?.status === "approved") cls = "approved";
       else if (res?.status === "denied") cls = "denied";
-
       html += `<tr class="${cls}">
-        <td>${r.Ozean}</td>
-        <td>${r.Inselgruppe}</td>
-        <td>${r.Insel}</td>
-        <td>${r.Spielername}</td>
-        <td>${r.Allianzname}</td>
-        <td>${r.Punkte}</td>
-        <td>${reservedBy || "-"}</td>
-        <td>${renderActionButton(key, res)}</td>
+        <td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td>
+        <td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td>
+        <td>${res?.user || "-"}</td><td>${renderButton(key,res)}</td></tr>`;
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+  }
+
+  /* ==== Buttons für Reservierungen ==== */
+  function renderButton(key, res) {
+    if (!currentUser) return "<button disabled>Login nötig</button>";
+
+    if (!res || res.status === "denied") 
+      return `<button onclick="reserve('${key}')">Reservieren</button>`;
+
+    if (res.status === "requested") {
+      if (res.user === currentUser.ingameName)
+        return `<button disabled>Reserviert (wartet)</button>`;
+      if (currentRole === "admin")
+        return `<button onclick="approve('${key}')">✔️</button><button onclick="deny('${key}')">✖️</button>`;
+      return `<button disabled>Reserviert von ${res.user}</button>`;
+    }
+
+    if (res.status === "approved") {
+      if (res.user === currentUser.ingameName)
+        return `<button disabled>✅ Bestätigt</button>`;
+      return `<button disabled>Reserviert von ${res.user}</button>`;
+    }
+  }
+
+  async function reserve(key) {
+    const doc = await reservationsRef.doc(key).get();
+    if (doc.exists && doc.data().status !== "denied") return alert("Bereits reserviert!");
+    await reservationsRef.doc(key).set({
+      user: currentUser.ingameName,
+      status: "requested",
+      timestamp: new Date()
+    });
+  }
+
+  async function approve(key) {
+    if (currentRole !== "admin") return alert("Nur Admin darf bestätigen!");
+    await reservationsRef.doc(key).update({ status: "approved" });
+  }
+
+  async function deny(key) {
+    if (currentRole !== "admin") return alert("Nur Admin darf ablehnen!");
+    await reservationsRef.doc(key).update({ status: "denied" });
+  }
+
+  /* ==== User-Listener für Rollenverwaltung ==== */
+  function listenUsers() {
+    usersRef.onSnapshot(snapshot => {
+      const users = [];
+      snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+      renderUserTable(users);
+    });
+  }
+
+  /* ==== User-Tabelle ==== */
+  function renderUserTable(users) {
+    const div = document.getElementById("userTable");
+    let html = "<table><thead><tr><th>Ingame-Name</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody>";
+    users.forEach(u => {
+      html += `<tr>
+        <td>${u.ingameName}</td>
+        <td>${u.role}</td>
+        <td>${renderRoleButtons(u)}</td>
       </tr>`;
     });
     html += "</tbody></table>";
     div.innerHTML = html;
   }
 
-  // Button-Logik
-  function renderActionButton(key, res) {
-    const user = document.getElementById("playerName").value.trim();
-    const admin = document.getElementById("isAdmin").checked;
-    if (!user) return `<button disabled>🔒 Name nötig</button>`;
-
-    if (!res || res.status === "denied") {
-      return `<button onclick="reserveIsland('${key}','${user}')">Reservieren</button>`;
-    }
-    if (res.status === "requested") {
-      if (res.user === user)
-        return `<button disabled>Reserviert (wartet)</button>`;
-      if (admin)
-        return `<div class='admin-controls'>
-          <button onclick="approve('${key}')">✔️</button>
-          <button onclick="deny('${key}')">✖️</button>
-        </div>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    if (res.status === "approved") {
-      if (res.user === user)
-        return `<button disabled>✅ Bestätigt</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    return "-";
+  /* ==== Admin-Rollensteuerung ==== */
+  function renderRoleButtons(u) {
+    if (u.ingameName === currentUser.ingameName)
+      return `<button disabled>👑 Du</button>`;
+    if (u.role === "admin")
+      return `<button onclick="setRole('${u.ingameName}','member')">⬇️ Zu Mitglied</button>`;
+    else
+      return `<button onclick="setRole('${u.ingameName}','admin')">⬆️ Zu Admin</button>`;
   }
 
-  // Reservieren
-  async function reserveIsland(key, user) {
-    const doc = await reservationsRef.doc(key).get();
-    if (doc.exists && doc.data().status !== "denied") {
-      alert("Diese Insel ist bereits reserviert oder bestätigt!");
-      return;
-    }
-    await reservationsRef.doc(key).set({ user, status: "requested", timestamp: new Date() });
-  }
-
-  // Admin genehmigt
-  async function approve(key) {
-    await reservationsRef.doc(key).update({ status: "approved" });
-  }
-
-  // Admin lehnt ab
-  async function deny(key) {
-    await reservationsRef.doc(key).update({ status: "denied" });
-  }
-
-  // Admin löscht alles
-  async function resetReservations() {
-    if (!document.getElementById("isAdmin").checked) {
-      alert("Nur Admin darf zurücksetzen!");
-      return;
-    }
-    if (!confirm("Alle Reservierungen wirklich löschen?")) return;
-    const snapshot = await reservationsRef.get();
-    const batch = db.batch();
-    snapshot.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-    alert("Alle Reservierungen gelöscht.");
+  async function setRole(name, role) {
+    await usersRef.doc(name).update({ role });
   }
 </script>
 </body>
