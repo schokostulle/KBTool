@@ -10,6 +10,7 @@
     th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
     .hidden { display: none; }
   </style>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -80,7 +81,7 @@
     loginDiv.classList.remove("hidden");
   });
 
-  // ===== CSV Upload ohne Kopfzeile =====
+  // ===== CSV Upload (Semikolon-getrennt) =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
@@ -91,15 +92,15 @@
       const lines = text.split("\n").map(l => l.trim()).filter(l => l);
       if (lines.length === 0) return alert("CSV ist leer!");
 
-      // Jede Zeile splitten nach Tab oder Komma
+      // === CSV parsen (Semikolon als Trenner) ===
       const csvData = lines.map(line => {
-        const values = line.split(/\t|,/).map(v => v.trim());
+        const values = line.split(";").map(v => v.trim());
         const row = {};
         TABLE_HEADER.forEach((key, i) => { row[key] = values[i] || ""; });
         return row;
       });
 
-      // CSV in Firestore speichern (ersetzt alte CSV)
+      // In Firestore speichern (ersetzt alte CSV)
       await db.collection("baseData").doc("csvFile").set({
         data: csvData,
         uploadedAt: new Date()
