@@ -10,6 +10,7 @@
     --border: #e5e7eb;
     --text: #111827;
     --accent: #2563eb;
+    --accent-hover: #1d4ed8;
     --shadow: 0 3px 8px rgba(0,0,0,0.08);
     --radius: 12px;
   }
@@ -21,15 +22,15 @@
   }
   h1 { font-size: 1.8rem; margin-bottom: 1rem; }
   h2 { font-size: 1.3rem; margin-bottom: .5rem; }
-
   .hidden { display: none; }
 
+  /* Dashboard grid */
   .dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
+    margin-bottom: 2rem;
   }
-
   .card {
     background: var(--card);
     border-radius: var(--radius);
@@ -39,11 +40,19 @@
     cursor: pointer;
     transition: transform 0.15s ease;
   }
-  .card:hover {
-    transform: scale(1.03);
-    background: #eef2ff;
-  }
+  .card:hover { transform: scale(1.03); background: #eef2ff; }
 
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-hover); }
+
+  /* Table */
   table {
     border-collapse: collapse;
     width: 100%;
@@ -58,120 +67,231 @@
     font-size: 14px;
   }
   th { background: #f3f4f6; font-weight: 600; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 5px 8px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 8px;
+  }
+
+  .back-btn {
+    margin-bottom: 1rem;
+    background: #6b7280;
+  }
 </style>
 </head>
 <body>
 
 <h1>Allianz Dashboard</h1>
 
-<!-- Dashboard-Start -->
+<!-- === DASHBOARD === -->
 <div id="dashboard">
   <div class="dashboard">
-    <div class="card" onclick="showPage('csvView')">📜 Inselübersicht (CSV)</div>
+    <div class="card" onclick="showPage('csvView')">📜 CSV-Datenbasis</div>
+    <div class="card" onclick="showPage('inselView')">🏝 Inselübersicht</div>
     <div class="card" onclick="showPage('statsView')">📈 Allianz-Statistik</div>
-    <div class="card" onclick="showPage('reportsView')">⚔️ Kampfberichte</div>
+    <div class="card" onclick="showPage('reportView')">⚔️ Kampfberichte</div>
   </div>
+
+  <h2>CSV hochladen</h2>
+  <input type="file" id="csvUpload" accept=".csv" />
+  <button onclick="uploadCSV()">CSV laden</button>
+  <p style="margin-top:.5rem; font-size:13px; color:#6b7280;">
+    Hinweis: CSV-Spalten = Ozean, Inselgruppe, Insel, Inselname, Spieler ID, Spielername, Allianz ID, Allianz Kürzel, Allianzname, Punkte
+  </p>
 </div>
 
-<!-- CSV-Anzeige (Platzhalter für spätere Integration deiner bisherigen Tabelle) -->
+<!-- === CSV Daten === -->
 <div id="csvView" class="hidden">
-  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <button class="back-btn" onclick="showPage('dashboard')">⬅️ Zurück</button>
   <h2>CSV Datenbasis</h2>
-  <p>Diese Tabelle basiert auf den eingelesenen CSV-Daten.</p>
   <div id="csvTable">Noch keine CSV geladen.</div>
 </div>
 
-<!-- Neue Tabelle: Allianz-Statistik -->
+<!-- === Inselübersicht === -->
+<div id="inselView" class="hidden">
+  <button class="back-btn" onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>🏝 Inselübersicht</h2>
+
+  <div class="filter-bar">
+    <select id="filterAllianz"><option value="">Allianz (alle)</option></select>
+    <select id="filterSpieler"><option value="">Spieler (alle)</option></select>
+    <input type="number" id="filterOz" placeholder="Ozean" min="1" />
+    <button onclick="applyInselFilter()">Filtern</button>
+    <button onclick="resetInselFilter()">Zurücksetzen</button>
+  </div>
+
+  <div id="inselTable"></div>
+</div>
+
+<!-- === Allianz Statistik === -->
 <div id="statsView" class="hidden">
-  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
-  <h2>Allianz-Statistik</h2>
-  <p>Basierend auf den Daten der CSV-Datei.</p>
+  <button class="back-btn" onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>📈 Allianz-Statistik</h2>
   <div id="statsTable"></div>
 </div>
 
-<!-- Kampfberichte (späteres Modul) -->
-<div id="reportsView" class="hidden">
-  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
-  <h2>Kampfberichte</h2>
-  <p>Wird später hinzugefügt.</p>
+<!-- === Kampfberichte === -->
+<div id="reportView" class="hidden">
+  <button class="back-btn" onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>⚔️ Kampfberichte-Import</h2>
+  <p>Füge hier Kampfberichte aus dem Spiel ein (Textblock).</p>
+  <textarea id="reportInput" placeholder="Kampfbericht hier einfügen..."></textarea>
+  <button onclick="parseReport()">Importieren</button>
+  <div id="reportResult"></div>
 </div>
 
 <script>
   let csvData = [];
 
-  // Navigation zwischen "Seiten"
   function showPage(page) {
-    document.querySelectorAll("#dashboard, #csvView, #statsView, #reportsView")
+    document.querySelectorAll("#dashboard, #csvView, #inselView, #statsView, #reportView")
       .forEach(el => el.classList.add("hidden"));
     document.getElementById(page).classList.remove("hidden");
   }
 
-  // Beispiel CSV laden (später via Firebase oder Upload)
-  const csvText = `1;12;1;Insel Alpha;123;Spieler1;11;TAG;Allianz Blau;1200
-1;12;2;Insel Beta;124;Spieler2;11;TAG;Allianz Blau;800
-1;13;3;Insel Gamma;125;Spieler3;12;ROT;Allianz Rot;950
-1;13;4;Insel Delta;126;Spieler4;12;ROT;Allianz Rot;1100
-1;14;5;Insel Epsilon;127;Spieler5;13;GRN;Allianz Grün;500`;
-
-  csvData = csvText.split("\n").map(l => {
-    const v = l.split(";");
-    return {
-      "Ozean": v[0],
-      "Inselgruppe": v[1],
-      "Insel": v[2],
-      "Inselname": v[3],
-      "Spieler ID": v[4],
-      "Spielername": v[5],
-      "Allianz ID": v[6],
-      "Allianz Kürzel": v[7],
-      "Allianzname": v[8],
-      "Punkte": parseInt(v[9])
+  function uploadCSV() {
+    const file = document.getElementById("csvUpload").files[0];
+    if (!file) return alert("Bitte CSV auswählen!");
+    const reader = new FileReader();
+    reader.onload = e => {
+      const lines = e.target.result.trim().split("\n").map(l => l.trim());
+      csvData = lines.map(line => {
+        const v = line.split(";").map(x => x.replace(/^"|"$/g, '').trim());
+        return {
+          Ozean: v[0],
+          Inselgruppe: v[1],
+          Insel: v[2],
+          Inselname: v[3],
+          "Spieler ID": v[4],
+          Spielername: v[5],
+          "Allianz ID": v[6],
+          "Allianz Kürzel": v[7],
+          Allianzname: v[8],
+          Punkte: parseInt(v[9] || "0")
+        };
+      });
+      renderCSVTable();
+      renderStatsTable();
+      fillFilterOptions();
+      alert("CSV erfolgreich geladen!");
     };
-  });
+    reader.readAsText(file);
+  }
 
-  renderCSVTable();
-  renderStatsTable();
-
-  // CSV Tabelle rendern
+  // CSV Tabelle
   function renderCSVTable() {
     const div = document.getElementById("csvTable");
     let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Inselname</th><th>Spieler</th><th>Allianz</th><th>Punkte</th></tr></thead><tbody>";
     csvData.forEach(r => {
-      html += `<tr><td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td><td>${r.Inselname}</td><td>${r["Spielername"]}</td><td>${r["Allianzname"]}</td><td>${r.Punkte}</td></tr>`;
+      html += `<tr><td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td><td>${r.Inselname}</td><td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td></tr>`;
     });
     html += "</tbody></table>";
     div.innerHTML = html;
   }
 
-  // Allianzstatistik aus CSV berechnen
-  function renderStatsTable() {
-    const div = document.getElementById("statsTable");
+  // Inselübersicht-Filter befüllen
+  function fillFilterOptions() {
+    const allianzen = [...new Set(csvData.map(r => r.Allianzname))].sort();
+    const spieler = [...new Set(csvData.map(r => r.Spielername))].sort();
 
-    // Daten aggregieren pro Allianz
-    const allianzMap = {};
-    csvData.forEach(r => {
-      const a = r["Allianzname"];
-      if (!allianzMap[a]) allianzMap[a] = { allianz: a, punkte: 0, inseln: 0, spieler: new Set() };
-      allianzMap[a].punkte += r.Punkte;
-      allianzMap[a].inseln += 1;
-      allianzMap[a].spieler.add(r["Spielername"]);
-    });
+    const aSel = document.getElementById("filterAllianz");
+    const sSel = document.getElementById("filterSpieler");
+    aSel.innerHTML = '<option value="">Allianz (alle)</option>';
+    sSel.innerHTML = '<option value="">Spieler (alle)</option>';
+    allianzen.forEach(a => aSel.innerHTML += `<option>${a}</option>`);
+    spieler.forEach(s => sSel.innerHTML += `<option>${s}</option>`);
 
-    const stats = Object.values(allianzMap).map(a => ({
-      Allianz: a.allianz,
-      Inseln: a.inseln,
-      Spieler: a.spieler.size,
-      Gesamtpunkte: a.punkte,
-      Durchschnitt: Math.round(a.punkte / a.spieler.size)
-    }));
+    renderInselTable(csvData);
+  }
 
-    // Tabelle
-    let html = "<table><thead><tr><th>Allianz</th><th>Inseln</th><th>Spieler</th><th>Gesamtpunkte</th><th>Ø Punkte / Spieler</th></tr></thead><tbody>";
-    stats.forEach(s => {
-      html += `<tr><td>${s.Allianz}</td><td>${s.Inseln}</td><td>${s.Spieler}</td><td>${s.Gesamtpunkte}</td><td>${s.Durchschnitt}</td></tr>`;
+  // Inselübersicht anzeigen
+  function renderInselTable(data) {
+    const div = document.getElementById("inselTable");
+    if (!data.length) { div.innerHTML = "Keine Einträge."; return; }
+    let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Inselname</th><th>Spieler</th><th>Allianz</th><th>Punkte</th></tr></thead><tbody>";
+    data.forEach(r => {
+      html += `<tr><td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td><td>${r.Inselname}</td><td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td></tr>`;
     });
     html += "</tbody></table>";
     div.innerHTML = html;
+  }
+
+  // Inselübersicht: Filter anwenden
+  function applyInselFilter() {
+    const a = document.getElementById("filterAllianz").value;
+    const s = document.getElementById("filterSpieler").value;
+    const o = document.getElementById("filterOz").value;
+    const filtered = csvData.filter(r =>
+      (!a || r.Allianzname === a) &&
+      (!s || r.Spielername === s) &&
+      (!o || r.Ozean === o)
+    );
+    renderInselTable(filtered);
+  }
+  function resetInselFilter() {
+    document.getElementById("filterAllianz").value = "";
+    document.getElementById("filterSpieler").value = "";
+    document.getElementById("filterOz").value = "";
+    renderInselTable(csvData);
+  }
+
+  // Allianzstatistik
+  function renderStatsTable() {
+    if (!csvData.length) return;
+    const div = document.getElementById("statsTable");
+    const grouped = {};
+    csvData.forEach(r => {
+      const a = r.Allianzname;
+      if (!grouped[a]) grouped[a] = { Allianz: a, Inseln: 0, Spieler: new Set(), Punkte: 0 };
+      grouped[a].Inseln++;
+      grouped[a].Punkte += r.Punkte;
+      grouped[a].Spieler.add(r.Spielername);
+    });
+    const rows = Object.values(grouped).map(g => ({
+      Allianz: g.Allianz,
+      Inseln: g.Inseln,
+      Spieler: g.Spieler.size,
+      Punkte: g.Punkte,
+      Durchschnitt: Math.round(g.Punkte / g.Spieler.size)
+    }));
+    let html = "<table><thead><tr><th>Allianz</th><th>Inseln</th><th>Spieler</th><th>Punkte</th><th>Ø Punkte / Spieler</th></tr></thead><tbody>";
+    rows.forEach(r => {
+      html += `<tr><td>${r.Allianz}</td><td>${r.Inseln}</td><td>${r.Spieler}</td><td>${r.Punkte}</td><td>${r.Durchschnitt}</td></tr>`;
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
+  }
+
+  // Kampfberichte-Import (Grundfunktion)
+  function parseReport() {
+    const text = document.getElementById("reportInput").value.trim();
+    if (!text) return alert("Bitte einen Kampfbericht einfügen!");
+    const lines = text.split("\n").map(l => l.trim());
+    let result = "<h3>Erkannte Daten:</h3><ul>";
+    lines.forEach(l => {
+      if (/vom\s+\d{2}\.\d{2}\.\d{4}/i.test(l)) result += `<li><b>Datum:</b> ${l}</li>`;
+      else if (/Angreifer/i.test(l)) result += `<li><b>${l}</b></li>`;
+      else if (/Verteidiger/i.test(l)) result += `<li><b>${l}</b></li>`;
+      else if (/Geplünderte Rohstoffe/i.test(l)) result += `<li><b>${l}</b></li>`;
+    });
+    result += "</ul>";
+    document.getElementById("reportResult").innerHTML = result;
   }
 </script>
 </body>
