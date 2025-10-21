@@ -4,24 +4,133 @@
   <meta charset="UTF-8">
   <title>Allianz Admin Tool</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { margin: 5px; padding: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; position: relative; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; position: relative; }
-    th.sortable { cursor: pointer; background-color: #f3f3f3; }
-    th.sortable:hover { background-color: #e2e2e2; }
+    :root {
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --shadow: 0 2px 8px rgba(0,0,0,0.05);
+      --radius: 10px;
+    }
+
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    input, button {
+      font-family: inherit;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-right: 8px;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    #adminPanel {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f3f4f6;
+      font-weight: 600;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th:hover {
+      background: #e5e7eb;
+    }
+
+    tr:hover td {
+      background: #f9fafb;
+    }
+
     .filter-menu {
       position: absolute;
       background: white;
-      border: 1px solid #999;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      z-index: 10;
-      padding: 5px;
-      max-height: 300px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 100;
+      padding: 0.5rem;
+      max-height: 250px;
       overflow-y: auto;
+      animation: fadeIn 0.15s ease;
     }
-    .filter-menu label { display: block; font-size: 14px; cursor: pointer; margin: 2px 0; }
-    .filter-actions { margin-top: 5px; text-align: center; }
+
+    .filter-menu label {
+      display: flex;
+      align-items: center;
+      padding: 2px 0;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .filter-menu input[type="checkbox"] {
+      accent-color: var(--accent);
+      margin-right: 8px;
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 5px;
+    }
+
+    .filter-actions button {
+      flex: 1;
+      margin: 3px;
+      font-size: 13px;
+      padding: 5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     .hidden { display: none; }
   </style>
 
@@ -47,7 +156,7 @@
   <h3>Datenübersicht</h3>
   <div id="csvTable">Keine Daten</div>
 
-  <button id="logoutBtn">Logout</button>
+  <button id="logoutBtn" style="margin-top:1rem;">Logout</button>
 </div>
 
 <script>
@@ -63,7 +172,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // ===== Variablen =====
+  // ===== Tabellenstruktur =====
   const TABLE_HEADER = [
     { key: "Ozean", label: "Oz" },
     { key: "Inselgruppe", label: "IG" },
@@ -149,7 +258,7 @@
 
     let html = "<table><thead><tr>";
     TABLE_HEADER.forEach(h => {
-      html += `<th class="sortable" onclick="onHeaderClick(event, '${h.key}')">${h.label}</th>`;
+      html += `<th onclick="onHeaderClick(event, '${h.key}')">${h.label} ▾</th>`;
     });
     html += "</tr></thead><tbody>";
 
@@ -168,22 +277,19 @@
     const th = e.target;
     closeAllMenus();
 
-    // Falls mit Shift geklickt wird → Sortierung
     if (e.shiftKey) {
       sortTable(columnKey);
       return;
     }
 
-    // Andernfalls → Filtermenü öffnen
     showFilterMenu(th, columnKey);
   };
 
-  // ===== Intelligente Sortierung =====
+  // ===== Sortierung =====
   function sortTable(columnKey) {
     sortOrder[columnKey] = !sortOrder[columnKey];
     const dir = sortOrder[columnKey] ? 1 : -1;
     const isNumeric = allData.every(r => /^\d+$/.test(r[columnKey]) || r[columnKey] === "");
-
     filteredData.sort((a, b) => {
       const A = a[columnKey];
       const B = b[columnKey];
@@ -193,7 +299,7 @@
     renderCSVTable(filteredData);
   }
 
-  // ===== Dynamisches Filtermenü =====
+  // ===== Filtermenü =====
   function showFilterMenu(th, columnKey) {
     const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
       /^\d+$/.test(a) && /^\d+$/.test(b) ? parseInt(a)-parseInt(b) : a.localeCompare(b, 'de')
@@ -201,25 +307,32 @@
 
     const menu = document.createElement("div");
     menu.className = "filter-menu";
-    menu.style.top = (th.offsetTop + th.offsetHeight) + "px";
-    menu.style.left = th.offsetLeft + "px";
+    menu.addEventListener("click", ev => ev.stopPropagation());
 
     values.forEach(v => {
       const id = `${columnKey}_${v}`.replace(/\s+/g, "_");
       const checked = !activeFilters[columnKey] || activeFilters[columnKey].includes(v);
-      menu.innerHTML += `<label><input type="checkbox" id="${id}" value="${v}" ${checked ? "checked" : ""}> ${v}</label>`;
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" id="${id}" value="${v}" ${checked ? "checked" : ""}> ${v}`;
+      menu.appendChild(label);
     });
 
-    menu.innerHTML += `
-      <div class="filter-actions">
-        <button onclick="applyFilter('${columnKey}')">Anwenden</button>
-        <button onclick="resetFilter('${columnKey}')">Alle</button>
-      </div>
+    const actions = document.createElement("div");
+    actions.className = "filter-actions";
+    actions.innerHTML = `
+      <button onclick="applyFilter('${columnKey}')">Anwenden</button>
+      <button onclick="resetFilter('${columnKey}')">Alle</button>
     `;
-    th.appendChild(menu);
+    menu.appendChild(actions);
+
+    document.body.appendChild(menu);
+
+    const rect = th.getBoundingClientRect();
+    menu.style.top = (rect.bottom + window.scrollY) + "px";
+    menu.style.left = (rect.left + window.scrollX) + "px";
+    menu.style.minWidth = rect.width + "px";
   }
 
-  // ===== Filter anwenden =====
   window.applyFilter = function(columnKey) {
     const menu = document.querySelector(".filter-menu");
     const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
@@ -231,11 +344,9 @@
         return !f || f.includes(row[key]);
       });
     });
-
     renderCSVTable(filteredData);
   };
 
-  // ===== Filter zurücksetzen =====
   window.resetFilter = function(columnKey) {
     delete activeFilters[columnKey];
     filteredData = allData.filter(row => {
@@ -247,7 +358,6 @@
     renderCSVTable(filteredData);
   };
 
-  // ===== Menü schließen bei Klick außerhalb =====
   document.addEventListener("click", e => {
     if (!e.target.closest(".filter-menu") && !e.target.closest("th")) closeAllMenus();
   });
