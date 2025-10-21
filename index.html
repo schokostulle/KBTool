@@ -171,52 +171,99 @@ function toggleTheme(){
   document.getElementById("themeToggle").textContent=next==="dark"?"☀️":"🌙";
 }
 
-/* ---------------- Auth ---------------- */
-function fakeEmail(name){
-  // robust: nur [a-z0-9_], Leerzeichen/Sonderzeichen zu _
+/* ===================== Authentifizierung ===================== */
+
+// Hilfsfunktion: Fake-Mail für Ingame-Namen erzeugen
+function fakeEmail(name) {
   return name
     .trim()
     .toLowerCase()
-    .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss")
-    .replace(/[^\w]+/g,"_")
+    .replace(/[ä]/g, "ae")
+    .replace(/[ö]/g, "oe")
+    .replace(/[ü]/g, "ue")
+    .replace(/[ß]/g, "ss")
+    .replace(/[^\w]+/g, "_") // nur Buchstaben, Zahlen, _
     + "@alliancesystem.fake";
 }
+
+// Hauptüberwachung: reagiert, wenn sich der Auth-Status ändert
 auth.onAuthStateChanged(async (u) => {
   if (!u) return;
-  await new Promise(r => setTimeout(r, 300)); // 300ms warten
+
+  // 🔸 kleine Verzögerung, damit Firestore sich initialisiert
+  await new Promise(r => setTimeout(r, 300));
 
   const name = u.email.split("@")[0].replace(/_/g, " ");
   const userRef = usersRef.doc(name);
+
+  // 🔸 immer vom Server laden, um veraltete Cache-Werte zu vermeiden
   let snap = await userRef.get({ source: "server" });
+
+  // Falls noch kein Eintrag vorhanden → neu anlegen
   if (!snap.exists) {
     await userRef.set({ ingameName: name, role: "member", status: "pending" });
     snap = await userRef.get({ source: "server" });
   }
+
   const data = snap.data();
+  console.log("🔥 Firestore-Benutzerdaten geladen:", data);
+
+  currentUser = { ...u, ingameName: name };
+  currentRole = data.role || "member";
   currentStatus = data.status || "pending";
-  ...
-});
 
-  if(currentStatus==="pending"){ alert("Dein Account wurde noch nicht freigeschaltet."); await auth.signOut(); location.reload(); return; }
-  if(currentStatus==="blocked"){ alert("Dein Account wurde gesperrt."); await auth.signOut(); location.reload(); return; }
+  // 🔒 Sicherheitsabfragen
+  if (currentStatus === "pending") {
+    alert("Dein Account wurde noch nicht freigeschaltet.");
+    await auth.signOut();
+    location.reload();
+    return;
+  }
 
+  if (currentStatus === "blocked") {
+    alert("Dein Account wurde gesperrt. Bitte wende dich an den Admin.");
+    await auth.signOut();
+    location.reload();
+    return;
+  }
+
+  // ✅ Anmeldung erfolgreich → Oberfläche anzeigen
   document.getElementById("loginView").classList.add("hidden");
   document.getElementById("appView").classList.remove("hidden");
-  document.getElementById("userDisplay").textContent=name;
-  document.getElementById("roleDisplay").textContent=currentRole;
-  document.getElementById("statusDisplay").textContent="AKTIV";
 
-  if(currentRole==="admin"){ document.getElementById("adminTab").classList.remove("hidden"); document.getElementById("csvTab").classList.remove("hidden"); listenUsers(); }
+  document.getElementById("userDisplay").textContent = name;
+  document.getElementById("roleDisplay").textContent = currentRole;
+  document.getElementById("statusDisplay").textContent = "AKTIV";
 
-  await loadCSV(); listenReservations(); buildTableHeader(); applyFiltersAndRender();
+  if (currentRole === "admin") {
+    document.getElementById("adminTab").classList.remove("hidden");
+    document.getElementById("csvTab").classList.remove("hidden");
+    listenUsers(); // Mitgliederverwaltung aktivieren
+  }
+
+  // Daten laden
+  await loadCSV();
+  listenReservations();
+  buildTableHeader();
+  applyFiltersAndRender();
 });
 
-async function login(){
-  const n=document.getElementById("username").value.trim(), p=document.getElementById("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort angeben!");
-  try{ await auth.signInWithEmailAndPassword(fakeEmail(n), p); }
-  catch(e){ alert(e.message); }
+// ===================== Login / Registrierung / Logout =====================
+
+// Login-Funktion
+async function login() {
+  const n = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
+
+  try {
+    await auth.signInWithEmailAndPassword(fakeEmail(n), p);
+  } catch (e) {
+    alert(e.message);
+  }
 }
+
+// Registrierung
 async function register() {
   const n = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value.trim();
@@ -224,14 +271,12 @@ async function register() {
   if (!/^[a-zA-Z0-9 _-]+$/.test(n))
     return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
 
-  // Admin-Erkennung robuster machen
   let adminExists = false;
   try {
     const snapshot = await usersRef.where("role", "==", "admin").get();
     adminExists = !snapshot.empty;
   } catch (err) {
-    console.warn("Fehler bei Admin-Erkennung (vermutlich leere DB):", err);
-    adminExists = false;
+    console.warn("Fehler bei Admin-Erkennung:", err);
   }
 
   try {
@@ -247,15 +292,19 @@ async function register() {
       createdAt: new Date(),
     });
 
-    if (adminExists)
-      alert("Registriert. Dein Account wartet auf Freischaltung durch den Admin.");
-    else
-      alert("Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!");
+    alert(adminExists
+      ? "Registriert. Dein Account wartet auf Freischaltung durch den Admin."
+      : "Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!");
   } catch (e) {
     alert(e.message);
   }
 }
-async function logout(){ await auth.signOut(); location.reload(); }
+
+// Logout-Funktion
+async function logout() {
+  await auth.signOut();
+  location.reload();
+}
 
 /* ---------------- CSV ---------------- */
 async function uploadCSV(){
