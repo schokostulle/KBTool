@@ -231,14 +231,20 @@ async function register() {
     await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
     const uid = auth.currentUser.uid;
 
+    // Versuch, das Meta-Dokument anzulegen (nur beim allerersten User möglich)
     const cfgRef = metaRef.doc("config");
     let firstAdmin = false;
     try {
-      await cfgRef.create({ adminInitialized: true, createdAt: new Date() });
+      await cfgRef.create({
+        adminInitialized: true,
+        createdAt: new Date(),
+        bootstrapBy: n
+      });
+      console.log("✅ META/config erfolgreich angelegt!");
       firstAdmin = true;
-      console.log("🟢 Erstes Meta-Dokument angelegt – Bootstrap erfolgreich.");
     } catch (e) {
-      console.log("ℹ️ Meta-Config existiert bereits:", e.code);
+      console.warn("⚠️ META/config konnte nicht angelegt werden:", e.code, e.message);
+      firstAdmin = false;
     }
 
     await usersRef.doc(uid).set({
@@ -253,7 +259,7 @@ async function register() {
       ? "Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!"
       : "Registriert. Dein Account wartet auf Freischaltung durch den Admin.");
   } catch (e) {
-    console.error("Fehler bei Registrierung:", e);
+    console.error("❌ Fehler bei Registrierung:", e);
     alert(e.message);
   }
 }
