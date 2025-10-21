@@ -3,330 +3,73 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Kampfbericht-Tool — Starter</title>
+<title>Kampfbericht-Tool — CSV-Viewer (Grundgerüst)</title>
+
+<!-- PapaParse für CSV -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <style>
   body{font-family:system-ui,Arial,Helvetica,sans-serif;margin:18px;background:#fafafa;color:#111}
   h1,h2{margin:8px 0}
-  section{background:#fff;border-radius:8px;padding:12px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+  section{background:#fff;border-radius:8px;padding:12px;margin:12px 0;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
   input,textarea,select,button{font:inherit;padding:8px;border:1px solid #ddd;border-radius:6px;margin:6px 0;width:100%;box-sizing:border-box}
-  .row{display:flex;gap:8px}
-  .col{flex:1}
   button.small{width:auto;padding:6px 10px}
+  table{border-collapse:collapse;width:100%;margin-top:12px}
+  th,td{border:1px solid #ccc;padding:6px;text-align:left;font-size:0.95rem}
+  th{background:#f2f2f2}
   .muted{color:#666;font-size:0.9rem}
-  pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto}
-  .coord-section{border-left:4px solid #007bff;padding:8px;margin:8px 0;background:#f7fbff}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .note{font-size:0.9rem;color:#444}
+  .warn{color:crimson}
 </style>
 </head>
 <body>
-  <h1>⚔️ Kampfbericht-Tool — Starter</h1>
 
-  <!-- 1) Registrierung / Login -->
-  <section id="authSection">
-    <h2>🔑 Anmeldung / Registrierung</h2>
-    <div class="row">
-      <input id="username" type="text" placeholder="Ingame-Name" />
-      <input id="password" type="password" placeholder="Passwort" />
-    </div>
-    <div class="row">
-      <button id="btnRegister" class="small">Registrieren</button>
-      <button id="btnLogin" class="small">Login</button>
-      <button id="btnLogout" class="small" style="display:none">Logout</button>
-    </div>
-    <p id="authMessage" class="muted">Noch nicht angemeldet.</p>
-    <p class="muted">Hinweis: Dies ist das Starter-Modul — Auth ist vorerst lokal (localStorage). Später ersetzen wir es durch Firebase Auth.</p>
-  </section>
+<h1>⚔️ Kampfbericht-Tool — CSV-Viewer (Grundgerüst)</h1>
 
-  <!-- 2) Host-Bereich (nur sichtbar nach Host-Login) -->
-  <section id="hostSection">
-    <h2>🛡 Hostbereich</h2>
-    <p class="muted">Host-Login (temporär, Passwort nicht im Code speichern!).</p>
-    <div class="row">
-      <input id="hostPass" type="password" placeholder="Host-Passwort" />
-      <button id="hostLoginBtn" class="small">Host Login</button>
-      <button id="hostLogoutBtn" class="small" style="display:none">Host Logout</button>
-    </div>
-    <div id="hostControls" style="display:none;margin-top:10px;">
-      <h3>Host-Kontrollen</h3>
-      <div class="row">
-        <input type="file" id="csvInput" accept=".csv" />
-        <button id="btnLoadCsv" class="small">CSV hochladen (Host)</button>
-      </div>
-      <div style="margin-top:8px;">
-        <button id="btnClearAll" class="small" style="background:#ffdddd">Alles löschen (local)</button>
-        <p class="muted">Host kann später Benutzer freischalten/sperren (wenn Firebase integriert).</p>
-      </div>
-    </div>
-  </section>
+<section id="csvSection">
+  <h2>1) CSV hochladen (Host)</h2>
+  <p class="muted">Wähle die Host-CSV-Datei aus. Die CSV wird lokal im Browser gespeichert (localStorage) – später ersetzen wir das durch Firestore für zentrale Speicherung.</p>
+  <input type="file" id="csvFile" accept=".csv" />
+  <div class="actions">
+    <button id="btnProcessCsv" class="small">CSV verarbeiten & speichern</button>
+    <button id="btnClearCsv" class="small" style="background:#ffdede">CSV löschen</button>
+    <button id="btnClearAll" class="small" style="background:#ffdede">Alles (Reports + CSV) löschen</button>
+  </div>
+  <p id="csvStatus" class="note"></p>
+</section>
 
-  <!-- 3) Kampfbericht einfügen (Copy & Paste) -->
-  <section id="reportSection" style="display:none">
-    <h2>📝 Kampfbericht einfügen</h2>
-    <textarea id="reportText" rows="10" placeholder="Füge hier den Kampfbericht per Copy & Paste ein..."></textarea>
-    <div class="row">
-      <button id="btnSaveReport" class="small">Bericht speichern (lokal)</button>
-      <button id="btnParsePreview" class="small">Vorschau parsen</button>
-    </div>
-    <div id="parsePreview"></div>
-  </section>
-
-  <!-- 4) Übersicht / Datenbank (lokal gespeichert) -->
-  <section id="dbSection" style="display:none">
-    <h2>📊 Datenbank (lokal)</h2>
-    <p class="muted">Dies ist die lokale Ansicht. Später ersetzen wir die Speicherung durch Firestore.</p>
-    <div id="dbOutput"></div>
-  </section>
+<section id="tableSection">
+  <h2>2) Tabellenansicht nach Koordinate & Datum (neueste zuerst)</h2>
+  <p class="muted">Kopf: Koordinate, Datum des letzten Eintrags (oder 0), gefolgt von standardisierten Gebäude- und Einheiten-Spalten.</p>
+  <div id="tableContainer"></div>
+</section>
 
 <script>
-/* ===========================
-   Starter-Module: Übersicht
-   - Dieses Skript ist bewusst einfach gehalten und modular.
-   - Später ersetzen wir localStorage durch Firestore.
-   =========================== */
+/* ============================
+   Grundstruktur + CSV → Tabelle
+   - Speichert CSV lokal (localStorage)
+   - Ermittelt für jede Zeile eine "Koordinate"
+   - Baut eine Übersichtstabelle mit festen Kopfspalten (Gebäude + Einheiten)
+   - Sortiert die Koordinaten nach "Datum des letzten Eintrags" (neueste zuerst)
+   ============================ */
 
-// ---------- Utilities ----------
-const $ = id => document.getElementById(id);
-function safeParseJSON(s){ try{return JSON.parse(s);}catch(e){return null;} }
-
-// ---------- Storage (local for now) ----------
-const STORAGE = {
-  USERS_KEY: 'kb_users_v1',
-  REPORTS_KEY: 'kb_reports_v1',
-  CSV_KEY: 'kb_hostcsv_v1',
-
-  loadUsers(){ return safeParseJSON(localStorage.getItem(this.USERS_KEY)) || []; },
-  saveUsers(arr){ localStorage.setItem(this.USERS_KEY, JSON.stringify(arr)); },
-
-  loadReports(){ return safeParseJSON(localStorage.getItem(this.REPORTS_KEY)) || []; },
-  saveReports(arr){ localStorage.setItem(this.REPORTS_KEY, JSON.stringify(arr)); },
-
-  loadCSV(){ return safeParseJSON(localStorage.getItem(this.CSV_KEY)) || null; },
-  saveCSV(obj){ localStorage.setItem(this.CSV_KEY, JSON.stringify(obj)); },
-
-  clearAll(){ localStorage.removeItem(this.USERS_KEY); localStorage.removeItem(this.REPORTS_KEY); localStorage.removeItem(this.CSV_KEY); }
+// ---------- Storage keys ----------
+const STORAGE_KEYS = {
+  HOST_CSV: 'kb_host_csv_v1',
+  REPORTS: 'kb_reports_v1' // optional: falls später Reports gespeichert werden
 };
 
-// ---------- App state ----------
-let state = {
-  currentUser: null,
-  hostLoggedIn: false
-};
+// ---------- Vordefinierte Spalten (Kopf) ----------
+const TABLE_COLUMNS = [
+  // erste Pflichtfelder
+  'Koordinate',
+  'DatumLetzterEintrag',
+  // Gebäude (wie gewünscht)
+  'Haupthaus','Goldbergwerk','Steinbruch','Holzfällerhütte','Universität','Baracke','Werft','Lagerhaus','Steinwall','Wachturm','Ruhestätte',
+  // Einheiten (wie gewünscht)
+  'Fregatte','Handelskogge','Kolonisationsschiff','Spähschiff','Steinschleuderer','Lanzenträger','Langbogenschütze','Kanonen'
+];
 
-// ---------- UI functions ----------
-function show(id){ $(id).style.display = ''; }
-function hide(id){ $(id).style.display = 'none'; }
-
-function refreshAuthUI(){
-  if(state.currentUser){
-    $('authMessage').innerText = `Angemeldet als: ${state.currentUser.username}`;
-    $('btnLogout').style.display = '';
-    $('btnRegister').style.display = 'none';
-    $('btnLogin').style.display = 'none';
-    show('reportSection'); show('dbSection');
-  } else {
-    $('authMessage').innerText = 'Noch nicht angemeldet.';
-    $('btnLogout').style.display = 'none';
-    $('btnRegister').style.display = '';
-    $('btnLogin').style.display = '';
-    hide('reportSection'); hide('dbSection');
-  }
-  // host controls
-  if(state.hostLoggedIn){
-    $('hostControls').style.display = '';
-    $('hostLogoutBtn').style.display = '';
-    $('hostLoginBtn').style.display = 'none';
-  } else {
-    $('hostControls').style.display = 'none';
-    $('hostLogoutBtn').style.display = 'none';
-    $('hostLoginBtn').style.display = '';
-  }
-}
-
-// ---------- Auth (local, very simple) ----------
-function registerLocal(username, password){
-  const users = STORAGE.loadUsers();
-  if(users.find(u=>u.username.toLowerCase()===username.toLowerCase())){ alert('Benutzer existiert bereits'); return; }
-  users.push({ username, password, status: 'pending' }); // host must activate later
-  STORAGE.saveUsers(users);
-  alert('Registrierung erfolgreich. Bitte vom Host freischalten lassen (status pending).');
-}
-
-function loginLocal(username, password){
-  const users = STORAGE.loadUsers();
-  const u = users.find(x=>x.username===username);
-  if(!u){ alert('Benutzer nicht gefunden'); return; }
-  if(u.status!=='active'){ alert('Benutzer nicht freigeschaltet oder gesperrt'); return; }
-  if(u.password !== password){ alert('Falsches Passwort'); return; }
-  state.currentUser = { username }; refreshAuthUI(); renderDatabase();
-}
-function logoutLocal(){ state.currentUser = null; refreshAuthUI(); }
-
-// ---------- Host (very simple) ----------
-const HOST_SECRET = 'admin123'; // TODO: später nicht im Code lassen
-function hostLogin(pass){
-  if(pass === HOST_SECRET){ state.hostLoggedIn = true; refreshAuthUI(); alert('Host angemeldet'); renderUsersForHost(); }
-  else alert('Falsches Hostpasswort');
-}
-function hostLogout(){ state.hostLoggedIn = false; refreshAuthUI(); }
-
-// ---------- CSV load (host) ----------
-function handleCSVFileInput(file){
-  if(!file) return alert('Keine Datei');
-  Papa.parse(file, { header:true, dynamicTyping:true, skipEmptyLines:true, complete: (res)=>{
-    STORAGE.saveCSV(res.data);
-    alert('CSV lokal gespeichert (nur zum Test).');
-    renderDatabase();
-  }});
-}
-
-// ---------- Reports ----------
-function parseReport(text) {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const report = {
-    date: null,
-    coord: null,
-    attacker: null,
-    defender: null,
-    units: {},
-    destroyedBuildings: {},
-    researches: {},
-    raw: text
-  };
-
-  // Datum
-  for (const l of lines) {
-    const m = l.match(/\b(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})\b/);
-    if (m) { report.date = `${m[1]} ${m[2]}`; break; }
-  }
-
-  // Koordinate & Spieler
-  for (const l of lines) {
-    const m = l.match(/\((\d+:\d+:\d+)\)/);
-    if (m) { report.coord = m[1]; break; }
-  }
-  const atk = lines.find(l => /^Angreifer[:]?/i.test(l));
-  const def = lines.find(l => /^Verteidiger[:]?/i.test(l));
-  if (atk) report.attacker = atk.replace(/^Angreifer[:]?/i, '').trim().replace(/\(.*\)/, '').trim();
-  if (def) report.defender = def.replace(/^Verteidiger[:]?/i, '').trim().replace(/\(.*\)/, '').trim();
-
-  // Einheitenabschnitt erkennen
-  const unitRegex = /^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
-  for (const l of lines) {
-    const m = l.match(unitRegex);
-    if (m) {
-      const name = m[1].trim();
-      report.units[name] = { gesamt: parseInt(m[2]), verluste: parseInt(m[3]) };
-    }
-  }
-
-  // Gebäudezerstörung
-  for (const l of lines) {
-    const m = l.match(/^([A-Za-zÄÖÜäöüß\s]+)\s+Stufe\s+(\d+)\s*[→\-–>]+\s*(\d+)/);
-    if (m) {
-      const name = m[1].trim();
-      report.destroyedBuildings[name] = { from: +m[2], to: +m[3] };
-    }
-  }
-
-  // Forschungen
-  for (const l of lines) {
-    const m = l.match(/^([A-Za-zÄÖÜäöüß\s]+)\s+Stufe\s+(\d+)$/);
-    if (m && !report.destroyedBuildings[m[1].trim()]) {
-      report.researches[m[1].trim()] = parseInt(m[2]);
-    }
-  }
-
-  // Fallbacks
-  if (!report.date) report.date = new Date().toISOString();
-  if (!report.coord) report.coord = "Unbekannt";
-
-  return report;
-}
-  }
-  // Gebäude / Forschungen - TODO später strukturierter
-  const buildings = {}; const researches = {};
-  return { date, coord, units, buildings, researches, raw: text };
-}
-
-function saveReportLocal(parsed){
-  const reports = STORAGE.loadReports();
-  parsed.id = 'r_' + Date.now();
-  parsed.addedBy = state.currentUser ? state.currentUser.username : 'unknown';
-  reports.push(parsed);
-  STORAGE.saveReports(reports);
-  alert('Bericht lokal gespeichert.');
-  renderDatabase();
-}
-
-// ---------- Host: list users (local) ----------
-function renderUsersForHost(){
-  const users = STORAGE.loadUsers();
-  let html = '<table><tr><th>Name</th><th>Status</th><th>Aktion</th></tr>';
-  for(const u of users){
-    html += `<tr><td>${u.username}</td><td>${u.status}</td><td>
-      <button onclick="hostSetUserStatus('${u.username}','active')">Freischalten</button>
-      <button onclick="hostSetUserStatus('${u.username}','blocked')">Sperren</button>
-      <button onclick="hostSetUserStatus('${u.username}','deleted')">Löschen</button>
-    </td></tr>`;
-  }
-  html += '</table>';
-  $('hostControls').querySelector('#userList')?.remove?.();
-  const div = document.createElement('div'); div.id='userList'; div.innerHTML = html;
-  $('hostControls').prepend(div);
-}
-window.hostSetUserStatus = function(username,status){
-  let users = STORAGE.loadUsers();
-  if(status==='deleted'){ users = users.filter(u=>u.username!==username); }
-  else{ users = users.map(u=> u.username===username ? {...u,status} : u ); }
-  STORAGE.saveUsers(users);
-  renderUsersForHost();
-  alert('Benutzerstatus aktualisiert');
-}
-
-// ---------- Database rendering (local aggregation example) ----------
-function renderDatabase(){
-  const reports = STORAGE.loadReports();
-  if(reports.length===0){ $('dbOutput').innerText = 'Keine Berichte vorhanden.'; return; }
-  // group by coord and simple compute: max(gesamt) and sum(verluste)
-  const grouped = {};
-  for(const r of reports){
-    grouped[r.coord] = grouped[r.coord] || [];
-    grouped[r.coord].push(r);
-  }
-  let out = '';
-  for(const coord in grouped){
-    const list = grouped[coord];
-    out += `<div class="coord-section"><h3>📍 ${coord} — ${list.length} Bericht(e)</h3>`;
-    // aggregate units
-    const unitMax = {}, unitLoss = {};
-    for(const rep of list){
-      for(const u in rep.units){
-        unitMax[u] = Math.max(unitMax[u] || 0, rep.units[u].gesamt || 0);
-        unitLoss[u] = (unitLoss[u] || 0) + (rep.units[u].verluste || 0);
-      }
-    }
-    out += '<h4>Einheiten</h4><table><tr><th>Einheit</th><th>Aktuell</th><th>Verluste</th></tr>';
-    for(const u in unitMax){ const cur = Math.max(unitMax[u] - (unitLoss[u]||0), 0); out += `<tr><td>${u}</td><td>${cur}</td><td>${unitLoss[u]||0}</td></tr>`; }
-    out += '</table>';
-    out += '</div>';
-  }
-  $('dbOutput').innerHTML = out;
-}
-
-// ---------- Event wiring ----------
-$('btnRegister').addEventListener('click', ()=>registerLocal($('username').value.trim(), $('password').value.trim()));
-$('btnLogin').addEventListener('click', ()=>loginLocal($('username').value.trim(), $('password').value.trim()));
-$('btnLogout').addEventListener('click', ()=>{ logoutLocal(); });
-$('hostLoginBtn').addEventListener('click', ()=>hostLogin($('hostPass').value.trim()));
-$('hostLogoutBtn').addEventListener('click', ()=>hostLogout());
-$('btnLoadCsv').addEventListener('click', ()=>{ const f = $('csvInput').files[0]; handleCSVFileInput(f); });
-$('btnClearAll').addEventListener('click', ()=>{ if(confirm('Sicher löschen?')){ STORAGE.clearAll(); alert('localStorage gelöscht'); location.reload(); } });
-$('btnSaveReport').addEventListener('click', ()=>{ const txt = $('reportText').value.trim(); if(!txt) return alert('keine Daten'); const p = parseReport(txt); saveReportLocal(p); });
-$('btnParsePreview').addEventListener('click', ()=>{ const txt = $('reportText').value.trim(); if(!txt) return alert('keine Daten'); const p = parseReport(txt); $('parsePreview').innerHTML = '<pre>'+JSON.stringify(p,null,2)+'</pre>'; });
-
-// ---------- Init ----------
-refreshAuthUI();
-renderDatabase();
-
-</script>
-</body>
-</html>
+// ---------- Hilfsfunktionen ----------
+const $ = id => document.get
