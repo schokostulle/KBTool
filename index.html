@@ -2,71 +2,38 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Allianz-Kampfberichte Tool</title>
+  <title>Allianz Admin Tool</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    textarea, input { width: 100%; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    input, button { display: block; margin-bottom: 10px; width: 300px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
     .hidden { display: none; }
-    button { margin-bottom: 10px; }
   </style>
-  <!-- Firebase Libraries -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<h1>Allianz-Kampfberichte</h1>
+<h1>Allianz Admin Tool</h1>
 
-<!-- Auth -->
-<div id="authDiv">
-  <h3>Registrieren</h3>
-  <input type="email" id="regEmail" placeholder="Email">
-  <input type="password" id="regPass" placeholder="Passwort">
-  <button id="registerBtn">Registrieren</button>
-
-  <h3>Login</h3>
-  <input type="email" id="loginEmail" placeholder="Email">
-  <input type="password" id="loginPass" placeholder="Passwort">
-  <button id="loginBtn">Login</button>
+<!-- Admin Login -->
+<div id="loginDiv">
+  <input type="text" id="adminName" placeholder="Admin Name">
+  <input type="password" id="adminPass" placeholder="Admin Passwort">
+  <button id="loginBtn">Login als Admin</button>
 </div>
 
 <!-- Admin Panel -->
 <div id="adminPanel" class="hidden">
-  <h3>CSV hochladen (Inseln / Spieler)</h3>
+  <h2>CSV hochladen / ersetzen</h2>
   <input type="file" id="csvUpload" accept=".csv">
   <button id="uploadCsvBtn">CSV hochladen</button>
 
-  <h3>Mitglieder freischalten</h3>
-  <div id="membersList"></div>
-  <button id="refreshMembersBtn">Liste aktualisieren</button>
-
-  <button id="logoutBtnAdmin">Logout</button>
-</div>
-
-<!-- Mitglieder Panel -->
-<div id="memberPanel" class="hidden">
-  <h3>Kampfbericht einfügen</h3>
-  <textarea id="reportText" placeholder="Kampfbericht hier einfügen"></textarea>
-  <button id="submitReportBtn">Absenden</button>
-
-  <h3>Alle Berichte der Allianz (neueste zuerst)</h3>
-  <div id="reportsTable"></div>
-
-  <h3>Aggregierte Übersicht</h3>
-  <table id="aggregateTable">
-    <thead>
-      <tr>
-        <th>Einheit/Gebäude/Rohstoff</th>
-        <th>Anzahl / Level</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button id="logoutBtnMember">Logout</button>
+  <h3>Aktuelle CSV-Daten</h3>
+  <div id="csvTable">Keine Daten</div>
+  <button id="logoutBtn">Logout</button>
 </div>
 
 <script>
@@ -81,166 +48,77 @@
 };
 
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
 
-  const authDiv = document.getElementById("authDiv");
+  const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
-  const memberPanel = document.getElementById("memberPanel");
 
-  // ===== Registrierung =====
-  document.getElementById("registerBtn").addEventListener("click", async () => {
-    const email = document.getElementById("regEmail").value;
-    const pass = document.getElementById("regPass").value;
-    try {
-      const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
-      // Standard: member, nicht freigeschaltet
-      await db.collection("users").doc(userCredential.user.uid).set({
-        email,
-        role: "member",
-        allianceId: null,
-        approved: false
-      });
-      alert("Registrierung erfolgreich! Bitte auf Freischaltung warten.");
-    } catch(e){ alert(e.message); }
-  });
-
-  // ===== Login =====
-  document.getElementById("loginBtn").addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail").value;
-    const pass = document.getElementById("loginPass").value;
-    try { await auth.signInWithEmailAndPassword(email, pass); }
-    catch(e){ alert(e.message); }
-  });
-
-  // ===== Logout =====
-  document.getElementById("logoutBtnAdmin").addEventListener("click", () => auth.signOut());
-  document.getElementById("logoutBtnMember").addEventListener("click", () => auth.signOut());
-
-  // ===== Auth State =====
-  auth.onAuthStateChanged(async user => {
-    if(!user){ authDiv.classList.remove("hidden"); adminPanel.classList.add("hidden"); memberPanel.classList.add("hidden"); return; }
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    const data = userDoc.data();
-    authDiv.classList.add("hidden");
-
-    if(data.role === "admin"){
+  // ===== Admin Login (für Test) =====
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    const name = document.getElementById("adminName").value;
+    const pass = document.getElementById("adminPass").value;
+    if(name === "admin" && pass === "passwort123"){ // Testpasswort
+      loginDiv.classList.add("hidden");
       adminPanel.classList.remove("hidden");
-      memberPanel.classList.add("hidden");
-      loadMembers();
-    } else if(data.role === "member" && data.approved){
-      memberPanel.classList.remove("hidden");
-      adminPanel.classList.add("hidden");
-      renderAggregated();
+      loadCSV();
     } else {
-      alert("Mitglied noch nicht freigeschaltet.");
-      auth.signOut();
+      alert("Falscher Admin-Name oder Passwort");
     }
   });
 
-  // ===== CSV Upload (Admin) =====
+  // ===== Logout =====
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    adminPanel.classList.add("hidden");
+    loginDiv.classList.remove("hidden");
+  });
+
+  // ===== CSV Upload =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
-    if(!file) return alert("Bitte CSV wählen!");
+    if(!file) return alert("Bitte CSV auswählen!");
     const reader = new FileReader();
     reader.onload = async e => {
       const text = e.target.result;
       const lines = text.split("\n");
+      if(lines.length < 2) return alert("CSV leer oder nur Kopfzeile");
       const header = lines.shift().split(/\t/);
-      const batch = db.batch();
-      lines.forEach(line => {
+      const csvData = lines.map(line => {
         const values = line.split(/\t/);
-        if(values.length !== header.length) return;
-        const player = {};
-        header.forEach((key,i) => { player[key.trim()] = values[i].trim(); });
-        const docRef = db.collection("players").doc(player["Spieler ID"]);
-        batch.set(docRef, player);
+        const row = {};
+        header.forEach((key,i)=>{ row[key.trim()] = values[i]?.trim()||""; });
+        return row;
       });
-      await batch.commit();
-      alert("CSV erfolgreich hochgeladen!");
+
+      // Alte CSV ersetzen
+      await db.collection("baseData").doc("csvFile").set({ data: csvData, uploadedAt: new Date() });
+      alert("CSV erfolgreich hochgeladen / ersetzt!");
+      renderCSVTable(csvData);
     };
     reader.readAsText(file);
   });
 
-  // ===== Mitglieder freischalten (Admin) =====
-  async function loadMembers(){
-    const snapshot = await db.collection("users").where("role","==","member").get();
-    const div = document.getElementById("membersList");
-    div.innerHTML = "";
-    snapshot.docs.forEach(doc => {
-      const data = doc.data();
-      const btn = document.createElement("button");
-      btn.textContent = data.approved ? `✅ ${data.email}` : `❌ ${data.email} freischalten`;
-      btn.disabled = data.approved;
-      btn.onclick = async () => {
-        await db.collection("users").doc(doc.id).update({approved:true});
-        loadMembers();
-      };
-      div.appendChild(btn);
-      div.appendChild(document.createElement("br"));
-    });
-  }
-  document.getElementById("refreshMembersBtn").addEventListener("click", loadMembers);
-
-  // ===== Kampfberichte einfügen =====
-  document.getElementById("submitReportBtn").addEventListener("click", async () => {
-    const text = document.getElementById("reportText").value;
-    const user = auth.currentUser;
-    if(!user) return alert("Bitte einloggen!");
-    if(!text.trim()) return alert("Bericht leer!");
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    await db.collection("reports").add({
-      userId: user.uid,
-      allianceId: userDoc.data().allianceId,
-      reportText: text,
-      date: new Date()
-    });
-    document.getElementById("reportText").value = "";
-    renderAggregated();
-  });
-
-  // ===== Parsing Funktion (einfaches Beispiel) =====
-  function parseReport(text){
-    const lines = text.split("\n");
-    const data = { units:{}, buildings:{}, plunder:{} };
-    lines.forEach(line => {
-      const match = line.match(/(\w+)\s+(\d+)/);
-      if(match){
-        const key = match[1];
-        const value = parseInt(match[2]);
-        data.units[key] = (data.units[key]||0)+value;
-      }
-    });
-    return data;
+  // ===== CSV Tabelle anzeigen =====
+  async function loadCSV(){
+    const doc = await db.collection("baseData").doc("csvFile").get();
+    if(!doc.exists){ document.getElementById("csvTable").innerHTML = "Keine Daten"; return; }
+    renderCSVTable(doc.data().data);
   }
 
-  // ===== Aggregation und Anzeige =====
-  async function renderAggregated(){
-    const user = auth.currentUser;
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    const allianceId = userDoc.data().allianceId;
-    const snapshot = await db.collection("reports")
-      .where("allianceId","==",allianceId)
-      .orderBy("date","desc").get();
-
-    const reportsDiv = document.getElementById("reportsTable");
-    const tbody = document.querySelector("#aggregateTable tbody");
-    reportsDiv.innerHTML = "";
-    tbody.innerHTML = "";
-    const aggregate = { units:{}, buildings:{}, plunder:{} };
-
-    snapshot.docs.forEach(doc => {
-      const r = doc.data();
-      reportsDiv.innerHTML += `<p><strong>${r.date.toDate().toLocaleString()}</strong>: ${r.reportText}</p>`;
-      const parsed = parseReport(r.reportText);
-      Object.entries(parsed.units).forEach(([k,v]) => aggregate.units[k]=(aggregate.units[k]||0)+v);
+  function renderCSVTable(data){
+    const div = document.getElementById("csvTable");
+    if(!data.length){ div.innerHTML = "Keine Daten"; return; }
+    const header = Object.keys(data[0]);
+    let html = "<table><tr>";
+    header.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr>";
+    data.forEach(row=>{
+      html += "<tr>";
+      header.forEach(h=>html += `<td>${row[h]}</td>`);
+      html += "</tr>";
     });
-
-    Object.entries(aggregate.units).forEach(([k,v])=>{
-      tbody.innerHTML += `<tr><td>${k}</td><td>${v}</td></tr>`;
-    });
+    html += "</table>";
+    div.innerHTML = html;
   }
-
 </script>
 
 </body>
