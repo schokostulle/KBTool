@@ -5,13 +5,12 @@
   <title>Allianz Admin Tool</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input, button, select { margin-bottom: 10px; padding: 5px; }
+    input, button { margin: 5px; padding: 5px; }
     table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; cursor: default; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
     th.sortable { cursor: pointer; background-color: #f3f3f3; }
     th.sortable:hover { background-color: #e2e2e2; }
     .hidden { display: none; }
-    #filterRow input { width: 150px; }
   </style>
 
   <!-- Firebase -->
@@ -24,7 +23,7 @@
 
 <!-- Admin Login -->
 <div id="loginDiv">
-  <input type="text" id="adminName" placeholder="Admin Name / Benutzername">
+  <input type="text" id="adminName" placeholder="Admin Name">
   <input type="password" id="adminPass" placeholder="Admin Passwort">
   <button id="loginBtn">Login als Admin</button>
 </div>
@@ -36,20 +35,29 @@
   <button id="uploadCsvBtn">CSV hochladen</button>
 
   <h3>Datenübersicht</h3>
+
   <div>
-    🔎 Filter:
+    🔎 <b>Filter</b>:
     <input type="text" id="filterSpieler" placeholder="Spielername">
-    <input type="text" id="filterInselgruppe" placeholder="Inselgruppe">
+    <input type="text" id="filterAllianz" placeholder="Allianz">
     <button id="clearFilterBtn">Filter löschen</button>
   </div>
 
-  <div id="csvTable">Keine Daten</div>
+  <div>
+    <h4>Erweiterte Filter</h4>
+    Oz (Liste): <input id="filterOz" placeholder="z.B. 1,3,4">
+    IG-Bereich: <input id="filterIGmin" type="number" placeholder="min"> – 
+                <input id="filterIGmax" type="number" placeholder="max">
+    Allianz(en): <input id="filterAllianzen" placeholder="AX, BETA, DELTA">
+    <button id="applyAdvancedBtn">Filtern</button>
+  </div>
 
+  <div id="csvTable">Keine Daten</div>
   <button id="logoutBtn">Logout</button>
 </div>
 
 <script>
-  // ===== Firebase Config =====
+  // ===== Firebase Setup (Platzhalter ersetzen) =====
   const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
   authDomain: "ik-tool.firebaseapp.com",
@@ -62,35 +70,39 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  const loginDiv = document.getElementById("loginDiv");
-  const adminPanel = document.getElementById("adminPanel");
-  const filterSpieler = document.getElementById("filterSpieler");
-  const filterInselgruppe = document.getElementById("filterInselgruppe");
-
+  // ===== Variablen =====
   const TABLE_HEADER = [
-    "Ozean", "Inselgruppe", "Insel", "Inselname",
-    "Spieler ID", "Spielername", "Allianz ID",
-    "Allianz Kürzel", "Allianzname", "Punkte"
+    { key: "Ozean", label: "Oz" },
+    { key: "Inselgruppe", label: "IG" },
+    { key: "Insel", label: "I" },
+    { key: "Inselname", label: "Inselname" },
+    { key: "Spieler ID", label: "Spieler ID" },
+    { key: "Spielername", label: "Spielername" },
+    { key: "Allianz ID", label: "Allianz ID" },
+    { key: "Allianz Kürzel", label: "Allianz Kürzel" },
+    { key: "Allianzname", label: "Allianzname" },
+    { key: "Punkte", label: "Punkte" }
   ];
 
-  let allData = []; // Zwischenspeicher der CSV-Daten
-  let sortOrder = {}; // Sortierstatus je Spalte
+  let allData = [];
+  let sortOrder = {};
 
-  // ===== Admin Login =====
+  const loginDiv = document.getElementById("loginDiv");
+  const adminPanel = document.getElementById("adminPanel");
+
+  // ===== Login =====
   document.getElementById("loginBtn").addEventListener("click", () => {
     const name = document.getElementById("adminName").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
-    
     if (name === "Admin" && pass === "passwort123") {
       loginDiv.classList.add("hidden");
       adminPanel.classList.remove("hidden");
       loadCSV();
     } else {
-      alert("Falscher Name oder Passwort");
+      alert("Falscher Name oder Passwort!");
     }
   });
 
-  // ===== Logout =====
   document.getElementById("logoutBtn").addEventListener("click", () => {
     adminPanel.classList.add("hidden");
     loginDiv.classList.remove("hidden");
@@ -105,12 +117,11 @@
     reader.onload = async e => {
       const text = e.target.result.trim();
       const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-      if (lines.length === 0) return alert("CSV ist leer!");
 
       const csvData = lines.map(line => {
         const values = line.split(";").map(v => v.replace(/^"|"$/g, '').trim());
         const row = {};
-        TABLE_HEADER.forEach((key, i) => { row[key] = values[i] || ""; });
+        TABLE_HEADER.forEach((col, i) => { row[col.key] = values[i] || ""; });
         return row;
       });
 
@@ -119,14 +130,13 @@
         uploadedAt: new Date()
       });
 
-      alert("CSV erfolgreich hochgeladen / ersetzt!");
       allData = csvData;
       renderCSVTable(allData);
     };
     reader.readAsText(file);
   });
 
-  // ===== CSV aus Firestore laden =====
+  // ===== CSV Laden =====
   async function loadCSV() {
     const doc = await db.collection("baseData").doc("csvFile").get();
     if (!doc.exists) {
@@ -137,7 +147,7 @@
     renderCSVTable(allData);
   }
 
-  // ===== Tabelle anzeigen =====
+  // ===== Tabelle rendern =====
   function renderCSVTable(data) {
     const div = document.getElementById("csvTable");
     if (!data || data.length === 0) {
@@ -147,13 +157,13 @@
 
     let html = "<table><thead><tr>";
     TABLE_HEADER.forEach(h => {
-      html += `<th class="sortable" onclick="sortTable('${h}')">${h}</th>`;
+      html += `<th class="sortable" onclick="sortTable('${h.key}')">${h.label}</th>`;
     });
     html += "</tr></thead><tbody>";
 
     data.forEach(row => {
       html += "<tr>";
-      TABLE_HEADER.forEach(h => html += `<td>${row[h]}</td>`);
+      TABLE_HEADER.forEach(h => html += `<td>${row[h.key]}</td>`);
       html += "</tr>";
     });
 
@@ -161,35 +171,64 @@
     div.innerHTML = html;
   }
 
-  // ===== Filtern =====
-  function applyFilters() {
-    const fSpieler = filterSpieler.value.toLowerCase();
-    const fInselgruppe = filterInselgruppe.value.toLowerCase();
+  // ===== Sortierung (intelligent für alle Spalten) =====
+  window.sortTable = function(columnKey) {
+    sortOrder[columnKey] = !sortOrder[columnKey];
+    const dir = sortOrder[columnKey] ? 1 : -1;
 
-    const filtered = allData.filter(row => {
-      const spielerMatch = fSpieler ? row["Spielername"].toLowerCase().includes(fSpieler) : true;
-      const gruppeMatch = fInselgruppe ? row["Inselgruppe"].toLowerCase().includes(fInselgruppe) : true;
-      return spielerMatch && gruppeMatch;
+    const isNumeric = allData.every(r => /^\d+$/.test(r[columnKey]) || r[columnKey] === "");
+
+    allData.sort((a, b) => {
+      const A = a[columnKey];
+      const B = b[columnKey];
+      if (isNumeric) {
+        return (parseInt(A || 0) - parseInt(B || 0)) * dir;
+      } else {
+        return A.localeCompare(B, 'de', { numeric: true }) * dir;
+      }
     });
 
-    renderCSVTable(filtered);
-  }
+    renderCSVTable(allData);
+  };
 
-  filterSpieler.addEventListener("input", applyFilters);
-  filterInselgruppe.addEventListener("input", applyFilters);
+  // ===== Filter =====
+  document.getElementById("filterSpieler").addEventListener("input", applyFilters);
+  document.getElementById("filterAllianz").addEventListener("input", applyFilters);
   document.getElementById("clearFilterBtn").addEventListener("click", () => {
-    filterSpieler.value = "";
-    filterInselgruppe.value = "";
+    document.getElementById("filterSpieler").value = "";
+    document.getElementById("filterAllianz").value = "";
     renderCSVTable(allData);
   });
 
-  // ===== Sortieren =====
-  window.sortTable = function (column) {
-    sortOrder[column] = !sortOrder[column];
-    const direction = sortOrder[column] ? 1 : -1;
-    allData.sort((a, b) => (a[column] > b[column] ? direction : -direction));
-    renderCSVTable(allData);
-  };
+  function applyFilters() {
+    const s = document.getElementById("filterSpieler").value.toLowerCase();
+    const a = document.getElementById("filterAllianz").value.toLowerCase();
+    const filtered = allData.filter(r =>
+      (!s || r["Spielername"].toLowerCase().includes(s)) &&
+      (!a || r["Allianzname"].toLowerCase().includes(a))
+    );
+    renderCSVTable(filtered);
+  }
+
+  // ===== Erweiterte Filter =====
+  document.getElementById("applyAdvancedBtn").addEventListener("click", () => {
+    const ozList = document.getElementById("filterOz").value.split(",").map(x => x.trim()).filter(x => x);
+    const igMin = parseInt(document.getElementById("filterIGmin").value || 0);
+    const igMax = parseInt(document.getElementById("filterIGmax").value || 9999);
+    const allies = document.getElementById("filterAllianzen").value.split(",").map(x => x.trim().toLowerCase()).filter(x => x);
+
+    const filtered = allData.filter(r => {
+      const ozOK = ozList.length === 0 || ozList.includes(r["Ozean"]);
+      const ig = parseInt(r["Inselgruppe"] || 0);
+      const igOK = ig >= igMin && ig <= igMax;
+      const allyOK = allies.length === 0 ||
+        allies.includes(r["Allianz Kürzel"].toLowerCase()) ||
+        allies.includes(r["Allianzname"].toLowerCase());
+      return ozOK && igOK && allyOK;
+    });
+
+    renderCSVTable(filtered);
+  });
 </script>
 
 </body>
