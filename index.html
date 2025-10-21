@@ -5,7 +5,7 @@
   <title>Allianz Admin Tool</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input, button { display: block; margin-bottom: 10px; width: 300px; }
+    input, button { display: block; margin-bottom: 10px; width: 350px; }
     table { border-collapse: collapse; margin-top: 20px; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
     .hidden { display: none; }
@@ -53,13 +53,19 @@
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
 
-  // ===== Admin Login mit einfachem Namen =====
+  // Vorgegebene Spaltenbezeichnungen für Anzeige
+  const TABLE_HEADER = [
+    "Ozean", "Inselgruppe", "Insel", "Inselname",
+    "Spieler ID", "Spielername", "Allianz ID",
+    "Allianz Kürzel", "Allianzname", "Punkte"
+  ];
+
+  // ===== Admin Login =====
   document.getElementById("loginBtn").addEventListener("click", () => {
     const name = document.getElementById("adminName").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
     
-    // Einfacher Testzugang
-    if(name === "Admin" && pass === "passwort123"){
+    if (name === "Admin" && pass === "passwort123") {
       loginDiv.classList.add("hidden");
       adminPanel.classList.remove("hidden");
       loadCSV();
@@ -74,51 +80,66 @@
     loginDiv.classList.remove("hidden");
   });
 
-  // ===== CSV Upload und Ersetzen =====
+  // ===== CSV Upload ohne Kopfzeile =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
-    if(!file) return alert("Bitte CSV auswählen!");
+    if (!file) return alert("Bitte CSV auswählen!");
+    
     const reader = new FileReader();
     reader.onload = async e => {
-      const text = e.target.result;
-      const lines = text.split("\n");
-      if(lines.length < 2) return alert("CSV leer oder nur Kopfzeile");
-      const header = lines.shift().split(/\t/);
+      const text = e.target.result.trim();
+      const lines = text.split("\n").map(l => l.trim()).filter(l => l);
+      if (lines.length === 0) return alert("CSV ist leer!");
+
+      // Jede Zeile splitten nach Tab oder Komma
       const csvData = lines.map(line => {
-        const values = line.split(/\t/);
+        const values = line.split(/\t|,/).map(v => v.trim());
         const row = {};
-        header.forEach((key,i)=>{ row[key.trim()] = values[i]?.trim()||""; });
+        TABLE_HEADER.forEach((key, i) => { row[key] = values[i] || ""; });
         return row;
       });
 
-      // Alte CSV ersetzen
-      await db.collection("baseData").doc("csvFile").set({ data: csvData, uploadedAt: new Date() });
+      // CSV in Firestore speichern (ersetzt alte CSV)
+      await db.collection("baseData").doc("csvFile").set({
+        data: csvData,
+        uploadedAt: new Date()
+      });
+
       alert("CSV erfolgreich hochgeladen / ersetzt!");
       renderCSVTable(csvData);
     };
     reader.readAsText(file);
   });
 
-  // ===== CSV Tabelle laden und anzeigen =====
-  async function loadCSV(){
+  // ===== CSV aus Firestore laden =====
+  async function loadCSV() {
     const doc = await db.collection("baseData").doc("csvFile").get();
-    if(!doc.exists){ document.getElementById("csvTable").innerHTML = "Keine Daten"; return; }
+    if (!doc.exists) {
+      document.getElementById("csvTable").innerHTML = "Keine Daten vorhanden.";
+      return;
+    }
     renderCSVTable(doc.data().data);
   }
 
-  function renderCSVTable(data){
+  // ===== Tabelle anzeigen =====
+  function renderCSVTable(data) {
     const div = document.getElementById("csvTable");
-    if(!data.length){ div.innerHTML = "Keine Daten"; return; }
-    const header = Object.keys(data[0]);
-    let html = "<table><tr>";
-    header.forEach(h => html += `<th>${h}</th>`);
-    html += "</tr>";
-    data.forEach(row=>{
+    if (!data || data.length === 0) {
+      div.innerHTML = "Keine Daten vorhanden.";
+      return;
+    }
+
+    let html = "<table><thead><tr>";
+    TABLE_HEADER.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr></thead><tbody>";
+
+    data.forEach(row => {
       html += "<tr>";
-      header.forEach(h=>html += `<td>${row[h]}</td>`);
+      TABLE_HEADER.forEach(h => html += `<td>${row[h]}</td>`);
       html += "</tr>";
     });
-    html += "</table>";
+
+    html += "</tbody></table>";
     div.innerHTML = html;
   }
 </script>
