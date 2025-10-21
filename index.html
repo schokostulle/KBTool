@@ -214,21 +214,56 @@ function toggleTheme(){
 /* ===================== Auth ===================== */
 function fakeEmail(n){ return n.toLowerCase().replace(/\s+/g,"_")+"@alliancesystem.fake"; }
 
-auth.onAuthStateChanged(async u=>{
-  if(!u) return;
-  const name = u.email.split("@")[0].replace(/_/g," ");
-  const doc = await usersRef.doc(name).get();
-  currentRole = doc.exists && doc.data().role ? doc.data().role : "member";
-  currentStatus = doc.exists && doc.data().status ? doc.data().status : "active"; // default
-  await usersRef.doc(name).set({ ingameName:name, role:currentRole, status:currentStatus }, { merge:true });
-  currentUser = { ...u, ingameName:name };
+/* ===================== Auth ===================== */
+function fakeEmail(n){
+  return n.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
+}
 
+// === Anmeldeüberwachung ===
+auth.onAuthStateChanged(async (u) => {
+  if (!u) return; // nicht angemeldet
+
+  const name = u.email.split("@")[0].replace(/_/g, " ");
+  const userDoc = usersRef.doc(name);
+  let snap = await userDoc.get();
+
+  // Benutzer-Datensatz anlegen, wenn nicht vorhanden
+  if (!snap.exists) {
+    await userDoc.set({
+      ingameName: name,
+      role: "member",
+      status: "pending",
+    });
+    snap = await userDoc.get();
+  }
+
+  const data = snap.data();
+  currentUser = { ...u, ingameName: name };
+  currentRole = data.role || "member";
+  currentStatus = data.status || "pending";
+
+  // === Sicherheitslogik für gesperrte/ausstehende Accounts ===
+  if (currentStatus === "pending") {
+    alert("Dein Account wurde noch nicht freigeschaltet. Bitte warte auf den Admin.");
+    await auth.signOut();
+    location.reload();
+    return;
+  }
+  if (currentStatus === "blocked") {
+    alert("Dein Account wurde gesperrt. Bitte wende dich an den Admin.");
+    await auth.signOut();
+    location.reload();
+    return;
+  }
+
+  // === Benutzer ist aktiv ===
   document.getElementById("loginView").classList.add("hidden");
   document.getElementById("appView").classList.remove("hidden");
   document.getElementById("userDisplay").textContent = name;
   document.getElementById("roleDisplay").textContent = currentRole;
-  document.getElementById("statusDisplay").textContent = (currentStatus==='blocked'?'GESPERRT':currentStatus==='pending'?'AUSSTEHEND':'AKTIV');
+  document.getElementById("statusDisplay").textContent = "AKTIV";
 
+  // Admin-spezifische Tabs einblenden
   if (currentRole === "admin") {
     document.getElementById("adminTab").classList.remove("hidden");
     document.getElementById("csvTab").classList.remove("hidden");
@@ -238,30 +273,53 @@ auth.onAuthStateChanged(async u=>{
     document.getElementById("csvTab").classList.add("hidden");
   }
 
+  // Daten laden
   await loadCSV();
   listenReservations();
   buildTableHeader();
   applyFiltersAndRender();
 });
 
-async function login(){
-  const n=document.getElementById("username").value.trim();
-  const p=document.getElementById("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort angeben!");
-  try{ await auth.signInWithEmailAndPassword(fakeEmail(n),p); }catch(e){ alert(e.message); }
+// === Login ===
+async function login() {
+  const n = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
+  try {
+    await auth.signInWithEmailAndPassword(fakeEmail(n), p);
+  } catch (e) {
+    alert(e.message);
+  }
 }
-async function register(){
-  const n=document.getElementById("username").value.trim();
-  const p=document.getElementById("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort angeben!");
-  const adminExists = !(await usersRef.where("role","==","admin").get()).empty;
-  try{
-    await auth.createUserWithEmailAndPassword(fakeEmail(n),p);
-    await usersRef.doc(n).set({ ingameName:n, role:adminExists?"member":"admin", status:"pending" });
-    alert(adminExists?"Registriert (wartet auf Freischaltung).":"Du bist der erste Admin!");
-  }catch(e){ alert(e.message); }
+
+// === Registrierung ===
+async function register() {
+  const n = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
+  const adminExists = !(await usersRef.where("role", "==", "admin").get()).empty;
+  try {
+    await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
+    await usersRef.doc(n).set({
+      ingameName: n,
+      role: adminExists ? "member" : "admin",
+      status: adminExists ? "pending" : "active",
+    });
+    alert(
+      adminExists
+        ? "Registriert. Dein Account wartet auf Freischaltung durch den Admin."
+        : "Du bist der erste Admin und automatisch freigeschaltet!"
+    );
+  } catch (e) {
+    alert(e.message);
+  }
 }
-async function logout(){ await auth.signOut(); location.reload(); }
+
+// === Logout ===
+async function logout() {
+  await auth.signOut();
+  location.reload();
+}
 
 /* ===================== CSV ===================== */
 async function uploadCSV(){
