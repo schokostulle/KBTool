@@ -1,214 +1,283 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Kampfbericht-Tool</title>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kampfbericht-Tool — Starter</title>
 <style>
-body{font-family:Arial,Helvetica,sans-serif;margin:20px;}
-input,button,textarea{margin:5px 0;padding:5px;font-size:1em;}
-table{border-collapse:collapse;width:100%;margin-bottom:20px;}
-th,td{border:1px solid #ccc;padding:4px;text-align:left;}
-.coord-section{border:1px solid #ccc;padding:10px;margin:10px 0;}
+  body{font-family:system-ui,Arial,Helvetica,sans-serif;margin:18px;background:#fafafa;color:#111}
+  h1,h2{margin:8px 0}
+  section{background:#fff;border-radius:8px;padding:12px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+  input,textarea,select,button{font:inherit;padding:8px;border:1px solid #ddd;border-radius:6px;margin:6px 0;width:100%;box-sizing:border-box}
+  .row{display:flex;gap:8px}
+  .col{flex:1}
+  button.small{width:auto;padding:6px 10px}
+  .muted{color:#666;font-size:0.9rem}
+  pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto}
+  .coord-section{border-left:4px solid #007bff;padding:8px;margin:8px 0;background:#f7fbff}
 </style>
 </head>
 <body>
-<h1>⚔️ Kampfbericht-Tool</h1>
+  <h1>⚔️ Kampfbericht-Tool — Starter</h1>
 
-<!-- Registrierung & Login -->
-<section id="registerSection">
-  <h2>🔑 Anmeldung / Registrierung</h2>
-  <input type="text" id="regName" placeholder="Name">
-  <input type="password" id="regPass" placeholder="Passwort">
-  <div>
-    <button id="registerBtn">Registrieren</button>
-    <button id="loginBtn">Login</button>
-  </div>
-  <p id="regStatus"></p>
-</section>
+  <!-- 1) Registrierung / Login -->
+  <section id="authSection">
+    <h2>🔑 Anmeldung / Registrierung</h2>
+    <div class="row">
+      <input id="username" type="text" placeholder="Ingame-Name" />
+      <input id="password" type="password" placeholder="Passwort" />
+    </div>
+    <div class="row">
+      <button id="btnRegister" class="small">Registrieren</button>
+      <button id="btnLogin" class="small">Login</button>
+      <button id="btnLogout" class="small" style="display:none">Logout</button>
+    </div>
+    <p id="authMessage" class="muted">Noch nicht angemeldet.</p>
+    <p class="muted">Hinweis: Dies ist das Starter-Modul — Auth ist vorerst lokal (localStorage). Später ersetzen wir es durch Firebase Auth.</p>
+  </section>
 
-<!-- Hauptbereich -->
-<section id="mainSection" style="display:none;">
-  <h2>Kampfbericht einfügen</h2>
-  <textarea id="reportText" rows="12" cols="80" placeholder="Bericht hier einfügen"></textarea><br>
-  <button id="analyzeBtn">Bericht speichern</button>
-  <h2>📊 Datenbank Übersicht</h2>
-  <div id="output"></div>
-</section>
+  <!-- 2) Host-Bereich (nur sichtbar nach Host-Login) -->
+  <section id="hostSection">
+    <h2>🛡 Hostbereich</h2>
+    <p class="muted">Host-Login (temporär, Passwort nicht im Code speichern!).</p>
+    <div class="row">
+      <input id="hostPass" type="password" placeholder="Host-Passwort" />
+      <button id="hostLoginBtn" class="small">Host Login</button>
+      <button id="hostLogoutBtn" class="small" style="display:none">Host Logout</button>
+    </div>
+    <div id="hostControls" style="display:none;margin-top:10px;">
+      <h3>Host-Kontrollen</h3>
+      <div class="row">
+        <input type="file" id="csvInput" accept=".csv" />
+        <button id="btnLoadCsv" class="small">CSV hochladen (Host)</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button id="btnClearAll" class="small" style="background:#ffdddd">Alles löschen (local)</button>
+        <p class="muted">Host kann später Benutzer freischalten/sperren (wenn Firebase integriert).</p>
+      </div>
+    </div>
+  </section>
 
-<!-- Hostbereich -->
-<section id="hostSection" style="margin-top:30px;">
-  <h2>🛡 Hostbereich</h2>
-  <input type="password" id="hostPass" placeholder="Host Passwort">
-  <button id="hostLoginBtn">Login</button>
+  <!-- 3) Kampfbericht einfügen (Copy & Paste) -->
+  <section id="reportSection" style="display:none">
+    <h2>📝 Kampfbericht einfügen</h2>
+    <textarea id="reportText" rows="10" placeholder="Füge hier den Kampfbericht per Copy & Paste ein..."></textarea>
+    <div class="row">
+      <button id="btnSaveReport" class="small">Bericht speichern (lokal)</button>
+      <button id="btnParsePreview" class="small">Vorschau parsen</button>
+    </div>
+    <div id="parsePreview"></div>
+  </section>
 
-  <div id="hostControls" style="display:none;">
-    <h3>Benutzerverwaltung</h3>
-    <div id="userList"></div>
-    <h3>CSV hochladen</h3>
-    <input type="file" id="csvFile" accept=".csv">
-    <button id="loadCsv">CSV laden</button>
-  </div>
-</section>
+  <!-- 4) Übersicht / Datenbank (lokal gespeichert) -->
+  <section id="dbSection" style="display:none">
+    <h2>📊 Datenbank (lokal)</h2>
+    <p class="muted">Dies ist die lokale Ansicht. Später ersetzen wir die Speicherung durch Firestore.</p>
+    <div id="dbOutput"></div>
+  </section>
 
 <script>
-document.addEventListener("DOMContentLoaded", async function(){
-console.log("Script gestartet");
+/* ===========================
+   Starter-Module: Übersicht
+   - Dieses Skript ist bewusst einfach gehalten und modular.
+   - Später ersetzen wir localStorage durch Firestore.
+   =========================== */
 
-const firebaseConfig={
-  apiKey:"AIzaSyAW5DmnfORhv5oY3azmpNJ4NHniYUGFnsQ",
-  authDomain:"ktool-aa787.firebaseapp.com",
-  projectId:"ktool-aa787",
-  storageBucket:"ktool-aa787.firebasestorage.app",
-  messagingSenderId:"528761267115",
-  appId:"1:528761267115:web:826f6284db2a2f784d28ee"
+// ---------- Utilities ----------
+const $ = id => document.getElementById(id);
+function safeParseJSON(s){ try{return JSON.parse(s);}catch(e){return null;} }
+
+// ---------- Storage (local for now) ----------
+const STORAGE = {
+  USERS_KEY: 'kb_users_v1',
+  REPORTS_KEY: 'kb_reports_v1',
+  CSV_KEY: 'kb_hostcsv_v1',
+
+  loadUsers(){ return safeParseJSON(localStorage.getItem(this.USERS_KEY)) || []; },
+  saveUsers(arr){ localStorage.setItem(this.USERS_KEY, JSON.stringify(arr)); },
+
+  loadReports(){ return safeParseJSON(localStorage.getItem(this.REPORTS_KEY)) || []; },
+  saveReports(arr){ localStorage.setItem(this.REPORTS_KEY, JSON.stringify(arr)); },
+
+  loadCSV(){ return safeParseJSON(localStorage.getItem(this.CSV_KEY)) || null; },
+  saveCSV(obj){ localStorage.setItem(this.CSV_KEY, JSON.stringify(obj)); },
+
+  clearAll(){ localStorage.removeItem(this.USERS_KEY); localStorage.removeItem(this.REPORTS_KEY); localStorage.removeItem(this.CSV_KEY); }
 };
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
 
-// -------- Testkonto sicherstellen --------
-const TEST_ACCOUNT={username:"Testspieler",password:"test123"};
-async function ensureTestAccount(){
-  const snap=await db.collection('users').where('username','==',TEST_ACCOUNT.username).get();
-  if(snap.empty){await db.collection('users').add({username:TEST_ACCOUNT.username,status:'pending',password:TEST_ACCOUNT.password});}
+// ---------- App state ----------
+let state = {
+  currentUser: null,
+  hostLoggedIn: false
+};
+
+// ---------- UI functions ----------
+function show(id){ $(id).style.display = ''; }
+function hide(id){ $(id).style.display = 'none'; }
+
+function refreshAuthUI(){
+  if(state.currentUser){
+    $('authMessage').innerText = `Angemeldet als: ${state.currentUser.username}`;
+    $('btnLogout').style.display = '';
+    $('btnRegister').style.display = 'none';
+    $('btnLogin').style.display = 'none';
+    show('reportSection'); show('dbSection');
+  } else {
+    $('authMessage').innerText = 'Noch nicht angemeldet.';
+    $('btnLogout').style.display = 'none';
+    $('btnRegister').style.display = '';
+    $('btnLogin').style.display = '';
+    hide('reportSection'); hide('dbSection');
+  }
+  // host controls
+  if(state.hostLoggedIn){
+    $('hostControls').style.display = '';
+    $('hostLogoutBtn').style.display = '';
+    $('hostLoginBtn').style.display = 'none';
+  } else {
+    $('hostControls').style.display = 'none';
+    $('hostLogoutBtn').style.display = 'none';
+    $('hostLoginBtn').style.display = '';
+  }
 }
-ensureTestAccount();
 
-// -------- Registrierung --------
-document.getElementById('registerBtn').addEventListener('click',async()=>{
-  const name=document.getElementById('regName').value.trim();
-  const pass=document.getElementById('regPass').value.trim();
-  if(!name||!pass)return alert("Name und Passwort ausfüllen!");
-  const snap=await db.collection('users').where('username','==',name).get();
-  if(!snap.empty)return alert("Benutzer existiert bereits");
-  await db.collection('users').add({username:name,password:pass,status:'pending'});
-  document.getElementById('regStatus').innerText="Registrierung erfolgreich. Host muss freischalten.";
-});
-
-// -------- Login --------
-document.getElementById('loginBtn').addEventListener('click',async()=>{
-  const name=document.getElementById('regName').value.trim();
-  const pass=document.getElementById('regPass').value.trim();
-  const snap=await db.collection('users').where('username','==',name).get();
-  if(snap.empty)return alert("Unbekannter Benutzer");
-  const doc=snap.docs[0];const data=doc.data();
-  if(data.status!=='active')return alert("Nicht freigeschaltet oder gesperrt");
-  if(data.password!==pass)return alert("Falsches Passwort");
-  window.currentUser={id:doc.id,username:name};
-  document.getElementById('registerSection').style.display='none';
-  document.getElementById('mainSection').style.display='block';
-  renderReports();
-});
-
-// -------- Host Login --------
-const HOST_PASSWORD="admin123";
-document.getElementById('hostLoginBtn').addEventListener('click',()=>{
-  const pass=document.getElementById('hostPass').value.trim();
-  if(pass!==HOST_PASSWORD)return alert("Falsches Host-Passwort");
-  document.getElementById('hostControls').style.display='block';
-  renderUsers();
-});
-
-// -------- Benutzerverwaltung --------
-async function renderUsers(){
-  const snap=await db.collection('users').get();
-  let html="<table><tr><th>Name</th><th>Status</th><th>Aktionen</th></tr>";
-  snap.forEach(doc=>{
-    const u=doc.data();
-    html+=`<tr><td>${u.username}</td><td>${u.status}</td>
-    <td>
-    <button onclick="updateUser('${doc.id}','active')">Freischalten</button>
-    <button onclick="updateUser('${doc.id}','blocked')">Sperren</button>
-    <button onclick="updateUser('${doc.id}','pending')">Ablehnen</button>
-    <button onclick="updateUser('${doc.id}','deleted')">Löschen</button>
-    </td></tr>`;
-  });
-  html+="</table>";
-  document.getElementById('userList').innerHTML=html;
+// ---------- Auth (local, very simple) ----------
+function registerLocal(username, password){
+  const users = STORAGE.loadUsers();
+  if(users.find(u=>u.username.toLowerCase()===username.toLowerCase())){ alert('Benutzer existiert bereits'); return; }
+  users.push({ username, password, status: 'pending' }); // host must activate later
+  STORAGE.saveUsers(users);
+  alert('Registrierung erfolgreich. Bitte vom Host freischalten lassen (status pending).');
 }
-window.updateUser=async(id,status)=>{await db.collection('users').doc(id).update({status});renderUsers();};
 
-// -------- CSV Upload --------
-document.getElementById('loadCsv').addEventListener('click',()=>{
-  const file=document.getElementById('csvFile').files[0];
-  if(!file)return alert("Bitte CSV wählen");
-  Papa.parse(file,{header:true,dynamicTyping:true,complete:async(res)=>{
-    await db.collection('csv').doc('hostData').set({data:res.data});
-    alert("CSV gespeichert");
+function loginLocal(username, password){
+  const users = STORAGE.loadUsers();
+  const u = users.find(x=>x.username===username);
+  if(!u){ alert('Benutzer nicht gefunden'); return; }
+  if(u.status!=='active'){ alert('Benutzer nicht freigeschaltet oder gesperrt'); return; }
+  if(u.password !== password){ alert('Falsches Passwort'); return; }
+  state.currentUser = { username }; refreshAuthUI(); renderDatabase();
+}
+function logoutLocal(){ state.currentUser = null; refreshAuthUI(); }
+
+// ---------- Host (very simple) ----------
+const HOST_SECRET = 'admin123'; // TODO: später nicht im Code lassen
+function hostLogin(pass){
+  if(pass === HOST_SECRET){ state.hostLoggedIn = true; refreshAuthUI(); alert('Host angemeldet'); renderUsersForHost(); }
+  else alert('Falsches Hostpasswort');
+}
+function hostLogout(){ state.hostLoggedIn = false; refreshAuthUI(); }
+
+// ---------- CSV load (host) ----------
+function handleCSVFileInput(file){
+  if(!file) return alert('Keine Datei');
+  Papa.parse(file, { header:true, dynamicTyping:true, skipEmptyLines:true, complete: (res)=>{
+    STORAGE.saveCSV(res.data);
+    alert('CSV lokal gespeichert (nur zum Test).');
+    renderDatabase();
   }});
-});
+}
 
-// -------- Bericht speichern --------
-document.getElementById('analyzeBtn').addEventListener('click',async()=>{
-  const text=document.getElementById('reportText').value.trim();
-  if(!text)return alert("Bericht einfügen!");
-  const r=parseReport(text);
-  r.userId=window.currentUser.id;r.username=window.currentUser.username;
-  await db.collection('reports').add(r);
-  document.getElementById('reportText').value='';
-});
-
-// -------- Bericht parser --------
+// ---------- Reports ----------
 function parseReport(text){
-  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const dateMatch=lines[0].match(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/);
-  const date=dateMatch?new Date(dateMatch[0].split('.').reverse().join('-')):new Date();
-  const coordMatch=lines.find(l=>l.includes('Einheiten des Angreifers')||l.includes('Einheiten des Verteidigers'))?.match(/\((\d+:\d+:\d+)\)/);
-  const coord=coordMatch?coordMatch[1]:'Unbekannt';
-  const unitPattern=/^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
-  let units={};
-  for(let line of lines){const m=line.match(unitPattern);if(m)units[m[1].trim()]={gesamt:+m[2],verluste:+m[3]};}
-  let buildings={},bStart=lines.indexOf('Gebäude');
-  if(bStart>=0){for(let i=bStart+1;i<lines.length;i++){if(lines[i]==='')break;const p=lines[i].split('\t');if(p.length>=2)buildings[p[0].trim()]=parseInt(p[1].replace(/\D/g,''))||1;}}
-  let researches={},rStart=lines.indexOf('Forschungen');
-  if(rStart>=0){for(let i=rStart+1;i<lines.length;i++){if(lines[i]==='')break;const p=lines[i].split('\t');if(p.length>=2)researches[p[0].trim()]=parseInt(p[1].replace(/\D/g,''))||1;}}
-  return {date,coord,units,buildings,researches};
+  // Sehr simpler Parser; wir werden diesen in Schritt 2 verbessern.
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const dateMatch = lines[0] && lines[0].match(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}/);
+  const date = dateMatch ? dateMatch[0] : new Date().toISOString();
+  const coordMatch = lines.find(l=>l.includes('Einheiten des Angreifers')||l.includes('Einheiten des Verteidigers'))?.match(/\((\d+:\d+:\d+)\)/);
+  const coord = coordMatch ? coordMatch[1] : 'Unbekannt';
+  // Suche Einheiten mit "Name  gesamt  verluste" (sehr heuristisch)
+  const unitPattern = /^([A-Za-zÄÖÜäöüß\s]+)\s+(\d+)\s+(\d+)$/;
+  let units = {};
+  for(const ln of lines){
+    const m = ln.match(unitPattern);
+    if(m){ units[m[1].trim()] = { gesamt: +m[2], verluste: +m[3] }; }
+  }
+  // Gebäude / Forschungen - TODO später strukturierter
+  const buildings = {}; const researches = {};
+  return { date, coord, units, buildings, researches, raw: text };
 }
 
-// -------- Anzeige --------
-function renderReports(){
-  db.collection('reports').orderBy('date','desc').onSnapshot(snap=>{
-    const arr=[];snap.forEach(d=>arr.push(d.data()));displayReports(arr);
-  });
+function saveReportLocal(parsed){
+  const reports = STORAGE.loadReports();
+  parsed.id = 'r_' + Date.now();
+  parsed.addedBy = state.currentUser ? state.currentUser.username : 'unknown';
+  reports.push(parsed);
+  STORAGE.saveReports(reports);
+  alert('Bericht lokal gespeichert.');
+  renderDatabase();
 }
-async function displayReports(reps){
-  const grouped={};
-  for(const r of reps){if(!grouped[r.coord])grouped[r.coord]=[];grouped[r.coord].push(r);}
-  let html="";
+
+// ---------- Host: list users (local) ----------
+function renderUsersForHost(){
+  const users = STORAGE.loadUsers();
+  let html = '<table><tr><th>Name</th><th>Status</th><th>Aktion</th></tr>';
+  for(const u of users){
+    html += `<tr><td>${u.username}</td><td>${u.status}</td><td>
+      <button onclick="hostSetUserStatus('${u.username}','active')">Freischalten</button>
+      <button onclick="hostSetUserStatus('${u.username}','blocked')">Sperren</button>
+      <button onclick="hostSetUserStatus('${u.username}','deleted')">Löschen</button>
+    </td></tr>`;
+  }
+  html += '</table>';
+  $('hostControls').querySelector('#userList')?.remove?.();
+  const div = document.createElement('div'); div.id='userList'; div.innerHTML = html;
+  $('hostControls').prepend(div);
+}
+window.hostSetUserStatus = function(username,status){
+  let users = STORAGE.loadUsers();
+  if(status==='deleted'){ users = users.filter(u=>u.username!==username); }
+  else{ users = users.map(u=> u.username===username ? {...u,status} : u ); }
+  STORAGE.saveUsers(users);
+  renderUsersForHost();
+  alert('Benutzerstatus aktualisiert');
+}
+
+// ---------- Database rendering (local aggregation example) ----------
+function renderDatabase(){
+  const reports = STORAGE.loadReports();
+  if(reports.length===0){ $('dbOutput').innerText = 'Keine Berichte vorhanden.'; return; }
+  // group by coord and simple compute: max(gesamt) and sum(verluste)
+  const grouped = {};
+  for(const r of reports){
+    grouped[r.coord] = grouped[r.coord] || [];
+    grouped[r.coord].push(r);
+  }
+  let out = '';
   for(const coord in grouped){
-    const repList=grouped[coord];html+=`<div class="coord-section"><h3>📍 ${coord}</h3>`;
-    // Einheiten
-    let max={},loss={};
-    for(const rep of repList){
+    const list = grouped[coord];
+    out += `<div class="coord-section"><h3>📍 ${coord} — ${list.length} Bericht(e)</h3>`;
+    // aggregate units
+    const unitMax = {}, unitLoss = {};
+    for(const rep of list){
       for(const u in rep.units){
-        if(!max[u]||rep.units[u].gesamt>max[u])max[u]=rep.units[u].gesamt;
-        loss[u]=(loss[u]||0)+rep.units[u].verluste;
+        unitMax[u] = Math.max(unitMax[u] || 0, rep.units[u].gesamt || 0);
+        unitLoss[u] = (unitLoss[u] || 0) + (rep.units[u].verluste || 0);
       }
     }
-    html+='<h4>💂 Einheiten</h4><table><tr><th>Einheit</th><th>Aktuell</th><th>Verluste</th></tr>';
-    for(const u in max){const cur=Math.max(max[u]-loss[u],0);html+=`<tr><td>${u}</td><td>${cur}</td><td>${loss[u]}</td></tr>`;}
-    html+='</table>';
-    // Gebäude
-    let build={};
-    for(const r of [...repList].reverse()){for(const b in r.buildings){build[b]=Math.max(r.buildings[b],build[b]||1);}}
-    html+='<h4>🏰 Gebäude</h4><table><tr><th>Gebäude</th><th>Stufe</th></tr>';
-    for(const b in build){html+=`<tr><td>${b}</td><td>${build[b]}</td></tr>`;}
-    html+='</table>';
-    // Forschungen
-    let res={};
-    for(const r of repList){for(const k in r.researches){res[k]=Math.max(r.researches[k]||0,res[k]||0);}}
-    html+='<h4>🔬 Forschungen</h4><table><tr><th>Forschung</th><th>Stufe</th></tr>';
-    for(const k in res){html+=`<tr><td>${k}</td><td>${res[k]}</td></tr>`;}
-    html+='</table></div>';
+    out += '<h4>Einheiten</h4><table><tr><th>Einheit</th><th>Aktuell</th><th>Verluste</th></tr>';
+    for(const u in unitMax){ const cur = Math.max(unitMax[u] - (unitLoss[u]||0), 0); out += `<tr><td>${u}</td><td>${cur}</td><td>${unitLoss[u]||0}</td></tr>`; }
+    out += '</table>';
+    out += '</div>';
   }
-  document.getElementById('output').innerHTML=html;
+  $('dbOutput').innerHTML = out;
 }
 
-}); // DOMContentLoaded Ende
+// ---------- Event wiring ----------
+$('btnRegister').addEventListener('click', ()=>registerLocal($('username').value.trim(), $('password').value.trim()));
+$('btnLogin').addEventListener('click', ()=>loginLocal($('username').value.trim(), $('password').value.trim()));
+$('btnLogout').addEventListener('click', ()=>{ logoutLocal(); });
+$('hostLoginBtn').addEventListener('click', ()=>hostLogin($('hostPass').value.trim()));
+$('hostLogoutBtn').addEventListener('click', ()=>hostLogout());
+$('btnLoadCsv').addEventListener('click', ()=>{ const f = $('csvInput').files[0]; handleCSVFileInput(f); });
+$('btnClearAll').addEventListener('click', ()=>{ if(confirm('Sicher löschen?')){ STORAGE.clearAll(); alert('localStorage gelöscht'); location.reload(); } });
+$('btnSaveReport').addEventListener('click', ()=>{ const txt = $('reportText').value.trim(); if(!txt) return alert('keine Daten'); const p = parseReport(txt); saveReportLocal(p); });
+$('btnParsePreview').addEventListener('click', ()=>{ const txt = $('reportText').value.trim(); if(!txt) return alert('keine Daten'); const p = parseReport(txt); $('parsePreview').innerHTML = '<pre>'+JSON.stringify(p,null,2)+'</pre>'; });
+
+// ---------- Init ----------
+refreshAuthUI();
+renderDatabase();
+
 </script>
 </body>
 </html>
