@@ -181,22 +181,21 @@ function fakeEmail(name){
     .replace(/[^\w]+/g,"_")
     + "@alliancesystem.fake";
 }
-auth.onAuthStateChanged((u) => console.log("Auth State Changed:", u));
-auth.onAuthError = (e) => console.error("Auth Error:", e);
-auth.onAuthStateChanged(async (u)=>{
-  if(!u) return;
+auth.onAuthStateChanged(async (u) => {
+  if (!u) return;
+  await new Promise(r => setTimeout(r, 300)); // 300ms warten
 
-  const name = u.email.split("@")[0].replace(/_/g," ");
+  const name = u.email.split("@")[0].replace(/_/g, " ");
   const userRef = usersRef.doc(name);
-  let snap = await userRef.get();
-  if(!snap.exists){ // Erstlogin → Datensatz anlegen
-    await userRef.set({ ingameName:name, role:"member", status:"pending" });
-    snap = await userRef.get();
+  let snap = await userRef.get({ source: "server" });
+  if (!snap.exists) {
+    await userRef.set({ ingameName: name, role: "member", status: "pending" });
+    snap = await userRef.get({ source: "server" });
   }
   const data = snap.data();
-  currentUser={...u, ingameName:name};
-  currentRole=data.role||"member";
-  currentStatus=data.status||"pending";
+  currentStatus = data.status || "pending";
+  ...
+});
 
   if(currentStatus==="pending"){ alert("Dein Account wurde noch nicht freigeschaltet."); await auth.signOut(); location.reload(); return; }
   if(currentStatus==="blocked"){ alert("Dein Account wurde gesperrt."); await auth.signOut(); location.reload(); return; }
