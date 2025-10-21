@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Inselverwaltung</title>
+<title>Allianz Dashboard – Auto-Admin Setup</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -102,6 +102,37 @@ function fakeEmail(name) {
   return name.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
 }
 
+/* ==== Prüfen, ob Admin existiert ==== */
+async function doesAdminExist() {
+  const snapshot = await usersRef.where("role", "==", "admin").get();
+  return !snapshot.empty;
+}
+
+/* ==== Registrierung ==== */
+async function register() {
+  const name = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
+  const email = fakeEmail(name);
+
+  try {
+    const isAdminExists = await doesAdminExist();
+    await auth.createUserWithEmailAndPassword(email, pass);
+    await usersRef.doc(name).set({
+      ingameName: name,
+      role: isAdminExists ? "member" : "admin" // Erster User wird Admin
+    });
+
+    if (!isAdminExists)
+      alert(`Willkommen ${name}! Du bist der erste Admin.`);
+    else
+      alert(`Registrierung erfolgreich als Mitglied!`);
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 /* ==== Auth Listener ==== */
 auth.onAuthStateChanged(async user => {
   if (user) {
@@ -129,22 +160,6 @@ auth.onAuthStateChanged(async user => {
     document.getElementById("mainDiv").classList.add("hidden");
   }
 });
-
-/* ==== Registrierung ==== */
-async function register() {
-  const name = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
-  const email = fakeEmail(name);
-
-  try {
-    await auth.createUserWithEmailAndPassword(email, pass);
-    await usersRef.doc(name).set({ role: "member", ingameName: name });
-    alert("Registrierung erfolgreich! Du kannst dich jetzt anmelden.");
-  } catch (err) {
-    alert(err.message);
-  }
-}
 
 /* ==== Login ==== */
 async function login() {
@@ -280,7 +295,7 @@ async function setRole(name, role) {
   await usersRef.doc(name).update({ role });
 }
 
-/* ==== Inselkarte mit Live-Aktualisierung ==== */
+/* ==== Inselkarte (Live) ==== */
 function drawMapLive(reservations = {}) {
   const canvas = document.getElementById("mapCanvas");
   if (!canvas) return;
