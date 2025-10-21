@@ -5,10 +5,13 @@
   <title>Allianz Admin Tool</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input, button { display: block; margin-bottom: 10px; width: 350px; }
+    input, button, select { margin-bottom: 10px; padding: 5px; }
     table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; cursor: default; }
+    th.sortable { cursor: pointer; background-color: #f3f3f3; }
+    th.sortable:hover { background-color: #e2e2e2; }
     .hidden { display: none; }
+    #filterRow input { width: 150px; }
   </style>
 
   <!-- Firebase -->
@@ -32,8 +35,16 @@
   <input type="file" id="csvUpload" accept=".csv">
   <button id="uploadCsvBtn">CSV hochladen</button>
 
-  <h3>Aktuelle CSV-Daten</h3>
+  <h3>Datenübersicht</h3>
+  <div>
+    🔎 Filter:
+    <input type="text" id="filterSpieler" placeholder="Spielername">
+    <input type="text" id="filterInselgruppe" placeholder="Inselgruppe">
+    <button id="clearFilterBtn">Filter löschen</button>
+  </div>
+
   <div id="csvTable">Keine Daten</div>
+
   <button id="logoutBtn">Logout</button>
 </div>
 
@@ -53,13 +64,17 @@
 
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
+  const filterSpieler = document.getElementById("filterSpieler");
+  const filterInselgruppe = document.getElementById("filterInselgruppe");
 
-  // Vorgegebene Spaltenbezeichnungen für Anzeige
   const TABLE_HEADER = [
     "Ozean", "Inselgruppe", "Insel", "Inselname",
     "Spieler ID", "Spielername", "Allianz ID",
     "Allianz Kürzel", "Allianzname", "Punkte"
   ];
+
+  let allData = []; // Zwischenspeicher der CSV-Daten
+  let sortOrder = {}; // Sortierstatus je Spalte
 
   // ===== Admin Login =====
   document.getElementById("loginBtn").addEventListener("click", () => {
@@ -81,7 +96,7 @@
     loginDiv.classList.remove("hidden");
   });
 
-  // ===== CSV Upload (Semikolon-getrennt) =====
+  // ===== CSV Upload =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
@@ -92,22 +107,21 @@
       const lines = text.split("\n").map(l => l.trim()).filter(l => l);
       if (lines.length === 0) return alert("CSV ist leer!");
 
-      // === CSV parsen (Semikolon als Trenner) ===
       const csvData = lines.map(line => {
-        const values = line.split(";").map(v => v.trim());
+        const values = line.split(";").map(v => v.replace(/^"|"$/g, '').trim());
         const row = {};
         TABLE_HEADER.forEach((key, i) => { row[key] = values[i] || ""; });
         return row;
       });
 
-      // In Firestore speichern (ersetzt alte CSV)
       await db.collection("baseData").doc("csvFile").set({
         data: csvData,
         uploadedAt: new Date()
       });
 
       alert("CSV erfolgreich hochgeladen / ersetzt!");
-      renderCSVTable(csvData);
+      allData = csvData;
+      renderCSVTable(allData);
     };
     reader.readAsText(file);
   });
@@ -119,7 +133,8 @@
       document.getElementById("csvTable").innerHTML = "Keine Daten vorhanden.";
       return;
     }
-    renderCSVTable(doc.data().data);
+    allData = doc.data().data;
+    renderCSVTable(allData);
   }
 
   // ===== Tabelle anzeigen =====
@@ -131,7 +146,9 @@
     }
 
     let html = "<table><thead><tr>";
-    TABLE_HEADER.forEach(h => html += `<th>${h}</th>`);
+    TABLE_HEADER.forEach(h => {
+      html += `<th class="sortable" onclick="sortTable('${h}')">${h}</th>`;
+    });
     html += "</tr></thead><tbody>";
 
     data.forEach(row => {
@@ -143,6 +160,36 @@
     html += "</tbody></table>";
     div.innerHTML = html;
   }
+
+  // ===== Filtern =====
+  function applyFilters() {
+    const fSpieler = filterSpieler.value.toLowerCase();
+    const fInselgruppe = filterInselgruppe.value.toLowerCase();
+
+    const filtered = allData.filter(row => {
+      const spielerMatch = fSpieler ? row["Spielername"].toLowerCase().includes(fSpieler) : true;
+      const gruppeMatch = fInselgruppe ? row["Inselgruppe"].toLowerCase().includes(fInselgruppe) : true;
+      return spielerMatch && gruppeMatch;
+    });
+
+    renderCSVTable(filtered);
+  }
+
+  filterSpieler.addEventListener("input", applyFilters);
+  filterInselgruppe.addEventListener("input", applyFilters);
+  document.getElementById("clearFilterBtn").addEventListener("click", () => {
+    filterSpieler.value = "";
+    filterInselgruppe.value = "";
+    renderCSVTable(allData);
+  });
+
+  // ===== Sortieren =====
+  window.sortTable = function (column) {
+    sortOrder[column] = !sortOrder[column];
+    const direction = sortOrder[column] ? 1 : -1;
+    allData.sort((a, b) => (a[column] > b[column] ? direction : -direction));
+    renderCSVTable(allData);
+  };
 </script>
 
 </body>
