@@ -1,171 +1,192 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Allianz Admin Tool</title>
-  <style>
-    :root {
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --border: #e5e7eb;
-      --text: #111827;
-      --text-muted: #6b7280;
-      --accent: #3b82f6;
-      --accent-hover: #2563eb;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --radius: 10px;
-    }
+<meta charset="UTF-8" />
+<title>Allianz Admin Tool</title>
+<style>
+  :root {
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --border: #d1d5db;
+    --text: #111827;
+    --text-muted: #374151;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --shadow: 0 3px 10px rgba(0,0,0,0.1);
+    --radius: 10px;
+  }
 
-    body {
-      font-family: "Inter", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 2rem;
-    }
+  body {
+    font-family: "Inter", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem;
+  }
 
-    h1 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-    }
+  h1 { font-size: 1.8rem; margin-bottom: 1.5rem; }
 
-    input, button {
-      font-family: inherit;
-      padding: 8px 10px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      margin-right: 8px;
-    }
+  input, button {
+    font-family: inherit;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-right: 8px;
+  }
 
-    button {
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-      border: none;
-      transition: background 0.2s ease;
-    }
-    button:hover { background: var(--accent-hover); }
+  button {
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s ease;
+  }
+  button:hover { background: var(--accent-hover); }
 
-    #adminPanel {
-      background: var(--card);
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
+  #adminPanel {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 1rem;
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
 
-    th, td {
-      border-bottom: 1px solid var(--border);
-      padding: 8px 10px;
-      text-align: left;
-      font-size: 14px;
-      position: relative;
-    }
+  th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 14px;
+    position: relative;
+  }
 
-    th {
-      background: #f3f4f6;
-      font-weight: 600;
-      user-select: none;
-      cursor: pointer;
-    }
-    th:hover { background: #e5e7eb; }
+  th {
+    background: #f3f4f6;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { background: #e5e7eb; }
 
-    tr:hover td { background: #f9fafb; }
+  tr:hover td { background: #f9fafb; }
 
-    .sort-icon, .filter-icon {
-      font-size: 12px;
-      margin-left: 6px;
-      color: var(--text-muted);
-      transition: color 0.2s;
-    }
-    .sorted .sort-icon { color: var(--accent); }
-    .filtered .filter-icon { color: var(--accent); }
+  .sort-icon, .filter-icon {
+    font-size: 12px;
+    margin-left: 6px;
+    color: #9ca3af;
+  }
+  .sorted .sort-icon,
+  .filtered .filter-icon { color: var(--accent); }
 
-    .filter-menu {
-      position: absolute;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      z-index: 100;
-      max-height: 300px;
-      overflow-y: auto;
-      animation: fadeIn 0.15s ease;
-      min-width: 160px;
-    }
+  /* --- Dropdown Menü --- */
+  .filter-menu {
+    position: absolute;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    z-index: 100;
+    max-height: 320px;
+    overflow-y: auto;
+    min-width: 180px;
+    animation: fadeIn 0.15s ease;
+  }
 
-    .filter-header {
-      position: sticky;
-      top: 0;
-      background: #f3f4f6;
-      padding: 4px;
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      z-index: 10;
-    }
+  .filter-header {
+    position: sticky;
+    top: 0;
+    background: #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+    padding: 5px;
+  }
 
-    .filter-header button {
-      flex: 1;
-      margin: 2px;
-      font-size: 13px;
-      padding: 4px 6px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: white;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .filter-header button:hover { background: var(--bg); }
+  .filter-header button {
+    flex: 1;
+    margin: 2px;
+    font-size: 13px;
+    padding: 5px 6px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  .filter-header button:hover {
+    background: var(--accent-hover);
+  }
 
-    .filter-menu label {
-      display: flex;
-      align-items: center;
-      padding: 3px 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--text-muted);
-    }
+  .filter-menu label {
+    display: flex;
+    align-items: center;
+    padding: 3px 6px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .filter-menu label:hover { background: #f3f4f6; }
+  .filter-menu input[type="checkbox"] {
+    accent-color: var(--accent);
+    margin-right: 8px;
+    transform: scale(1.1);
+  }
 
-    .filter-menu input[type="checkbox"] {
-      accent-color: var(--accent);
-      margin-right: 8px;
-      transform: scale(1.1);
-    }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
+  .hidden { display: none; }
 
-    .hidden { display: none; }
-  </style>
+  /* --- Statuszeile --- */
+  #tableStatus {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f3f4f6;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    margin-top: 1rem;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  #resetFiltersBtn {
+    background: #6b7280;
+  }
+  #resetFiltersBtn:hover {
+    background: #4b5563;
+  }
+</style>
 </head>
 <body>
 
 <h1>Allianz Admin Tool</h1>
 
 <div id="loginDiv">
-  <input type="text" id="adminName" placeholder="Admin Name">
-  <input type="password" id="adminPass" placeholder="Admin Passwort">
+  <input type="text" id="adminName" placeholder="Admin Name" />
+  <input type="password" id="adminPass" placeholder="Admin Passwort" />
   <button id="loginBtn">Login als Admin</button>
+  <button id="quickLoginBtn" style="background:#10b981;">Als Admin testen</button>
 </div>
 
 <div id="adminPanel" class="hidden">
   <h2>CSV hochladen / ersetzen</h2>
-  <input type="file" id="csvUpload" accept=".csv">
+  <input type="file" id="csvUpload" accept=".csv" />
   <button id="uploadCsvBtn">CSV hochladen</button>
+
+  <!-- 🟢 Statuszeile -->
+  <div id="tableStatus" class="hidden">
+    <span id="statusText">Keine Daten geladen</span>
+    <button id="resetFiltersBtn">Filter zurücksetzen</button>
+  </div>
 
   <h3>Datenübersicht</h3>
   <div id="csvTable">Keine Daten</div>
@@ -174,10 +195,8 @@
 </div>
 
 <script>
-  // ===== Firebase Setup (Platzhalter ersetzen, für Test leer lassen) =====
   const db = { collection: () => ({ doc: () => ({ set: async ()=>{}, get: async()=>({exists:false}) }) }) };
 
-  // ===== Tabellenstruktur =====
   const TABLE_HEADER = [
     { key: "Ozean", label: "Oz" },
     { key: "Inselgruppe", label: "IG" },
@@ -198,19 +217,25 @@
 
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
+  const statusBar = document.getElementById("tableStatus");
+  const statusText = document.getElementById("statusText");
 
   // ===== Login =====
   document.getElementById("loginBtn").addEventListener("click", () => {
     const name = document.getElementById("adminName").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
-    if (name === "Admin" && pass === "passwort123") {
-      loginDiv.classList.add("hidden");
-      adminPanel.classList.remove("hidden");
-      loadCSV();
-    } else {
-      alert("Falscher Name oder Passwort!");
-    }
+    if (name === "Admin" && pass === "passwort123") openAdmin();
+    else alert("Falscher Name oder Passwort!");
   });
+
+  document.getElementById("quickLoginBtn").addEventListener("click", openAdmin);
+
+  function openAdmin() {
+    loginDiv.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
+    loadCSV();
+  }
+
   document.getElementById("logoutBtn").addEventListener("click", () => {
     adminPanel.classList.add("hidden");
     loginDiv.classList.remove("hidden");
@@ -221,7 +246,7 @@
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
     const reader = new FileReader();
-    reader.onload = async e => {
+    reader.onload = e => {
       const text = e.target.result.trim();
       const lines = text.split("\n").map(l => l.trim()).filter(l => l);
       const csvData = lines.map(line => {
@@ -237,7 +262,7 @@
     reader.readAsText(file);
   });
 
-  async function loadCSV() {
+  function loadCSV() {
     filteredData = [...allData];
     renderCSVTable(filteredData);
   }
@@ -247,8 +272,12 @@
     const div = document.getElementById("csvTable");
     if (!data || data.length === 0) {
       div.innerHTML = "Keine Daten vorhanden.";
+      statusBar.classList.add("hidden");
       return;
     }
+
+    // Statuszeile aktualisieren
+    updateStatus();
 
     let html = "<table><thead><tr>";
     TABLE_HEADER.forEach(h => {
@@ -272,7 +301,14 @@
     div.innerHTML = html;
   }
 
-  // ===== Header-Klick (Filter oder Sortierung) =====
+  // ===== Status aktualisieren =====
+  function updateStatus() {
+    const activeCount = Object.keys(activeFilters).filter(k => activeFilters[k]?.length > 0).length;
+    statusBar.classList.remove("hidden");
+    statusText.textContent = `${activeCount} Filter aktiv — ${filteredData.length} Einträge sichtbar`;
+  }
+
+  // ===== Header Klick =====
   window.onHeaderClick = function(e, columnKey) {
     const th = e.currentTarget;
     closeAllMenus();
@@ -294,47 +330,43 @@
     renderCSVTable(filteredData);
   }
 
-  // ===== Filtermenü =====
+  // ===== Dropdown-Menü =====
   function showFilterMenu(th, columnKey) {
     const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
-      /^\d+$/.test(a) && /^\d+$/.test(b) ? parseInt(a)-parseInt(b) : a.localeCompare(b, 'de')
+      /^\d+$/.test(a)&&/^\d+$/.test(b)?parseInt(a)-parseInt(b):a.localeCompare(b,'de')
     );
 
     const menu = document.createElement("div");
     menu.className = "filter-menu";
     menu.addEventListener("click", ev => ev.stopPropagation());
 
-    // Header mit Buttons
     const header = document.createElement("div");
     header.className = "filter-header";
 
-    const allBtn = document.createElement("button");
-    allBtn.textContent = "Alle";
-    allBtn.addEventListener("click", () => {
-      const checkboxes = menu.querySelectorAll("input[type=checkbox]");
-      const allChecked = [...checkboxes].every(cb => cb.checked);
-      checkboxes.forEach(cb => cb.checked = !allChecked);
-    });
-
     const applyBtn = document.createElement("button");
     applyBtn.textContent = "Anwenden";
-    applyBtn.addEventListener("click", () => applyFilter(columnKey));
+    applyBtn.onclick = () => applyFilter(columnKey);
 
-    header.appendChild(applyBtn);
-    header.appendChild(allBtn);
-    menu.appendChild(header);
+    const allBtn = document.createElement("button");
+    allBtn.textContent = "Alle";
+    allBtn.onclick = () => {
+      const boxes = menu.querySelectorAll("input[type=checkbox]");
+      const allChecked = [...boxes].every(b => b.checked);
+      boxes.forEach(b => b.checked = !allChecked);
+    };
 
-    // Checkboxen
+    header.append(applyBtn, allBtn);
+    menu.append(header);
+
     values.forEach(v => {
-      const id = `${columnKey}_${v}`.replace(/\s+/g, "_");
+      const id = `${columnKey}_${v}`.replace(/\s+/g,"_");
       const checked = !activeFilters[columnKey] || activeFilters[columnKey].includes(v);
       const label = document.createElement("label");
-      label.innerHTML = `<input type="checkbox" id="${id}" value="${v}" ${checked ? "checked" : ""}> ${v}`;
-      menu.appendChild(label);
+      label.innerHTML = `<input type="checkbox" value="${v}" ${checked?"checked":""}> ${v}`;
+      menu.append(label);
     });
 
-    document.body.appendChild(menu);
-
+    document.body.append(menu);
     const rect = th.getBoundingClientRect();
     menu.style.top = (rect.bottom + window.scrollY) + "px";
     menu.style.left = (rect.left + window.scrollX) + "px";
@@ -346,20 +378,27 @@
     const menu = document.querySelector(".filter-menu");
     const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
     activeFilters[columnKey] = selected;
-    filteredData = allData.filter(row =>
-      Object.keys(activeFilters).every(key => {
-        const f = activeFilters[key];
-        return !f || f.includes(row[key]);
+    filteredData = allData.filter(r =>
+      Object.keys(activeFilters).every(k=>{
+        const f=activeFilters[k];
+        return !f || f.includes(r[k]);
       })
     );
     renderCSVTable(filteredData);
   };
 
-  // ===== Klick außerhalb = Menü schließen =====
+  // ===== Filter zurücksetzen =====
+  document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+    activeFilters = {};
+    filteredData = [...allData];
+    renderCSVTable(filteredData);
+  });
+
+  // ===== Klick außerhalb schließt Menü =====
   document.addEventListener("click", e => {
     if (!e.target.closest(".filter-menu") && !e.target.closest("th")) closeAllMenus();
   });
-  function closeAllMenus() { document.querySelectorAll(".filter-menu").forEach(m => m.remove()); }
+  function closeAllMenus(){ document.querySelectorAll(".filter-menu").forEach(m=>m.remove()); }
 </script>
 </body>
 </html>
