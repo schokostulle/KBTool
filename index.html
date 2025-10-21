@@ -2,51 +2,46 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Admin Tool</title>
+<title>Allianz Dashboard</title>
 <style>
   :root {
     --bg: #f9fafb;
     --card: #ffffff;
-    --border: #d1d5db;
+    --border: #e5e7eb;
     --text: #111827;
-    --text-muted: #374151;
     --accent: #2563eb;
-    --accent-hover: #1d4ed8;
-    --shadow: 0 3px 10px rgba(0,0,0,0.1);
-    --radius: 10px;
+    --shadow: 0 3px 8px rgba(0,0,0,0.08);
+    --radius: 12px;
   }
-
   body {
     font-family: "Inter", system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
     padding: 2rem;
   }
+  h1 { font-size: 1.8rem; margin-bottom: 1rem; }
+  h2 { font-size: 1.3rem; margin-bottom: .5rem; }
 
-  h1 { font-size: 1.8rem; margin-bottom: 1.5rem; }
+  .hidden { display: none; }
 
-  input, button {
-    font-family: inherit;
-    padding: 8px 10px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin-right: 8px;
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
   }
 
-  button {
-    background: var(--accent);
-    color: #fff;
-    cursor: pointer;
-    border: none;
-    transition: background 0.2s ease;
-  }
-  button:hover { background: var(--accent-hover); }
-
-  #adminPanel {
+  .card {
     background: var(--card);
-    padding: 1.5rem;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+    padding: 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .card:hover {
+    transform: scale(1.03);
+    background: #eef2ff;
   }
 
   table {
@@ -56,349 +51,128 @@
     border-radius: var(--radius);
     overflow: hidden;
   }
-
   th, td {
     border-bottom: 1px solid var(--border);
     padding: 8px 10px;
     text-align: left;
     font-size: 14px;
-    position: relative;
   }
-
-  th {
-    background: #f3f4f6;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-  }
-  th:hover { background: #e5e7eb; }
-
-  tr:hover td { background: #f9fafb; }
-
-  .sort-icon, .filter-icon {
-    font-size: 12px;
-    margin-left: 6px;
-    color: #9ca3af;
-  }
-  .sorted .sort-icon,
-  .filtered .filter-icon { color: var(--accent); }
-
-  /* --- Dropdown Menü --- */
-  .filter-menu {
-    position: absolute;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    z-index: 100;
-    max-height: 320px;
-    overflow-y: auto;
-    min-width: 180px;
-    animation: fadeIn 0.15s ease;
-  }
-
-  .filter-header {
-    position: sticky;
-    top: 0;
-    background: #f3f4f6;
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    z-index: 10;
-    padding: 5px;
-  }
-
-  .filter-header button {
-    flex: 1;
-    margin: 2px;
-    font-size: 13px;
-    padding: 5px 6px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--accent);
-    color: white;
-    cursor: pointer;
-  }
-  .filter-header button:hover {
-    background: var(--accent-hover);
-  }
-
-  .filter-menu label {
-    display: flex;
-    align-items: center;
-    padding: 3px 6px;
-    font-size: 14px;
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .filter-menu label:hover { background: #f3f4f6; }
-  .filter-menu input[type="checkbox"] {
-    accent-color: var(--accent);
-    margin-right: 8px;
-    transform: scale(1.1);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .hidden { display: none; }
-
-  /* --- Statuszeile --- */
-  #tableStatus {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f3f4f6;
-    padding: 8px 10px;
-    border-radius: var(--radius);
-    margin-top: 1rem;
-    font-size: 14px;
-    color: var(--text-muted);
-  }
-
-  #resetFiltersBtn {
-    background: #6b7280;
-  }
-  #resetFiltersBtn:hover {
-    background: #4b5563;
-  }
+  th { background: #f3f4f6; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<h1>Allianz Admin Tool</h1>
+<h1>Allianz Dashboard</h1>
 
-<div id="loginDiv">
-  <input type="text" id="adminName" placeholder="Admin Name" />
-  <input type="password" id="adminPass" placeholder="Admin Passwort" />
-  <button id="loginBtn">Login als Admin</button>
-  <button id="quickLoginBtn" style="background:#10b981;">Als Admin testen</button>
+<!-- Dashboard-Start -->
+<div id="dashboard">
+  <div class="dashboard">
+    <div class="card" onclick="showPage('csvView')">📜 Inselübersicht (CSV)</div>
+    <div class="card" onclick="showPage('statsView')">📈 Allianz-Statistik</div>
+    <div class="card" onclick="showPage('reportsView')">⚔️ Kampfberichte</div>
+  </div>
 </div>
 
-<div id="adminPanel" class="hidden">
-  <h2>CSV hochladen / ersetzen</h2>
-  <input type="file" id="csvUpload" accept=".csv" />
-  <button id="uploadCsvBtn">CSV hochladen</button>
+<!-- CSV-Anzeige (Platzhalter für spätere Integration deiner bisherigen Tabelle) -->
+<div id="csvView" class="hidden">
+  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>CSV Datenbasis</h2>
+  <p>Diese Tabelle basiert auf den eingelesenen CSV-Daten.</p>
+  <div id="csvTable">Noch keine CSV geladen.</div>
+</div>
 
-  <!-- 🟢 Statuszeile -->
-  <div id="tableStatus" class="hidden">
-    <span id="statusText">Keine Daten geladen</span>
-    <button id="resetFiltersBtn">Filter zurücksetzen</button>
-  </div>
+<!-- Neue Tabelle: Allianz-Statistik -->
+<div id="statsView" class="hidden">
+  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>Allianz-Statistik</h2>
+  <p>Basierend auf den Daten der CSV-Datei.</p>
+  <div id="statsTable"></div>
+</div>
 
-  <h3>Datenübersicht</h3>
-  <div id="csvTable">Keine Daten</div>
-
-  <button id="logoutBtn" style="margin-top:1rem;">Logout</button>
+<!-- Kampfberichte (späteres Modul) -->
+<div id="reportsView" class="hidden">
+  <button onclick="showPage('dashboard')">⬅️ Zurück</button>
+  <h2>Kampfberichte</h2>
+  <p>Wird später hinzugefügt.</p>
 </div>
 
 <script>
-  const db = { collection: () => ({ doc: () => ({ set: async ()=>{}, get: async()=>({exists:false}) }) }) };
+  let csvData = [];
 
-  const TABLE_HEADER = [
-    { key: "Ozean", label: "Oz" },
-    { key: "Inselgruppe", label: "IG" },
-    { key: "Insel", label: "I" },
-    { key: "Inselname", label: "Inselname" },
-    { key: "Spieler ID", label: "Spieler ID" },
-    { key: "Spielername", label: "Spielername" },
-    { key: "Allianz ID", label: "Allianz ID" },
-    { key: "Allianz Kürzel", label: "Allianz Kürzel" },
-    { key: "Allianzname", label: "Allianzname" },
-    { key: "Punkte", label: "Punkte" }
-  ];
-
-  let allData = [];
-  let filteredData = [];
-  let activeFilters = {};
-  let sortOrder = {};
-
-  const loginDiv = document.getElementById("loginDiv");
-  const adminPanel = document.getElementById("adminPanel");
-  const statusBar = document.getElementById("tableStatus");
-  const statusText = document.getElementById("statusText");
-
-  // ===== Login =====
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    const name = document.getElementById("adminName").value.trim();
-    const pass = document.getElementById("adminPass").value.trim();
-    if (name === "Admin" && pass === "passwort123") openAdmin();
-    else alert("Falscher Name oder Passwort!");
-  });
-
-  document.getElementById("quickLoginBtn").addEventListener("click", openAdmin);
-
-  function openAdmin() {
-    loginDiv.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-    loadCSV();
+  // Navigation zwischen "Seiten"
+  function showPage(page) {
+    document.querySelectorAll("#dashboard, #csvView, #statsView, #reportsView")
+      .forEach(el => el.classList.add("hidden"));
+    document.getElementById(page).classList.remove("hidden");
   }
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    adminPanel.classList.add("hidden");
-    loginDiv.classList.remove("hidden");
-  });
+  // Beispiel CSV laden (später via Firebase oder Upload)
+  const csvText = `1;12;1;Insel Alpha;123;Spieler1;11;TAG;Allianz Blau;1200
+1;12;2;Insel Beta;124;Spieler2;11;TAG;Allianz Blau;800
+1;13;3;Insel Gamma;125;Spieler3;12;ROT;Allianz Rot;950
+1;13;4;Insel Delta;126;Spieler4;12;ROT;Allianz Rot;1100
+1;14;5;Insel Epsilon;127;Spieler5;13;GRN;Allianz Grün;500`;
 
-  // ===== CSV Upload =====
-  document.getElementById("uploadCsvBtn").addEventListener("click", () => {
-    const file = document.getElementById("csvUpload").files[0];
-    if (!file) return alert("Bitte CSV auswählen!");
-    const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target.result.trim();
-      const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-      const csvData = lines.map(line => {
-        const values = line.split(";").map(v => v.replace(/^"|"$/g, '').trim());
-        const row = {};
-        TABLE_HEADER.forEach((col, i) => { row[col.key] = values[i] || ""; });
-        return row;
-      });
-      allData = csvData;
-      filteredData = [...allData];
-      renderCSVTable(filteredData);
+  csvData = csvText.split("\n").map(l => {
+    const v = l.split(";");
+    return {
+      "Ozean": v[0],
+      "Inselgruppe": v[1],
+      "Insel": v[2],
+      "Inselname": v[3],
+      "Spieler ID": v[4],
+      "Spielername": v[5],
+      "Allianz ID": v[6],
+      "Allianz Kürzel": v[7],
+      "Allianzname": v[8],
+      "Punkte": parseInt(v[9])
     };
-    reader.readAsText(file);
   });
 
-  function loadCSV() {
-    filteredData = [...allData];
-    renderCSVTable(filteredData);
-  }
+  renderCSVTable();
+  renderStatsTable();
 
-  // ===== Tabelle rendern =====
-  function renderCSVTable(data) {
+  // CSV Tabelle rendern
+  function renderCSVTable() {
     const div = document.getElementById("csvTable");
-    if (!data || data.length === 0) {
-      div.innerHTML = "Keine Daten vorhanden.";
-      statusBar.classList.add("hidden");
-      return;
-    }
-
-    // Statuszeile aktualisieren
-    updateStatus();
-
-    let html = "<table><thead><tr>";
-    TABLE_HEADER.forEach(h => {
-      const sortClass = sortOrder[h.key] ? "sorted" : "";
-      const filterClass = activeFilters[h.key] ? "filtered" : "";
-      html += `<th class="${sortClass} ${filterClass}" onclick="onHeaderClick(event, '${h.key}')">
-                ${h.label}
-                <span class='sort-icon'>⇅</span>
-                <span class='filter-icon'>⚲</span>
-              </th>`;
+    let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Inselname</th><th>Spieler</th><th>Allianz</th><th>Punkte</th></tr></thead><tbody>";
+    csvData.forEach(r => {
+      html += `<tr><td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td><td>${r.Inselname}</td><td>${r["Spielername"]}</td><td>${r["Allianzname"]}</td><td>${r.Punkte}</td></tr>`;
     });
-    html += "</tr></thead><tbody>";
-
-    data.forEach(row => {
-      html += "<tr>";
-      TABLE_HEADER.forEach(h => html += `<td>${row[h.key]}</td>`);
-      html += "</tr>";
-    });
-
     html += "</tbody></table>";
     div.innerHTML = html;
   }
 
-  // ===== Status aktualisieren =====
-  function updateStatus() {
-    const activeCount = Object.keys(activeFilters).filter(k => activeFilters[k]?.length > 0).length;
-    statusBar.classList.remove("hidden");
-    statusText.textContent = `${activeCount} Filter aktiv — ${filteredData.length} Einträge sichtbar`;
-  }
+  // Allianzstatistik aus CSV berechnen
+  function renderStatsTable() {
+    const div = document.getElementById("statsTable");
 
-  // ===== Header Klick =====
-  window.onHeaderClick = function(e, columnKey) {
-    const th = e.currentTarget;
-    closeAllMenus();
-    if (e.shiftKey) { sortTable(columnKey); return; }
-    showFilterMenu(th, columnKey);
-  };
-
-  // ===== Sortierung =====
-  function sortTable(columnKey) {
-    sortOrder[columnKey] = !sortOrder[columnKey];
-    const dir = sortOrder[columnKey] ? 1 : -1;
-    const isNumeric = allData.every(r => /^\d+$/.test(r[columnKey]) || r[columnKey] === "");
-    filteredData.sort((a, b) => {
-      const A = a[columnKey];
-      const B = b[columnKey];
-      if (isNumeric) return (parseInt(A || 0) - parseInt(B || 0)) * dir;
-      return A.localeCompare(B, 'de', { numeric: true }) * dir;
-    });
-    renderCSVTable(filteredData);
-  }
-
-  // ===== Dropdown-Menü =====
-  function showFilterMenu(th, columnKey) {
-    const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
-      /^\d+$/.test(a)&&/^\d+$/.test(b)?parseInt(a)-parseInt(b):a.localeCompare(b,'de')
-    );
-
-    const menu = document.createElement("div");
-    menu.className = "filter-menu";
-    menu.addEventListener("click", ev => ev.stopPropagation());
-
-    const header = document.createElement("div");
-    header.className = "filter-header";
-
-    const applyBtn = document.createElement("button");
-    applyBtn.textContent = "Anwenden";
-    applyBtn.onclick = () => applyFilter(columnKey);
-
-    const allBtn = document.createElement("button");
-    allBtn.textContent = "Alle";
-    allBtn.onclick = () => {
-      const boxes = menu.querySelectorAll("input[type=checkbox]");
-      const allChecked = [...boxes].every(b => b.checked);
-      boxes.forEach(b => b.checked = !allChecked);
-    };
-
-    header.append(applyBtn, allBtn);
-    menu.append(header);
-
-    values.forEach(v => {
-      const id = `${columnKey}_${v}`.replace(/\s+/g,"_");
-      const checked = !activeFilters[columnKey] || activeFilters[columnKey].includes(v);
-      const label = document.createElement("label");
-      label.innerHTML = `<input type="checkbox" value="${v}" ${checked?"checked":""}> ${v}`;
-      menu.append(label);
+    // Daten aggregieren pro Allianz
+    const allianzMap = {};
+    csvData.forEach(r => {
+      const a = r["Allianzname"];
+      if (!allianzMap[a]) allianzMap[a] = { allianz: a, punkte: 0, inseln: 0, spieler: new Set() };
+      allianzMap[a].punkte += r.Punkte;
+      allianzMap[a].inseln += 1;
+      allianzMap[a].spieler.add(r["Spielername"]);
     });
 
-    document.body.append(menu);
-    const rect = th.getBoundingClientRect();
-    menu.style.top = (rect.bottom + window.scrollY) + "px";
-    menu.style.left = (rect.left + window.scrollX) + "px";
-    menu.style.minWidth = rect.width + "px";
+    const stats = Object.values(allianzMap).map(a => ({
+      Allianz: a.allianz,
+      Inseln: a.inseln,
+      Spieler: a.spieler.size,
+      Gesamtpunkte: a.punkte,
+      Durchschnitt: Math.round(a.punkte / a.spieler.size)
+    }));
+
+    // Tabelle
+    let html = "<table><thead><tr><th>Allianz</th><th>Inseln</th><th>Spieler</th><th>Gesamtpunkte</th><th>Ø Punkte / Spieler</th></tr></thead><tbody>";
+    stats.forEach(s => {
+      html += `<tr><td>${s.Allianz}</td><td>${s.Inseln}</td><td>${s.Spieler}</td><td>${s.Gesamtpunkte}</td><td>${s.Durchschnitt}</td></tr>`;
+    });
+    html += "</tbody></table>";
+    div.innerHTML = html;
   }
-
-  // ===== Filter anwenden =====
-  window.applyFilter = function(columnKey) {
-    const menu = document.querySelector(".filter-menu");
-    const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
-    activeFilters[columnKey] = selected;
-    filteredData = allData.filter(r =>
-      Object.keys(activeFilters).every(k=>{
-        const f=activeFilters[k];
-        return !f || f.includes(r[k]);
-      })
-    );
-    renderCSVTable(filteredData);
-  };
-
-  // ===== Filter zurücksetzen =====
-  document.getElementById("resetFiltersBtn").addEventListener("click", () => {
-    activeFilters = {};
-    filteredData = [...allData];
-    renderCSVTable(filteredData);
-  });
-
-  // ===== Klick außerhalb schließt Menü =====
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".filter-menu") && !e.target.closest("th")) closeAllMenus();
-  });
-  function closeAllMenus(){ document.querySelectorAll(".filter-menu").forEach(m=>m.remove()); }
 </script>
 </body>
 </html>
