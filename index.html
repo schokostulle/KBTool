@@ -2,10 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – CSV Upload</title>
+<title>🏝 Allianz Dashboard</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
 <style>
   body { font-family: "Inter", sans-serif; background: #f9fafb; color: #111827; padding: 2rem; }
   h1 { font-size: 1.8rem; margin-bottom: 1rem; }
@@ -28,7 +29,7 @@
 
 <h1>🏝 Allianz Dashboard</h1>
 
-<!-- === LOGIN === -->
+<!-- LOGIN -->
 <div id="loginDiv" class="card">
   <h2>Login / Registrierung</h2>
   <input type="text" id="username" placeholder="Ingame-Name" /><br>
@@ -37,10 +38,11 @@
   <button onclick="register()">Registrieren</button>
 </div>
 
-<!-- === MAIN === -->
+<!-- MAIN -->
 <div id="mainDiv" class="hidden">
   <p>Angemeldet als <b id="userDisplay"></b> (<span id="roleDisplay"></span>)</p>
   <div class="nav">
+    <button onclick="showPage('dashboardView')">🏠 Dashboard</button>
     <button onclick="showPage('reservationsView')">🏝 Inselübersicht</button>
     <button onclick="showPage('mapView')">🗺 Inselkarte</button>
     <button id="adminTab" class="hidden" onclick="showPage('adminView')">⚙️ Rollenverwaltung</button>
@@ -48,26 +50,33 @@
     <button onclick="logout()">🚪 Abmelden</button>
   </div>
 
-  <!-- === Inselübersicht === -->
-  <div id="reservationsView">
+  <!-- Dashboard -->
+  <div id="dashboardView">
+    <h2>🏠 Allianz Dashboard</h2>
+    <p>Willkommen! Wähle oben einen Bereich aus.</p>
+  </div>
+
+  <!-- Inselübersicht -->
+  <div id="reservationsView" class="hidden">
+    <h2>🏝 Inselübersicht</h2>
     <div id="inselTable"></div>
   </div>
 
-  <!-- === Inselkarte === -->
+  <!-- Karte -->
   <div id="mapView" class="hidden">
     <h2>🗺 Inselkarte</h2>
     <canvas id="mapCanvas" width="800" height="600"></canvas>
   </div>
 
-  <!-- === Rollenverwaltung === -->
+  <!-- Rollenverwaltung -->
   <div id="adminView" class="hidden">
     <h2>⚙️ Rollenverwaltung</h2>
     <div id="userTable"></div>
   </div>
 
-  <!-- === CSV Upload === -->
+  <!-- CSV Upload -->
   <div id="csvView" class="hidden">
-    <h2>📤 CSV-Datei hochladen (nur Admin)</h2>
+    <h2>📤 CSV-Datei hochladen</h2>
     <input type="file" id="csvInput" accept=".csv" /><br>
     <button onclick="uploadCSV()">CSV Hochladen & Ersetzen</button>
     <p id="csvStatus"></p>
@@ -75,7 +84,7 @@
 </div>
 
 <script>
-/* ==== Firebase Setup ==== */
+/* === Firebase Setup === */
 const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
   authDomain: "ik-tool.firebaseapp.com",
@@ -89,78 +98,40 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const usersRef = db.collection("users");
-const reservationsRef = db.collection("reservations");
 const islandsRef = db.collection("islands");
+const reservationsRef = db.collection("reservations");
 
 let currentUser = null;
 let currentRole = "member";
 let csvData = [];
 
-/* ==== Fake-Mail Helper ==== */
+/* === Hilfsfunktionen === */
 function fakeEmail(name) {
   return name.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
 }
-
-/* ==== Prüfen, ob Admin existiert ==== */
 async function doesAdminExist() {
   const snapshot = await usersRef.where("role", "==", "admin").get();
   return !snapshot.empty;
 }
 
-/* ==== Registrierung ==== */
+/* === Registrierung === */
 async function register() {
   const name = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value.trim();
   if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
   const email = fakeEmail(name);
 
-  const isAdminExists = await doesAdminExist();
   try {
+    const adminExists = await doesAdminExist();
     await auth.createUserWithEmailAndPassword(email, pass);
-  } catch(e) {
-    // falls der Nutzer schon existiert, einfach einloggen
-    try { await auth.signInWithEmailAndPassword(email, pass); } catch(err) { alert(err.message); return; }
+    await usersRef.doc(name).set({ ingameName: name, role: adminExists ? "member" : "admin" });
+    alert(adminExists ? "Registriert als Mitglied." : "Du bist der erste Admin!");
+  } catch (err) {
+    alert("Fehler bei Registrierung: " + err.message);
   }
-
-  // Wenn kein Admin existiert, Rolle anpassen oder neu setzen
-  const role = isAdminExists ? "member" : "admin";
-  await usersRef.doc(name).set({ ingameName: name, role }, { merge: true });
-
-  alert(role === "admin" ? "Du bist jetzt der erste Admin!" : "Registrierung erfolgreich.");
 }
 
-/* ==== Auth Listener ==== */
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    const ingameName = user.email.split("@")[0].replace(/_/g, " ");
-    const userDoc = await usersRef.doc(ingameName).get();
-    currentUser = { ...user, ingameName };
-    currentRole = userDoc.exists ? userDoc.data().role : "member";
-
-    document.getElementById("loginDiv").classList.add("hidden");
-    document.getElementById("mainDiv").classList.remove("hidden");
-    document.getElementById("userDisplay").textContent = ingameName;
-    document.getElementById("roleDisplay").textContent = currentRole;
-
-    if (currentRole === "admin") {
-      document.getElementById("adminTab").classList.remove("hidden");
-      document.getElementById("csvTab").classList.remove("hidden");
-      listenUsers();
-    } else {
-      document.getElementById("adminTab").classList.add("hidden");
-      document.getElementById("csvTab").classList.add("hidden");
-    }
-
-    listenReservations();
-    await loadCSVFromFirestore();
-    showPage("reservationsView");
-  } else {
-    document.getElementById("loginDiv").classList.remove("hidden");
-    document.getElementById("mainDiv").classList.add("hidden");
-  }
-});
-
-/* ==== Login ==== */
+/* === Login === */
 async function login() {
   const name = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value.trim();
@@ -172,17 +143,54 @@ async function login() {
     alert("Login fehlgeschlagen: " + err.message);
   }
 }
-async function logout() { await auth.signOut(); }
 
-/* ==== Navigation ==== */
+/* === Auth State Listener === */
+auth.onAuthStateChanged(async user => {
+  if (!user) return;
+  const ingameName = user.email.split("@")[0].replace(/_/g, " ");
+  const userDoc = await usersRef.doc(ingameName).get();
+
+  let role = "member";
+  if (userDoc.exists && userDoc.data().role) role = userDoc.data().role;
+  else await usersRef.doc(ingameName).set({ ingameName, role }, { merge: true });
+
+  currentUser = { ...user, ingameName };
+  currentRole = role;
+
+  document.getElementById("loginDiv").classList.add("hidden");
+  document.getElementById("mainDiv").classList.remove("hidden");
+  document.getElementById("userDisplay").textContent = ingameName;
+  document.getElementById("roleDisplay").textContent = role;
+
+  if (role === "admin") {
+    document.getElementById("adminTab").classList.remove("hidden");
+    document.getElementById("csvTab").classList.remove("hidden");
+    listenUsers();
+  } else {
+    document.getElementById("adminTab").classList.add("hidden");
+    document.getElementById("csvTab").classList.add("hidden");
+  }
+
+  listenReservations();
+  await loadCSVFromFirestore();
+});
+
+/* === Logout === */
+async function logout() {
+  await auth.signOut();
+  document.getElementById("mainDiv").classList.add("hidden");
+  document.getElementById("loginDiv").classList.remove("hidden");
+}
+
+/* === Seitenanzeige === */
 function showPage(id) {
-  ["reservationsView","mapView","adminView","csvView"].forEach(p =>
-    document.getElementById(p).classList.add("hidden"));
+  ["dashboardView", "reservationsView", "mapView", "adminView", "csvView"]
+    .forEach(p => document.getElementById(p).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   if (id === "mapView") drawMapLive();
 }
 
-/* ==== CSV Upload ==== */
+/* === CSV Upload === */
 async function uploadCSV() {
   if (currentRole !== "admin") return alert("Nur Admin darf CSV hochladen!");
   const file = document.getElementById("csvInput").files[0];
@@ -192,43 +200,34 @@ async function uploadCSV() {
   const text = await file.text();
   const rows = text.trim().split("\n").map(r => r.split(";"));
   csvData = rows.map(cols => ({
-    Ozean: cols[0],
-    Inselgruppe: cols[1],
-    Insel: cols[2],
-    Inselname: cols[3],
-    SpielerID: cols[4],
-    Spielername: cols[5],
-    AllianzID: cols[6],
-    AllianzKuerzel: cols[7],
-    Allianzname: cols[8],
-    Punkte: cols[9]
+    Ozean: cols[0], Inselgruppe: cols[1], Insel: cols[2], Inselname: cols[3],
+    SpielerID: cols[4], Spielername: cols[5], AllianzID: cols[6],
+    AllianzKuerzel: cols[7], Allianzname: cols[8], Punkte: cols[9]
   }));
 
-  // Alte Daten löschen
-  const old = await islandsRef.get();
   const batch = db.batch();
+  const old = await islandsRef.get();
   old.forEach(doc => batch.delete(doc.ref));
   await batch.commit();
 
-  // Neue Daten speichern
   const batch2 = db.batch();
   csvData.forEach((r, i) => {
     const docRef = islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`);
     batch2.set(docRef, r);
   });
   await batch2.commit();
-
   document.getElementById("csvStatus").textContent = "CSV erfolgreich hochgeladen!";
   await loadCSVFromFirestore();
 }
 
-/* ==== CSV Laden ==== */
+/* === CSV Laden === */
 async function loadCSVFromFirestore() {
   const snapshot = await islandsRef.get();
   csvData = snapshot.docs.map(doc => doc.data());
+  renderInselTable({});
 }
 
-/* ==== Echtzeit Reservierungen ==== */
+/* === Reservierungen === */
 function listenReservations() {
   reservationsRef.onSnapshot(snapshot => {
     const reservations = {};
@@ -239,9 +238,11 @@ function listenReservations() {
   });
 }
 
-/* ==== Inselübersicht ==== */
+/* === Inselübersicht === */
 function renderInselTable(reservations) {
   const div = document.getElementById("inselTable");
+  if (!csvData.length) { div.innerHTML = "<p>Keine Inseln geladen.</p>"; return; }
+
   let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
   csvData.forEach(r => {
     const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
@@ -256,7 +257,7 @@ function renderInselTable(reservations) {
   div.innerHTML = html;
 }
 
-/* ==== Reservierungen ==== */
+/* === Reservierungsaktionen === */
 function renderButton(key, res) {
   if (!currentUser) return "<button disabled>Login nötig</button>";
   if (!res || res.status === "denied") return `<button onclick="reserve('${key}')">Reservieren</button>`;
@@ -277,7 +278,7 @@ async function reserve(key) { await reservationsRef.doc(key).set({ user: current
 async function approve(key) { if (currentRole!=="admin")return; await reservationsRef.doc(key).update({ status: "approved" }); }
 async function deny(key) { if (currentRole!=="admin")return; await reservationsRef.doc(key).update({ status: "denied" }); }
 
-/* ==== Rollenverwaltung ==== */
+/* === Rollenverwaltung === */
 function listenUsers() {
   usersRef.onSnapshot(snapshot => {
     const users = [];
@@ -301,21 +302,24 @@ function renderRoleButtons(u) {
 }
 async function setRole(name, role) { await usersRef.doc(name).update({ role }); }
 
-/* ==== Inselkarte ==== */
+/* === Inselkarte === */
 function drawMapLive(reservations = {}) {
   const canvas = document.getElementById("mapCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   csvData.forEach(r => {
     const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
     const res = reservations[key];
     const x = (parseInt(r.Inselgruppe) * 6) % 780 + 10;
     const y = (parseInt(r.Ozean) * 100) % 580 + 20;
+
     let color = "#ccc";
     if (res?.status === "requested") color = "#facc15";
     else if (res?.status === "approved") color = "#22c55e";
     else if (res?.status === "denied") color = "#ef4444";
+
     ctx.beginPath();
     ctx.arc(x, y, 6, 0, Math.PI * 2);
     ctx.fillStyle = color;
@@ -323,10 +327,12 @@ function drawMapLive(reservations = {}) {
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 0.5;
     ctx.stroke();
+
     ctx.font = "10px Inter";
     ctx.fillStyle = "#111";
     ctx.fillText(r.Spielername || "", x + 8, y + 4);
   });
+
   ctx.font = "13px Inter";
   ctx.fillStyle = "#000";
   ctx.fillText("🟢 bestätigt  🟡 reserviert  🔴 abgelehnt  ⚪ frei", 10, 590);
