@@ -172,7 +172,14 @@ function toggleTheme(){
 }
 
 /* AUTH */
-function fakeEmail(n){return n.toLowerCase().replace(/\s+/g,"_")+"@alliancesystem.fake";}
+function fakeEmail(name) {
+  // alles in Kleinbuchstaben, Leerzeichen, Sonderzeichen und Umlaute entfernen
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w]+/g, "_")   // nur Buchstaben/Zahlen/Unterstrich behalten
+    + "@alliancesystem.fake";
+}
 
 auth.onAuthStateChanged(async(u)=>{
   if(!u)return;
