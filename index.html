@@ -1,75 +1,157 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Kampfbericht-Tool — CSV-Viewer (Grundgerüst)</title>
-
-<!-- PapaParse für CSV -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kampftool – Prototyp</title>
 <style>
-  body{font-family:system-ui,Arial,Helvetica,sans-serif;margin:18px;background:#fafafa;color:#111}
-  h1,h2{margin:8px 0}
-  section{background:#fff;border-radius:8px;padding:12px;margin:12px 0;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
-  input,textarea,select,button{font:inherit;padding:8px;border:1px solid #ddd;border-radius:6px;margin:6px 0;width:100%;box-sizing:border-box}
-  button.small{width:auto;padding:6px 10px}
-  table{border-collapse:collapse;width:100%;margin-top:12px}
-  th,td{border:1px solid #ccc;padding:6px;text-align:left;font-size:0.95rem}
-  th{background:#f2f2f2}
-  .muted{color:#666;font-size:0.9rem}
-  .actions{display:flex;gap:8px;flex-wrap:wrap}
-  .note{font-size:0.9rem;color:#444}
-  .warn{color:crimson}
+  body {
+    font-family: Arial, sans-serif;
+    background: #f6f7f9;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    background: #1e3a8a;
+    color: white;
+    padding: 10px 20px;
+  }
+  h1 { margin: 0; font-size: 20px; }
+  section {
+    padding: 20px;
+  }
+  input, button, textarea {
+    margin: 5px 0;
+    padding: 8px;
+  }
+  button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover { background: #1d4ed8; }
+  #main, #hostPanel { display: none; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: center;
+  }
+  th { background: #e5e7eb; }
 </style>
 </head>
 <body>
 
-<h1>⚔️ Kampfbericht-Tool — CSV-Viewer (Grundgerüst)</h1>
+<header>
+  <h1>Kampftool – Prototyp</h1>
+</header>
 
-<section id="csvSection">
-  <h2>1) CSV hochladen (Host)</h2>
-  <p class="muted">Wähle die Host-CSV-Datei aus. Die CSV wird lokal im Browser gespeichert (localStorage) – später ersetzen wir das durch Firestore für zentrale Speicherung.</p>
-  <input type="file" id="csvFile" accept=".csv" />
-  <div class="actions">
-    <button id="btnProcessCsv" class="small">CSV verarbeiten & speichern</button>
-    <button id="btnClearCsv" class="small" style="background:#ffdede">CSV löschen</button>
-    <button id="btnClearAll" class="small" style="background:#ffdede">Alles (Reports + CSV) löschen</button>
-  </div>
-  <p id="csvStatus" class="note"></p>
+<!-- ================== LOGIN ================== -->
+<section id="login">
+  <h2>Login</h2>
+  <label>Benutzername:</label><br>
+  <input type="text" id="username"><br>
+  <label>Passwort:</label><br>
+  <input type="password" id="password"><br>
+  <button id="loginBtn">Anmelden</button>
+  <button id="registerBtn">Registrieren</button>
+  <p id="loginMessage"></p>
 </section>
 
-<section id="tableSection">
-  <h2>2) Tabellenansicht nach Koordinate & Datum (neueste zuerst)</h2>
-  <p class="muted">Kopf: Koordinate, Datum des letzten Eintrags (oder 0), gefolgt von standardisierten Gebäude- und Einheiten-Spalten.</p>
-  <div id="tableContainer"></div>
+<!-- ================== MAIN USER AREA ================== -->
+<section id="main">
+  <h2>Mitgliederbereich</h2>
+  <p>Eingeloggt als: <span id="userDisplay"></span></p>
+
+  <h3>Kampfbericht einfügen (später)</h3>
+  <textarea id="reportText" rows="5" cols="50" placeholder="Kampfbericht hier einfügen..."></textarea><br>
+  <button id="uploadReportBtn">Hochladen (inaktiv)</button>
+
+  <h3>Gespeicherte Daten (Beispiel-Tabelle)</h3>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Koordinate</th>
+        <th>Datum letzter Eintrag</th>
+        <th>Haupthaus</th>
+        <th>Goldbergwerk</th>
+        <th>Steinbruch</th>
+        <th>Holzfällerhütte</th>
+        <th>Universität</th>
+        <th>Baracke</th>
+        <th>Werft</th>
+        <th>Lagerhaus</th>
+        <th>Steinwall</th>
+        <th>Wachturm</th>
+        <th>Ruhestätte</th>
+        <th>Fregatte</th>
+        <th>Handelskogge</th>
+        <th>Kolonialschiff</th>
+        <th>Spähschiff</th>
+        <th>Steinschleuderer</th>
+        <th>Lanzenträger</th>
+        <th>Langbogenschütze</th>
+        <th>Kanonen</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="21">Noch keine Daten geladen</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================== HOST PANEL ================== -->
+<section id="hostPanel">
+  <h2>Hostbereich</h2>
+  <p>Nur für Administratoren</p>
+
+  <h3>CSV hochladen</h3>
+  <input type="file" id="csvInput" accept=".csv">
+  <button id="loadCsvBtn">CSV laden (inaktiv)</button>
+
+  <h3>Benutzerverwaltung (später)</h3>
+  <div id="userList">(noch leer)</div>
 </section>
 
 <script>
-/* ============================
-   Grundstruktur + CSV → Tabelle
-   - Speichert CSV lokal (localStorage)
-   - Ermittelt für jede Zeile eine "Koordinate"
-   - Baut eine Übersichtstabelle mit festen Kopfspalten (Gebäude + Einheiten)
-   - Sortiert die Koordinaten nach "Datum des letzten Eintrags" (neueste zuerst)
-   ============================ */
+// ========= SIMPLER LOGIN SIMULATION (offline) =========
 
-// ---------- Storage keys ----------
-const STORAGE_KEYS = {
-  HOST_CSV: 'kb_host_csv_v1',
-  REPORTS: 'kb_reports_v1' // optional: falls später Reports gespeichert werden
-};
+const HOST_NAME = "host";
+const HOST_PASS = "admin123";
 
-// ---------- Vordefinierte Spalten (Kopf) ----------
-const TABLE_COLUMNS = [
-  // erste Pflichtfelder
-  'Koordinate',
-  'DatumLetzterEintrag',
-  // Gebäude (wie gewünscht)
-  'Haupthaus','Goldbergwerk','Steinbruch','Holzfällerhütte','Universität','Baracke','Werft','Lagerhaus','Steinwall','Wachturm','Ruhestätte',
-  // Einheiten (wie gewünscht)
-  'Fregatte','Handelskogge','Kolonisationsschiff','Spähschiff','Steinschleuderer','Lanzenträger','Langbogenschütze','Kanonen'
-];
+document.getElementById("loginBtn").addEventListener("click", () => {
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const msg = document.getElementById("loginMessage");
 
-// ---------- Hilfsfunktionen ----------
-const $ = id => document.get
+  if (!user || !pass) {
+    msg.textContent = "Bitte Name und Passwort eingeben.";
+    return;
+  }
+
+  if (user === HOST_NAME && pass === HOST_PASS) {
+    msg.textContent = "Host erfolgreich angemeldet.";
+    document.getElementById("login").style.display = "none";
+    document.getElementById("hostPanel").style.display = "block";
+  } else {
+    msg.textContent = "Angemeldet als Mitglied.";
+    document.getElementById("login").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    document.getElementById("userDisplay").textContent = user;
+  }
+});
+
+document.getElementById("registerBtn").addEventListener("click", () => {
+  alert("Registrierung wird in Phase 2 aktiviert (Firebase)");
+});
+</script>
+
+</body>
+</html>
