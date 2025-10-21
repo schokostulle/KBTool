@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kampftool – Prototyp</title>
 <style>
-  <body>
+ <body>
 <header>
   <h1>Kampftool – Firebase Version</h1>
 </header>
@@ -46,6 +46,14 @@
 </section>
 
 <!-- =============== Firebase SDKs =============== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+// === Firebase Konfiguration einfügen ===
 const firebaseConfig = {
   apiKey: "AIzaSyAW5DmnfORhv5oY3azmpNJ4NHniYUGFnsQ",
   authDomain: "ktool-aa787.firebaseapp.com",
@@ -53,17 +61,6 @@ const firebaseConfig = {
   storageBucket: "ktool-aa787.firebasestorage.app",
   messagingSenderId: "528761267115",
   appId: "1:528761267115:web:826f6284db2a2f784d28ee"
-};
-<script>
-
-// === Firebase Konfiguration einfügen ===
-const firebaseConfig = {
-  apiKey: "DEIN_API_KEY",
-  authDomain: "DEIN_DOMAIN",
-  projectId: "DEIN_PROJECT_ID",
-  storageBucket: "DEIN_STORAGE_BUCKET",
-  messagingSenderId: "DEIN_SENDER_ID",
-  appId: "DEIN_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
