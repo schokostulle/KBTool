@@ -2,14 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Allianz-Kampfberichte</title>
+  <title>Allianz-Kampfberichte Tool</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    textarea { width: 100%; height: 120px; margin-bottom: 10px; }
+    body { font-family: Arial; padding: 20px; }
+    textarea, input { width: 100%; margin-bottom: 10px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
     .hidden { display: none; }
-    input { margin-bottom: 5px; display: block; }
     button { margin-bottom: 10px; }
   </style>
   <!-- Firebase Libraries -->
@@ -21,7 +20,7 @@
 
 <h1>Allianz-Kampfberichte</h1>
 
-<!-- Authentifizierung -->
+<!-- Auth -->
 <div id="authDiv">
   <h3>Registrieren</h3>
   <input type="email" id="regEmail" placeholder="Email">
@@ -34,13 +33,26 @@
   <button id="loginBtn">Login</button>
 </div>
 
-<!-- Kampfberichte -->
-<div id="reportDiv" class="hidden">
+<!-- Admin Panel -->
+<div id="adminPanel" class="hidden">
+  <h3>CSV hochladen (Inseln / Spieler)</h3>
+  <input type="file" id="csvUpload" accept=".csv">
+  <button id="uploadCsvBtn">CSV hochladen</button>
+
+  <h3>Mitglieder freischalten</h3>
+  <div id="membersList"></div>
+  <button id="refreshMembersBtn">Liste aktualisieren</button>
+
+  <button id="logoutBtnAdmin">Logout</button>
+</div>
+
+<!-- Mitglieder Panel -->
+<div id="memberPanel" class="hidden">
   <h3>Kampfbericht einfügen</h3>
   <textarea id="reportText" placeholder="Kampfbericht hier einfügen"></textarea>
   <button id="submitReportBtn">Absenden</button>
 
-  <h3>Alle Berichte</h3>
+  <h3>Alle Berichte der Allianz (neueste zuerst)</h3>
   <div id="reportsTable"></div>
 
   <h3>Aggregierte Übersicht</h3>
@@ -54,7 +66,7 @@
     <tbody></tbody>
   </table>
 
-  <button id="logoutBtn">Logout</button>
+  <button id="logoutBtnMember">Logout</button>
 </div>
 
 <script>
@@ -73,14 +85,24 @@
   const db = firebase.firestore();
 
   const authDiv = document.getElementById("authDiv");
-  const reportDiv = document.getElementById("reportDiv");
+  const adminPanel = document.getElementById("adminPanel");
+  const memberPanel = document.getElementById("memberPanel");
 
   // ===== Registrierung =====
   document.getElementById("registerBtn").addEventListener("click", async () => {
     const email = document.getElementById("regEmail").value;
     const pass = document.getElementById("regPass").value;
-    try { await auth.createUserWithEmailAndPassword(email, pass); alert("Registrierung erfolgreich!"); }
-    catch (e) { alert(e.message); }
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+      // Standard: member, nicht freigeschaltet
+      await db.collection("users").doc(userCredential.user.uid).set({
+        email,
+        role: "member",
+        allianceId: null,
+        approved: false
+      });
+      alert("Registrierung erfolgreich! Bitte auf Freischaltung warten.");
+    } catch(e){ alert(e.message); }
   });
 
   // ===== Login =====
@@ -88,121 +110,137 @@
     const email = document.getElementById("loginEmail").value;
     const pass = document.getElementById("loginPass").value;
     try { await auth.signInWithEmailAndPassword(email, pass); }
-    catch (e) { alert(e.message); }
+    catch(e){ alert(e.message); }
   });
 
   // ===== Logout =====
-  document.getElementById("logoutBtn").addEventListener("click", () => { auth.signOut(); });
+  document.getElementById("logoutBtnAdmin").addEventListener("click", () => auth.signOut());
+  document.getElementById("logoutBtnMember").addEventListener("click", () => auth.signOut());
 
-  // ===== Auth State Listener =====
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      authDiv.classList.add("hidden");
-      reportDiv.classList.remove("hidden");
+  // ===== Auth State =====
+  auth.onAuthStateChanged(async user => {
+    if(!user){ authDiv.classList.remove("hidden"); adminPanel.classList.add("hidden"); memberPanel.classList.add("hidden"); return; }
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    const data = userDoc.data();
+    authDiv.classList.add("hidden");
+
+    if(data.role === "admin"){
+      adminPanel.classList.remove("hidden");
+      memberPanel.classList.add("hidden");
+      loadMembers();
+    } else if(data.role === "member" && data.approved){
+      memberPanel.classList.remove("hidden");
+      adminPanel.classList.add("hidden");
       renderAggregated();
     } else {
-      authDiv.classList.remove("hidden");
-      reportDiv.classList.add("hidden");
+      alert("Mitglied noch nicht freigeschaltet.");
+      auth.signOut();
     }
   });
 
-  // ===== Kampfbericht absenden =====
+  // ===== CSV Upload (Admin) =====
+  document.getElementById("uploadCsvBtn").addEventListener("click", () => {
+    const file = document.getElementById("csvUpload").files[0];
+    if(!file) return alert("Bitte CSV wählen!");
+    const reader = new FileReader();
+    reader.onload = async e => {
+      const text = e.target.result;
+      const lines = text.split("\n");
+      const header = lines.shift().split(/\t/);
+      const batch = db.batch();
+      lines.forEach(line => {
+        const values = line.split(/\t/);
+        if(values.length !== header.length) return;
+        const player = {};
+        header.forEach((key,i) => { player[key.trim()] = values[i].trim(); });
+        const docRef = db.collection("players").doc(player["Spieler ID"]);
+        batch.set(docRef, player);
+      });
+      await batch.commit();
+      alert("CSV erfolgreich hochgeladen!");
+    };
+    reader.readAsText(file);
+  });
+
+  // ===== Mitglieder freischalten (Admin) =====
+  async function loadMembers(){
+    const snapshot = await db.collection("users").where("role","==","member").get();
+    const div = document.getElementById("membersList");
+    div.innerHTML = "";
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const btn = document.createElement("button");
+      btn.textContent = data.approved ? `✅ ${data.email}` : `❌ ${data.email} freischalten`;
+      btn.disabled = data.approved;
+      btn.onclick = async () => {
+        await db.collection("users").doc(doc.id).update({approved:true});
+        loadMembers();
+      };
+      div.appendChild(btn);
+      div.appendChild(document.createElement("br"));
+    });
+  }
+  document.getElementById("refreshMembersBtn").addEventListener("click", loadMembers);
+
+  // ===== Kampfberichte einfügen =====
   document.getElementById("submitReportBtn").addEventListener("click", async () => {
     const text = document.getElementById("reportText").value;
     const user = auth.currentUser;
-    if (!user) return alert("Bitte einloggen!");
-    if (!text.trim()) return alert("Bericht darf nicht leer sein!");
-    await db.collection("reports").add({ userId: user.uid, text, date: new Date() });
+    if(!user) return alert("Bitte einloggen!");
+    if(!text.trim()) return alert("Bericht leer!");
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    await db.collection("reports").add({
+      userId: user.uid,
+      allianceId: userDoc.data().allianceId,
+      reportText: text,
+      date: new Date()
+    });
     document.getElementById("reportText").value = "";
     renderAggregated();
   });
 
-  // ===== Parsing-Funktion =====
-  function parseReport(text) {
+  // ===== Parsing Funktion (einfaches Beispiel) =====
+  function parseReport(text){
     const lines = text.split("\n");
-    const data = { attacker: {}, defender: {}, buildings: {}, plunder: {} };
-    let currentBlock = null;
-
+    const data = { units:{}, buildings:{}, plunder:{} };
     lines.forEach(line => {
-      line = line.trim();
-      if (!line) return;
-
-      if (line.startsWith("Einheiten des Angreifers")) { currentBlock = "attacker"; return; }
-      if (line.startsWith("Einheiten des Verteidigers")) { currentBlock = "defender"; return; }
-      if (line.startsWith("Zerstörung") || line.startsWith("Kollateralschaden")) { currentBlock = "buildings"; return; }
-      if (line.startsWith("Geplünderte Rohstoffe")) { currentBlock = "plunder"; return; }
-
-      if (currentBlock === "attacker" || currentBlock === "defender") {
-        const match = line.match(/(\w+)\s+(\d+)\s+(\d+)/);
-        if (match) {
-          const unit = match[1];
-          const total = parseInt(match[2]);
-          const losses = parseInt(match[3]);
-          data[currentBlock][unit] = { total, losses };
-        }
-      }
-
-      if (currentBlock === "buildings") {
-        const match = line.match(/(\w+)\s*\((\d+) auf (\d+)\)/);
-        if (match) {
-          const building = match[1];
-          const after = parseInt(match[3]);
-          data.buildings[building] = after;
-        }
-      }
-
-      if (currentBlock === "plunder") {
-        const match = line.match(/(\w+)\s+(\d+)/);
-        if (match) {
-          const resource = match[1];
-          const amount = parseInt(match[2]);
-          data.plunder[resource] = amount;
-        }
+      const match = line.match(/(\w+)\s+(\d+)/);
+      if(match){
+        const key = match[1];
+        const value = parseInt(match[2]);
+        data.units[key] = (data.units[key]||0)+value;
       }
     });
-
     return data;
   }
 
-  // ===== Aggregation & Anzeige =====
-  async function renderAggregated() {
-    const snapshot = await db.collection("reports").orderBy("date").get();
-    const reportsTable = document.getElementById("reportsTable");
-    const tbody = document.querySelector("#aggregateTable tbody");
-    reportsTable.innerHTML = "";
-    tbody.innerHTML = "";
+  // ===== Aggregation und Anzeige =====
+  async function renderAggregated(){
+    const user = auth.currentUser;
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    const allianceId = userDoc.data().allianceId;
+    const snapshot = await db.collection("reports")
+      .where("allianceId","==",allianceId)
+      .orderBy("date","desc").get();
 
-    const aggregate = { units: {}, buildings: {}, plunder: {} };
+    const reportsDiv = document.getElementById("reportsTable");
+    const tbody = document.querySelector("#aggregateTable tbody");
+    reportsDiv.innerHTML = "";
+    tbody.innerHTML = "";
+    const aggregate = { units:{}, buildings:{}, plunder:{} };
 
     snapshot.docs.forEach(doc => {
-      const data = parseReport(doc.data().text);
-      reportsTable.innerHTML += `<p><strong>${doc.data().date.toDate().toLocaleString()}</strong>: ${doc.data().text}</p>`;
-
-      ["attacker","defender"].forEach(side => {
-        for (const [unit, info] of Object.entries(data[side])) {
-          aggregate.units[unit] = (aggregate.units[unit] || 0) + (info.total - info.losses);
-        }
-      });
-
-      for (const [building, level] of Object.entries(data.buildings)) {
-        aggregate.buildings[building] = Math.max(aggregate.buildings[building] || 0, level);
-      }
-
-      for (const [res, amount] of Object.entries(data.plunder)) {
-        aggregate.plunder[res] = (aggregate.plunder[res] || 0) + amount;
-      }
+      const r = doc.data();
+      reportsDiv.innerHTML += `<p><strong>${r.date.toDate().toLocaleString()}</strong>: ${r.reportText}</p>`;
+      const parsed = parseReport(r.reportText);
+      Object.entries(parsed.units).forEach(([k,v]) => aggregate.units[k]=(aggregate.units[k]||0)+v);
     });
 
-    for (const [unit, count] of Object.entries(aggregate.units)) {
-      tbody.innerHTML += `<tr><td>${unit}</td><td>${count}</td></tr>`;
-    }
-    for (const [building, level] of Object.entries(aggregate.buildings)) {
-      tbody.innerHTML += `<tr><td>${building}</td><td>${level}</td></tr>`;
-    }
-    for (const [res, amount] of Object.entries(aggregate.plunder)) {
-      tbody.innerHTML += `<tr><td>${res}</td><td>${amount}</td></tr>`;
-    }
+    Object.entries(aggregate.units).forEach(([k,v])=>{
+      tbody.innerHTML += `<tr><td>${k}</td><td>${v}</td></tr>`;
+    });
   }
+
 </script>
 
 </body>
