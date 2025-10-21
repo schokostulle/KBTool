@@ -48,110 +48,153 @@
 </style>
 </head>
 <body>
-
 <header>
-  <h1>Kampftool – Prototyp</h1>
+  <h1>Kampftool – Firebase Version</h1>
 </header>
 
-<!-- ================== LOGIN ================== -->
+<!-- LOGIN -->
 <section id="login">
   <h2>Login</h2>
-  <label>Benutzername:</label><br>
-  <input type="text" id="username"><br>
-  <label>Passwort:</label><br>
-  <input type="password" id="password"><br>
+  <input type="email" id="email" placeholder="E-Mail"><br>
+  <input type="password" id="password" placeholder="Passwort"><br>
   <button id="loginBtn">Anmelden</button>
   <button id="registerBtn">Registrieren</button>
   <p id="loginMessage"></p>
 </section>
 
-<!-- ================== MAIN USER AREA ================== -->
-<section id="main">
+<!-- USER MAIN -->
+<section id="main" style="display:none;">
   <h2>Mitgliederbereich</h2>
-  <p>Eingeloggt als: <span id="userDisplay"></span></p>
+  <p>Eingeloggt als: <span id="userEmail"></span></p>
+  <button id="logoutBtn">Abmelden</button>
 
-  <h3>Kampfbericht einfügen (später)</h3>
-  <textarea id="reportText" rows="5" cols="50" placeholder="Kampfbericht hier einfügen..."></textarea><br>
-  <button id="uploadReportBtn">Hochladen (inaktiv)</button>
-
-  <h3>Gespeicherte Daten (Beispiel-Tabelle)</h3>
+  <h3>CSV-Daten (vom Host)</h3>
   <table id="dataTable">
     <thead>
-      <tr>
-        <th>Koordinate</th>
-        <th>Datum letzter Eintrag</th>
-        <th>Haupthaus</th>
-        <th>Goldbergwerk</th>
-        <th>Steinbruch</th>
-        <th>Holzfällerhütte</th>
-        <th>Universität</th>
-        <th>Baracke</th>
-        <th>Werft</th>
-        <th>Lagerhaus</th>
-        <th>Steinwall</th>
-        <th>Wachturm</th>
-        <th>Ruhestätte</th>
-        <th>Fregatte</th>
-        <th>Handelskogge</th>
-        <th>Kolonialschiff</th>
-        <th>Spähschiff</th>
-        <th>Steinschleuderer</th>
-        <th>Lanzenträger</th>
-        <th>Langbogenschütze</th>
-        <th>Kanonen</th>
-      </tr>
+      <tr id="csvHeader"></tr>
     </thead>
-    <tbody id="tableBody">
-      <tr><td colspan="21">Noch keine Daten geladen</td></tr>
+    <tbody id="csvBody">
+      <tr><td colspan="5">Noch keine Daten vorhanden</td></tr>
     </tbody>
   </table>
 </section>
 
-<!-- ================== HOST PANEL ================== -->
-<section id="hostPanel">
-  <h2>Hostbereich</h2>
-  <p>Nur für Administratoren</p>
-
-  <h3>CSV hochladen</h3>
-  <input type="file" id="csvInput" accept=".csv">
-  <button id="loadCsvBtn">CSV laden (inaktiv)</button>
-
-  <h3>Benutzerverwaltung (später)</h3>
-  <div id="userList">(noch leer)</div>
+<!-- HOST PANEL -->
+<section id="hostPanel" style="display:none;">
+  <h2>Host-Bereich</h2>
+  <input type="file" id="csvFile" accept=".csv">
+  <button id="uploadCsvBtn">CSV hochladen</button>
+  <p id="uploadStatus"></p>
 </section>
 
+<!-- =============== Firebase SDKs =============== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 <script>
-// ========= SIMPLER LOGIN SIMULATION (offline) =========
+// === Firebase Konfiguration einfügen ===
+const firebaseConfig = {
+  apiKey: "AIzaSyAW5DmnfORhv5oY3azmpNJ4NHniYUGFnsQ",
+  authDomain: "ktool-aa787.firebaseapp.com",
+  projectId: "ktool-aa787",
+  storageBucket: "ktool-aa787.firebasestorage.app",
+  messagingSenderId: "528761267115",
+  appId: "1:528761267115:web:826f6284db2a2f784d28ee"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-const HOST_NAME = "host";
-const HOST_PASS = "admin123";
+// ============== LOGIN / REGISTRIERUNG ==============
+const loginSection = document.getElementById("login");
+const mainSection = document.getElementById("main");
+const hostPanel = document.getElementById("hostPanel");
+const loginMsg = document.getElementById("loginMessage");
 
-document.getElementById("loginBtn").addEventListener("click", () => {
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  const msg = document.getElementById("loginMessage");
-
-  if (!user || !pass) {
-    msg.textContent = "Bitte Name und Passwort eingeben.";
-    return;
+document.getElementById("registerBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+  try {
+    await auth.createUserWithEmailAndPassword(email, pass);
+    loginMsg.textContent = "Registrierung erfolgreich. Du bist angemeldet.";
+  } catch (err) {
+    loginMsg.textContent = err.message;
   }
+});
 
-  if (user === HOST_NAME && pass === HOST_PASS) {
-    msg.textContent = "Host erfolgreich angemeldet.";
-    document.getElementById("login").style.display = "none";
-    document.getElementById("hostPanel").style.display = "block";
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (err) {
+    loginMsg.textContent = err.message;
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await auth.signOut();
+});
+
+// ============== AUTH STATE LISTENER ==============
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginSection.style.display = "none";
+    mainSection.style.display = "block";
+    document.getElementById("userEmail").textContent = user.email;
+
+    if (user.email === "host@example.com") { // Host-Konto
+      hostPanel.style.display = "block";
+    } else {
+      hostPanel.style.display = "none";
+    }
+
+    loadCsvData();
   } else {
-    msg.textContent = "Angemeldet als Mitglied.";
-    document.getElementById("login").style.display = "none";
-    document.getElementById("main").style.display = "block";
-    document.getElementById("userDisplay").textContent = user;
+    loginSection.style.display = "block";
+    mainSection.style.display = "none";
+    hostPanel.style.display = "none";
   }
 });
 
-document.getElementById("registerBtn").addEventListener("click", () => {
-  alert("Registrierung wird in Phase 2 aktiviert (Firebase)");
-});
-</script>
+// ============== CSV HOCHLADEN (HOST) ==============
+document.getElementById("uploadCsvBtn").addEventListener("click", () => {
+  const file = document.getElementById("csvFile").files[0];
+  if (!file) return alert("Bitte CSV-Datei auswählen!");
 
+  Papa.parse(file, {
+    header: true,
+    dynamicTyping: true,
+    complete: async (result) => {
+      await db.collection("csvData").doc("latest").set({
+        uploaded: new Date(),
+        data: result.data
+      });
+      document.getElementById("uploadStatus").textContent = "CSV erfolgreich gespeichert.";
+      loadCsvData();
+    }
+  });
+});
+
+// ============== CSV LADEN UND ANZEIGEN ==============
+async function loadCsvData() {
+  const docRef = db.collection("csvData").doc("latest");
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) return;
+
+  const csv = docSnap.data().data;
+  if (!csv || csv.length === 0) return;
+
+  const headers = Object.keys(csv[0]);
+  document.getElementById("csvHeader").innerHTML = headers.map(h => `<th>${h}</th>`).join("");
+  document.getElementById("csvBody").innerHTML = csv.map(row => {
+    return `<tr>${headers.map(h => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`;
+  }).join("");
+}
+</script>
 </body>
 </html>
