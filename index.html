@@ -6,10 +6,22 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     input, button { margin: 5px; padding: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; position: relative; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; position: relative; }
     th.sortable { cursor: pointer; background-color: #f3f3f3; }
     th.sortable:hover { background-color: #e2e2e2; }
+    .filter-menu {
+      position: absolute;
+      background: white;
+      border: 1px solid #999;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 10;
+      padding: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .filter-menu label { display: block; font-size: 14px; cursor: pointer; margin: 2px 0; }
+    .filter-actions { margin-top: 5px; text-align: center; }
     .hidden { display: none; }
   </style>
 
@@ -21,38 +33,20 @@
 
 <h1>Allianz Admin Tool</h1>
 
-<!-- Admin Login -->
 <div id="loginDiv">
   <input type="text" id="adminName" placeholder="Admin Name">
   <input type="password" id="adminPass" placeholder="Admin Passwort">
   <button id="loginBtn">Login als Admin</button>
 </div>
 
-<!-- Admin Panel -->
 <div id="adminPanel" class="hidden">
   <h2>CSV hochladen / ersetzen</h2>
   <input type="file" id="csvUpload" accept=".csv">
   <button id="uploadCsvBtn">CSV hochladen</button>
 
   <h3>Datenübersicht</h3>
-
-  <div>
-    🔎 <b>Filter</b>:
-    <input type="text" id="filterSpieler" placeholder="Spielername">
-    <input type="text" id="filterAllianz" placeholder="Allianz">
-    <button id="clearFilterBtn">Filter löschen</button>
-  </div>
-
-  <div>
-    <h4>Erweiterte Filter</h4>
-    Oz (Liste): <input id="filterOz" placeholder="z.B. 1,3,4">
-    IG-Bereich: <input id="filterIGmin" type="number" placeholder="min"> – 
-                <input id="filterIGmax" type="number" placeholder="max">
-    Allianz(en): <input id="filterAllianzen" placeholder="AX, BETA, DELTA">
-    <button id="applyAdvancedBtn">Filtern</button>
-  </div>
-
   <div id="csvTable">Keine Daten</div>
+
   <button id="logoutBtn">Logout</button>
 </div>
 
@@ -66,7 +60,6 @@
   messagingSenderId: "212260982227",
   appId: "1:212260982227:web:84bfe35c83387c1879f326"
 };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -85,6 +78,8 @@
   ];
 
   let allData = [];
+  let filteredData = [];
+  let activeFilters = {};
   let sortOrder = {};
 
   const loginDiv = document.getElementById("loginDiv");
@@ -112,31 +107,27 @@
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
-    
     const reader = new FileReader();
     reader.onload = async e => {
       const text = e.target.result.trim();
       const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-
       const csvData = lines.map(line => {
         const values = line.split(";").map(v => v.replace(/^"|"$/g, '').trim());
         const row = {};
         TABLE_HEADER.forEach((col, i) => { row[col.key] = values[i] || ""; });
         return row;
       });
-
       await db.collection("baseData").doc("csvFile").set({
         data: csvData,
         uploadedAt: new Date()
       });
-
       allData = csvData;
-      renderCSVTable(allData);
+      filteredData = [...allData];
+      renderCSVTable(filteredData);
     };
     reader.readAsText(file);
   });
 
-  // ===== CSV Laden =====
   async function loadCSV() {
     const doc = await db.collection("baseData").doc("csvFile").get();
     if (!doc.exists) {
@@ -144,7 +135,8 @@
       return;
     }
     allData = doc.data().data;
-    renderCSVTable(allData);
+    filteredData = [...allData];
+    renderCSVTable(filteredData);
   }
 
   // ===== Tabelle rendern =====
@@ -157,7 +149,7 @@
 
     let html = "<table><thead><tr>";
     TABLE_HEADER.forEach(h => {
-      html += `<th class="sortable" onclick="sortTable('${h.key}')">${h.label}</th>`;
+      html += `<th class="sortable" onclick="onHeaderClick(event, '${h.key}')">${h.label}</th>`;
     });
     html += "</tr></thead><tbody>";
 
@@ -171,65 +163,98 @@
     div.innerHTML = html;
   }
 
-  // ===== Sortierung (intelligent für alle Spalten) =====
-  window.sortTable = function(columnKey) {
-    sortOrder[columnKey] = !sortOrder[columnKey];
-    const dir = sortOrder[columnKey] ? 1 : -1;
+  // ===== Klick auf Spaltenkopf (Sortierung / Filtermenü) =====
+  window.onHeaderClick = function(e, columnKey) {
+    const th = e.target;
+    closeAllMenus();
 
-    const isNumeric = allData.every(r => /^\d+$/.test(r[columnKey]) || r[columnKey] === "");
+    // Falls mit Shift geklickt wird → Sortierung
+    if (e.shiftKey) {
+      sortTable(columnKey);
+      return;
+    }
 
-    allData.sort((a, b) => {
-      const A = a[columnKey];
-      const B = b[columnKey];
-      if (isNumeric) {
-        return (parseInt(A || 0) - parseInt(B || 0)) * dir;
-      } else {
-        return A.localeCompare(B, 'de', { numeric: true }) * dir;
-      }
-    });
-
-    renderCSVTable(allData);
+    // Andernfalls → Filtermenü öffnen
+    showFilterMenu(th, columnKey);
   };
 
-  // ===== Filter =====
-  document.getElementById("filterSpieler").addEventListener("input", applyFilters);
-  document.getElementById("filterAllianz").addEventListener("input", applyFilters);
-  document.getElementById("clearFilterBtn").addEventListener("click", () => {
-    document.getElementById("filterSpieler").value = "";
-    document.getElementById("filterAllianz").value = "";
-    renderCSVTable(allData);
-  });
+  // ===== Intelligente Sortierung =====
+  function sortTable(columnKey) {
+    sortOrder[columnKey] = !sortOrder[columnKey];
+    const dir = sortOrder[columnKey] ? 1 : -1;
+    const isNumeric = allData.every(r => /^\d+$/.test(r[columnKey]) || r[columnKey] === "");
 
-  function applyFilters() {
-    const s = document.getElementById("filterSpieler").value.toLowerCase();
-    const a = document.getElementById("filterAllianz").value.toLowerCase();
-    const filtered = allData.filter(r =>
-      (!s || r["Spielername"].toLowerCase().includes(s)) &&
-      (!a || r["Allianzname"].toLowerCase().includes(a))
-    );
-    renderCSVTable(filtered);
+    filteredData.sort((a, b) => {
+      const A = a[columnKey];
+      const B = b[columnKey];
+      if (isNumeric) return (parseInt(A || 0) - parseInt(B || 0)) * dir;
+      return A.localeCompare(B, 'de', { numeric: true }) * dir;
+    });
+    renderCSVTable(filteredData);
   }
 
-  // ===== Erweiterte Filter =====
-  document.getElementById("applyAdvancedBtn").addEventListener("click", () => {
-    const ozList = document.getElementById("filterOz").value.split(",").map(x => x.trim()).filter(x => x);
-    const igMin = parseInt(document.getElementById("filterIGmin").value || 0);
-    const igMax = parseInt(document.getElementById("filterIGmax").value || 9999);
-    const allies = document.getElementById("filterAllianzen").value.split(",").map(x => x.trim().toLowerCase()).filter(x => x);
+  // ===== Dynamisches Filtermenü =====
+  function showFilterMenu(th, columnKey) {
+    const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
+      /^\d+$/.test(a) && /^\d+$/.test(b) ? parseInt(a)-parseInt(b) : a.localeCompare(b, 'de')
+    );
 
-    const filtered = allData.filter(r => {
-      const ozOK = ozList.length === 0 || ozList.includes(r["Ozean"]);
-      const ig = parseInt(r["Inselgruppe"] || 0);
-      const igOK = ig >= igMin && ig <= igMax;
-      const allyOK = allies.length === 0 ||
-        allies.includes(r["Allianz Kürzel"].toLowerCase()) ||
-        allies.includes(r["Allianzname"].toLowerCase());
-      return ozOK && igOK && allyOK;
+    const menu = document.createElement("div");
+    menu.className = "filter-menu";
+    menu.style.top = (th.offsetTop + th.offsetHeight) + "px";
+    menu.style.left = th.offsetLeft + "px";
+
+    values.forEach(v => {
+      const id = `${columnKey}_${v}`.replace(/\s+/g, "_");
+      const checked = !activeFilters[columnKey] || activeFilters[columnKey].includes(v);
+      menu.innerHTML += `<label><input type="checkbox" id="${id}" value="${v}" ${checked ? "checked" : ""}> ${v}</label>`;
     });
 
-    renderCSVTable(filtered);
-  });
-</script>
+    menu.innerHTML += `
+      <div class="filter-actions">
+        <button onclick="applyFilter('${columnKey}')">Anwenden</button>
+        <button onclick="resetFilter('${columnKey}')">Alle</button>
+      </div>
+    `;
+    th.appendChild(menu);
+  }
 
+  // ===== Filter anwenden =====
+  window.applyFilter = function(columnKey) {
+    const menu = document.querySelector(".filter-menu");
+    const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
+    activeFilters[columnKey] = selected;
+
+    filteredData = allData.filter(row => {
+      return Object.keys(activeFilters).every(key => {
+        const f = activeFilters[key];
+        return !f || f.includes(row[key]);
+      });
+    });
+
+    renderCSVTable(filteredData);
+  };
+
+  // ===== Filter zurücksetzen =====
+  window.resetFilter = function(columnKey) {
+    delete activeFilters[columnKey];
+    filteredData = allData.filter(row => {
+      return Object.keys(activeFilters).every(key => {
+        const f = activeFilters[key];
+        return !f || f.includes(row[key]);
+      });
+    });
+    renderCSVTable(filteredData);
+  };
+
+  // ===== Menü schließen bei Klick außerhalb =====
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".filter-menu") && !e.target.closest("th")) closeAllMenus();
+  });
+
+  function closeAllMenus() {
+    document.querySelectorAll(".filter-menu").forEach(m => m.remove());
+  }
+</script>
 </body>
 </html>
