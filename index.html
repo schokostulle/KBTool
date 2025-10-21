@@ -255,22 +255,54 @@ async function register(){
 async function logout(){await auth.signOut();location.reload();}
 
 /* ===================== CSV ===================== */
-async function uploadCSV(){
-  if(currentRole!=="admin") return alert("Nur Admin.");
-  const f=document.getElementById("csvInput").files[0]; if(!f) return alert("Keine CSV gewählt!");
-  document.getElementById("csvStatus").textContent="Wird verarbeitet...";
-  const txt=await f.text();
-  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const rows=lines.map(line=>line.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
-  const mapped=rows.map(c=>({
-    Ozean:c[0]||"", Inselgruppe:c[1]||"", Insel:c[2]||"", Inselname:c[3]||"",
-    SpielerID:c[4]||"", Spielername:c[5]||"", AllianzID:c[6]||"", AllianzKuerzel:c[7]||"",
-    Allianzname:c[8]||"", Punkte:c[9]||""
+async function uploadCSV() {
+  if (currentRole !== "admin") return alert("Nur Admin.");
+  const f = document.getElementById("csvInput").files[0];
+  if (!f) return alert("Keine CSV gewählt!");
+  document.getElementById("csvStatus").textContent = "Wird verarbeitet...";
+
+  const txt = await f.text();
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // Spalten aufsplitten, Anführungszeichen entfernen, Zahlen säubern
+  const rows = lines.map(line =>
+    line.split(";").map(v =>
+      v.replace(/^"|"$/g, "").trim()
+    )
+  );
+
+  const mapped = rows.map(c => ({
+    Ozean: c[0] || "",
+    Inselgruppe: c[1] || "",
+    Insel: c[2] || "",
+    Inselname: c[3] || "",
+    SpielerID: c[4] || "",
+    Spielername: c[5] || "",
+    AllianzID: c[6] || "",
+    AllianzKuerzel: c[7] || "",
+    Allianzname: c[8] || "",
+    Punkte: parseInt((c[9] || "0").replace(/\D/g, "")) || 0 // 🔧 hier: Punkte zu Integer
   }));
-  const old=await islandsRef.get(); const b=db.batch(); old.forEach(d=>b.delete(d.ref)); await b.commit();
-  const b2=db.batch(); mapped.forEach((r,i)=> b2.set(islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`), r)); await b2.commit();
-  document.getElementById("csvStatus").textContent="CSV hochgeladen.";
-  await loadCSV(); resetAllFilters(); applyFiltersAndRender();
+
+  // Alte Inseln löschen und neue einfügen
+  const old = await islandsRef.get();
+  const b = db.batch();
+  old.forEach(d => b.delete(d.ref));
+  await b.commit();
+
+  const b2 = db.batch();
+  mapped.forEach((r, i) =>
+    b2.set(
+      islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`),
+      r
+    )
+  );
+  await b2.commit();
+
+  document.getElementById("csvStatus").textContent = "CSV hochgeladen.";
+  await loadCSV();
+  resetAllFilters();
+  applyFiltersAndRender();
 }
 async function loadCSV(){
   const snap=await islandsRef.get();
