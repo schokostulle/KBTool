@@ -12,7 +12,7 @@
       --text-muted: #6b7280;
       --accent: #3b82f6;
       --accent-hover: #2563eb;
-      --shadow: 0 2px 8px rgba(0,0,0,0.05);
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
       --radius: 10px;
     }
 
@@ -68,14 +68,14 @@
       padding: 8px 10px;
       text-align: left;
       font-size: 14px;
+      position: relative;
     }
 
     th {
       background: #f3f4f6;
       font-weight: 600;
-      position: relative;
-      cursor: pointer;
       user-select: none;
+      cursor: pointer;
     }
 
     th:hover {
@@ -84,6 +84,22 @@
 
     tr:hover td {
       background: #f9fafb;
+    }
+
+    .sort-icon,
+    .filter-icon {
+      font-size: 12px;
+      margin-left: 6px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .sorted .sort-icon {
+      color: var(--accent);
+    }
+
+    .filtered .filter-icon {
+      color: var(--accent);
     }
 
     .filter-menu {
@@ -102,7 +118,7 @@
     .filter-menu label {
       display: flex;
       align-items: center;
-      padding: 2px 0;
+      padding: 3px 4px;
       cursor: pointer;
       font-size: 14px;
       color: var(--text-muted);
@@ -111,17 +127,23 @@
     .filter-menu input[type="checkbox"] {
       accent-color: var(--accent);
       margin-right: 8px;
+      transform: scale(1.1);
     }
 
     .filter-actions {
       display: flex;
       justify-content: space-between;
       padding-top: 5px;
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
     }
 
     .filter-actions button {
       flex: 1;
-      margin: 3px;
+      margin: 2px;
       font-size: 13px;
       padding: 5px;
     }
@@ -160,19 +182,10 @@
 </div>
 
 <script>
-  // ===== Firebase Setup (Platzhalter ersetzen) =====
-  const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.firebasestorage.app",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
-};
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  // === Firebase Setup (nur für Test deaktiviert) ===
+  const db = { collection: () => ({ doc: () => ({ set: async ()=>{}, get: async()=>({exists:false}) }) }) };
 
-  // ===== Tabellenstruktur =====
+  // === Tabellenstruktur ===
   const TABLE_HEADER = [
     { key: "Ozean", label: "Oz" },
     { key: "Inselgruppe", label: "IG" },
@@ -194,7 +207,7 @@
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
 
-  // ===== Login =====
+  // === Login ===
   document.getElementById("loginBtn").addEventListener("click", () => {
     const name = document.getElementById("adminName").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
@@ -212,7 +225,7 @@
     loginDiv.classList.remove("hidden");
   });
 
-  // ===== CSV Upload =====
+  // === CSV Upload ===
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
@@ -226,10 +239,6 @@
         TABLE_HEADER.forEach((col, i) => { row[col.key] = values[i] || ""; });
         return row;
       });
-      await db.collection("baseData").doc("csvFile").set({
-        data: csvData,
-        uploadedAt: new Date()
-      });
       allData = csvData;
       filteredData = [...allData];
       renderCSVTable(filteredData);
@@ -238,17 +247,11 @@
   });
 
   async function loadCSV() {
-    const doc = await db.collection("baseData").doc("csvFile").get();
-    if (!doc.exists) {
-      document.getElementById("csvTable").innerHTML = "Keine Daten vorhanden.";
-      return;
-    }
-    allData = doc.data().data;
     filteredData = [...allData];
     renderCSVTable(filteredData);
   }
 
-  // ===== Tabelle rendern =====
+  // === Tabelle rendern ===
   function renderCSVTable(data) {
     const div = document.getElementById("csvTable");
     if (!data || data.length === 0) {
@@ -258,7 +261,13 @@
 
     let html = "<table><thead><tr>";
     TABLE_HEADER.forEach(h => {
-      html += `<th onclick="onHeaderClick(event, '${h.key}')">${h.label} ▾</th>`;
+      const sortClass = sortOrder[h.key] ? "sorted" : "";
+      const filterClass = activeFilters[h.key] ? "filtered" : "";
+      html += `<th class="${sortClass} ${filterClass}" onclick="onHeaderClick(event, '${h.key}')">
+                ${h.label}
+                <span class='sort-icon'>⇅</span>
+                <span class='filter-icon'>⚲</span>
+              </th>`;
     });
     html += "</tr></thead><tbody>";
 
@@ -272,20 +281,19 @@
     div.innerHTML = html;
   }
 
-  // ===== Klick auf Spaltenkopf (Sortierung / Filtermenü) =====
+  // === Klick auf Header ===
   window.onHeaderClick = function(e, columnKey) {
-    const th = e.target;
+    const th = e.currentTarget;
     closeAllMenus();
 
     if (e.shiftKey) {
       sortTable(columnKey);
       return;
     }
-
     showFilterMenu(th, columnKey);
   };
 
-  // ===== Sortierung =====
+  // === Sortierung ===
   function sortTable(columnKey) {
     sortOrder[columnKey] = !sortOrder[columnKey];
     const dir = sortOrder[columnKey] ? 1 : -1;
@@ -299,7 +307,7 @@
     renderCSVTable(filteredData);
   }
 
-  // ===== Filtermenü =====
+  // === Dropdown Menü ===
   function showFilterMenu(th, columnKey) {
     const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
       /^\d+$/.test(a) && /^\d+$/.test(b) ? parseInt(a)-parseInt(b) : a.localeCompare(b, 'de')
@@ -333,28 +341,29 @@
     menu.style.minWidth = rect.width + "px";
   }
 
+  // === Filter anwenden ===
   window.applyFilter = function(columnKey) {
     const menu = document.querySelector(".filter-menu");
     const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
     activeFilters[columnKey] = selected;
-
-    filteredData = allData.filter(row => {
-      return Object.keys(activeFilters).every(key => {
+    filteredData = allData.filter(row =>
+      Object.keys(activeFilters).every(key => {
         const f = activeFilters[key];
         return !f || f.includes(row[key]);
-      });
-    });
+      })
+    );
     renderCSVTable(filteredData);
   };
 
+  // === Filter zurücksetzen ===
   window.resetFilter = function(columnKey) {
     delete activeFilters[columnKey];
-    filteredData = allData.filter(row => {
-      return Object.keys(activeFilters).every(key => {
+    filteredData = allData.filter(row =>
+      Object.keys(activeFilters).every(key => {
         const f = activeFilters[key];
         return !f || f.includes(row[key]);
-      });
-    });
+      })
+    );
     renderCSVTable(filteredData);
   };
 
