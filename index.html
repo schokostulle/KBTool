@@ -220,36 +220,47 @@ async function login(){
   try{await auth.signInWithEmailAndPassword(fakeEmail(n),p);}catch(e){alert(e.message);}
 }
 
-async function register(){
-  const n=document.getElementById("username").value.trim(),p=document.getElementById("password").value.trim();
-  if(!n||!p)return alert("Bitte Ingame-Name & Passwort angeben!");
-  if(!/^[a-zA-Z0-9 _-]+$/.test(n))return alert("Ungültiger Ingame-Name.");
+async function register() {
+  const n = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
+  if (!/^[a-zA-Z0-9 _-]+$/.test(n))
+    return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
 
-  try{
-    await auth.createUserWithEmailAndPassword(fakeEmail(n),p);
-    const uid=auth.currentUser.uid;
+  try {
+    // Benutzer anlegen
+    await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
+    const uid = auth.currentUser.uid;
 
-    // Admin-Bootstrap: versuche meta/config zu CREATE'n (scheitert, wenn bereits vorhanden)
+    // Prüfe, ob meta/config bereits existiert
     const cfgRef = metaRef.doc("config");
     let firstAdmin = false;
     try {
-      await cfgRef.create({ adminInitialized:true, createdAt:new Date() });
-      firstAdmin = true; // wir waren die Ersten
-    } catch(e) {
-      firstAdmin = false; // existiert schon
+      // Versuch, Dokument anzulegen → klappt nur einmal
+      await cfgRef.create({ adminInitialized: true, createdAt: new Date() });
+      firstAdmin = true;
+      console.log("🟢 Meta-Dokument neu erstellt → erster Benutzer erkannt.");
+    } catch (e) {
+      console.log("ℹ️ Meta-Dokument existiert bereits:", e.code);
+      firstAdmin = false;
     }
 
+    // Benutzer in Firestore eintragen
     await usersRef.doc(uid).set({
-      uid, ingameName:n,
+      uid,
+      ingameName: n,
       role: firstAdmin ? "admin" : "member",
       status: firstAdmin ? "active" : "pending",
-      createdAt:new Date()
+      createdAt: new Date()
     });
 
     alert(firstAdmin
       ? "Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!"
-      : "Registriert. Dein Account wartet auf Freischaltung.");
-  }catch(e){alert(e.message);}
+      : "Registriert. Dein Account wartet auf Freischaltung durch den Admin.");
+  } catch (e) {
+    console.error("Fehler bei Registrierung:", e);
+    alert(e.message);
+  }
 }
 
 async function logout(){await auth.signOut();location.reload();}
