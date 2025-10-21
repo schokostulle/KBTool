@@ -44,9 +44,7 @@
       border: none;
       transition: background 0.2s ease;
     }
-    button:hover {
-      background: var(--accent-hover);
-    }
+    button:hover { background: var(--accent-hover); }
 
     #adminPanel {
       background: var(--card);
@@ -77,30 +75,18 @@
       user-select: none;
       cursor: pointer;
     }
+    th:hover { background: #e5e7eb; }
 
-    th:hover {
-      background: #e5e7eb;
-    }
+    tr:hover td { background: #f9fafb; }
 
-    tr:hover td {
-      background: #f9fafb;
-    }
-
-    .sort-icon,
-    .filter-icon {
+    .sort-icon, .filter-icon {
       font-size: 12px;
       margin-left: 6px;
       color: var(--text-muted);
       transition: color 0.2s;
     }
-
-    .sorted .sort-icon {
-      color: var(--accent);
-    }
-
-    .filtered .filter-icon {
-      color: var(--accent);
-    }
+    .sorted .sort-icon { color: var(--accent); }
+    .filtered .filter-icon { color: var(--accent); }
 
     .filter-menu {
       position: absolute;
@@ -109,11 +95,35 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       z-index: 100;
-      padding: 0.5rem;
-      max-height: 250px;
+      max-height: 300px;
       overflow-y: auto;
       animation: fadeIn 0.15s ease;
+      min-width: 160px;
     }
+
+    .filter-header {
+      position: sticky;
+      top: 0;
+      background: #f3f4f6;
+      padding: 4px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .filter-header button {
+      flex: 1;
+      margin: 2px;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .filter-header button:hover { background: var(--bg); }
 
     .filter-menu label {
       display: flex;
@@ -128,24 +138,6 @@
       accent-color: var(--accent);
       margin-right: 8px;
       transform: scale(1.1);
-    }
-
-    .filter-actions {
-      display: flex;
-      justify-content: space-between;
-      padding-top: 5px;
-      position: sticky;
-      bottom: 0;
-      background: white;
-      border-top: 1px solid var(--border);
-      padding-top: 8px;
-    }
-
-    .filter-actions button {
-      flex: 1;
-      margin: 2px;
-      font-size: 13px;
-      padding: 5px;
     }
 
     @keyframes fadeIn {
@@ -182,10 +174,10 @@
 </div>
 
 <script>
-  // === Firebase Setup (nur für Test deaktiviert) ===
+  // ===== Firebase Setup (Platzhalter ersetzen, für Test leer lassen) =====
   const db = { collection: () => ({ doc: () => ({ set: async ()=>{}, get: async()=>({exists:false}) }) }) };
 
-  // === Tabellenstruktur ===
+  // ===== Tabellenstruktur =====
   const TABLE_HEADER = [
     { key: "Ozean", label: "Oz" },
     { key: "Inselgruppe", label: "IG" },
@@ -207,7 +199,7 @@
   const loginDiv = document.getElementById("loginDiv");
   const adminPanel = document.getElementById("adminPanel");
 
-  // === Login ===
+  // ===== Login =====
   document.getElementById("loginBtn").addEventListener("click", () => {
     const name = document.getElementById("adminName").value.trim();
     const pass = document.getElementById("adminPass").value.trim();
@@ -219,13 +211,12 @@
       alert("Falscher Name oder Passwort!");
     }
   });
-
   document.getElementById("logoutBtn").addEventListener("click", () => {
     adminPanel.classList.add("hidden");
     loginDiv.classList.remove("hidden");
   });
 
-  // === CSV Upload ===
+  // ===== CSV Upload =====
   document.getElementById("uploadCsvBtn").addEventListener("click", () => {
     const file = document.getElementById("csvUpload").files[0];
     if (!file) return alert("Bitte CSV auswählen!");
@@ -251,7 +242,7 @@
     renderCSVTable(filteredData);
   }
 
-  // === Tabelle rendern ===
+  // ===== Tabelle rendern =====
   function renderCSVTable(data) {
     const div = document.getElementById("csvTable");
     if (!data || data.length === 0) {
@@ -281,19 +272,15 @@
     div.innerHTML = html;
   }
 
-  // === Klick auf Header ===
+  // ===== Header-Klick (Filter oder Sortierung) =====
   window.onHeaderClick = function(e, columnKey) {
     const th = e.currentTarget;
     closeAllMenus();
-
-    if (e.shiftKey) {
-      sortTable(columnKey);
-      return;
-    }
+    if (e.shiftKey) { sortTable(columnKey); return; }
     showFilterMenu(th, columnKey);
   };
 
-  // === Sortierung ===
+  // ===== Sortierung =====
   function sortTable(columnKey) {
     sortOrder[columnKey] = !sortOrder[columnKey];
     const dir = sortOrder[columnKey] ? 1 : -1;
@@ -307,7 +294,7 @@
     renderCSVTable(filteredData);
   }
 
-  // === Dropdown Menü ===
+  // ===== Filtermenü =====
   function showFilterMenu(th, columnKey) {
     const values = [...new Set(allData.map(r => r[columnKey]).filter(v => v !== ""))].sort((a,b) =>
       /^\d+$/.test(a) && /^\d+$/.test(b) ? parseInt(a)-parseInt(b) : a.localeCompare(b, 'de')
@@ -317,6 +304,27 @@
     menu.className = "filter-menu";
     menu.addEventListener("click", ev => ev.stopPropagation());
 
+    // Header mit Buttons
+    const header = document.createElement("div");
+    header.className = "filter-header";
+
+    const allBtn = document.createElement("button");
+    allBtn.textContent = "Alle";
+    allBtn.addEventListener("click", () => {
+      const checkboxes = menu.querySelectorAll("input[type=checkbox]");
+      const allChecked = [...checkboxes].every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+    });
+
+    const applyBtn = document.createElement("button");
+    applyBtn.textContent = "Anwenden";
+    applyBtn.addEventListener("click", () => applyFilter(columnKey));
+
+    header.appendChild(applyBtn);
+    header.appendChild(allBtn);
+    menu.appendChild(header);
+
+    // Checkboxen
     values.forEach(v => {
       const id = `${columnKey}_${v}`.replace(/\s+/g, "_");
       const checked = !activeFilters[columnKey] || activeFilters[columnKey].includes(v);
@@ -324,14 +332,6 @@
       label.innerHTML = `<input type="checkbox" id="${id}" value="${v}" ${checked ? "checked" : ""}> ${v}`;
       menu.appendChild(label);
     });
-
-    const actions = document.createElement("div");
-    actions.className = "filter-actions";
-    actions.innerHTML = `
-      <button onclick="applyFilter('${columnKey}')">Anwenden</button>
-      <button onclick="resetFilter('${columnKey}')">Alle</button>
-    `;
-    menu.appendChild(actions);
 
     document.body.appendChild(menu);
 
@@ -341,7 +341,7 @@
     menu.style.minWidth = rect.width + "px";
   }
 
-  // === Filter anwenden ===
+  // ===== Filter anwenden =====
   window.applyFilter = function(columnKey) {
     const menu = document.querySelector(".filter-menu");
     const selected = [...menu.querySelectorAll("input:checked")].map(i => i.value);
@@ -355,25 +355,11 @@
     renderCSVTable(filteredData);
   };
 
-  // === Filter zurücksetzen ===
-  window.resetFilter = function(columnKey) {
-    delete activeFilters[columnKey];
-    filteredData = allData.filter(row =>
-      Object.keys(activeFilters).every(key => {
-        const f = activeFilters[key];
-        return !f || f.includes(row[key]);
-      })
-    );
-    renderCSVTable(filteredData);
-  };
-
+  // ===== Klick außerhalb = Menü schließen =====
   document.addEventListener("click", e => {
     if (!e.target.closest(".filter-menu") && !e.target.closest("th")) closeAllMenus();
   });
-
-  function closeAllMenus() {
-    document.querySelectorAll(".filter-menu").forEach(m => m.remove());
-  }
+  function closeAllMenus() { document.querySelectorAll(".filter-menu").forEach(m => m.remove()); }
 </script>
 </body>
 </html>
