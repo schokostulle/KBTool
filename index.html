@@ -218,16 +218,43 @@ async function login(){
   try{ await auth.signInWithEmailAndPassword(fakeEmail(n), p); }
   catch(e){ alert(e.message); }
 }
-async function register(){
-  const n=document.getElementById("username").value.trim(), p=document.getElementById("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort angeben!");
-  if(!/^[a-zA-Z0-9 _-]+$/.test(n)) return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
-  const adminExists = !(await usersRef.where("role","==","admin").get()).empty;
-  try{
+async function register() {
+  const n = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
+  if (!/^[a-zA-Z0-9 _-]+$/.test(n))
+    return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
+
+  // Admin-Erkennung robuster machen
+  let adminExists = false;
+  try {
+    const snapshot = await usersRef.where("role", "==", "admin").get();
+    adminExists = !snapshot.empty;
+  } catch (err) {
+    console.warn("Fehler bei Admin-Erkennung (vermutlich leere DB):", err);
+    adminExists = false;
+  }
+
+  try {
     await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
-    await usersRef.doc(n).set({ ingameName:n, role: adminExists?"member":"admin", status: adminExists?"pending":"active" });
-    alert(adminExists ? "Registriert. Dein Account wartet auf Freischaltung." : "Du bist der erste Admin!");
-  }catch(e){ alert(e.message); }
+
+    const role = adminExists ? "member" : "admin";
+    const status = adminExists ? "pending" : "active";
+
+    await usersRef.doc(n).set({
+      ingameName: n,
+      role: role,
+      status: status,
+      createdAt: new Date(),
+    });
+
+    if (adminExists)
+      alert("Registriert. Dein Account wartet auf Freischaltung durch den Admin.");
+    else
+      alert("Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!");
+  } catch (e) {
+    alert(e.message);
+  }
 }
 async function logout(){ await auth.signOut(); location.reload(); }
 
