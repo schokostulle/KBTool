@@ -2,29 +2,25 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Auto-Admin Setup</title>
+<title>Allianz Dashboard – CSV Upload</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   body { font-family: "Inter", sans-serif; background: #f9fafb; color: #111827; padding: 2rem; }
   h1 { font-size: 1.8rem; margin-bottom: 1rem; }
-  input, button {
-    padding: 8px; margin: 6px 0; border-radius: 8px; border: 1px solid #d1d5db;
-  }
+  input, button { padding: 8px; margin: 6px 0; border-radius: 8px; border: 1px solid #d1d5db; }
   button { background: #2563eb; color: white; cursor: pointer; }
   button:hover { background: #1d4ed8; }
   .hidden { display: none; }
   .card { background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 1rem; }
   .nav { margin-bottom: 1rem; }
   .nav button { margin-right: 6px; }
-
   table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
   th, td { border-bottom: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
   tr.requested { background: #fff7d6; }
   tr.approved { background: #d1fae5; }
   tr.denied { background: #fee2e2; }
-
   canvas { background: #fff; border: 1px solid #ddd; border-radius: 8px; }
 </style>
 </head>
@@ -48,6 +44,7 @@
     <button onclick="showPage('reservationsView')">🏝 Inselübersicht</button>
     <button onclick="showPage('mapView')">🗺 Inselkarte</button>
     <button id="adminTab" class="hidden" onclick="showPage('adminView')">⚙️ Rollenverwaltung</button>
+    <button id="csvTab" class="hidden" onclick="showPage('csvView')">📤 CSV Upload</button>
     <button onclick="logout()">🚪 Abmelden</button>
   </div>
 
@@ -67,17 +64,25 @@
     <h2>⚙️ Rollenverwaltung</h2>
     <div id="userTable"></div>
   </div>
+
+  <!-- === CSV Upload === -->
+  <div id="csvView" class="hidden">
+    <h2>📤 CSV-Datei hochladen (nur Admin)</h2>
+    <input type="file" id="csvInput" accept=".csv" /><br>
+    <button onclick="uploadCSV()">CSV Hochladen & Ersetzen</button>
+    <p id="csvStatus"></p>
+  </div>
 </div>
 
 <script>
 /* ==== Firebase Setup ==== */
 const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.firebasestorage.app",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
+  apiKey: "DEINE-API-KEY",
+  authDomain: "DEINPROJEKT.firebaseapp.com",
+  projectId: "DEINPROJEKT",
+  storageBucket: "DEINPROJEKT.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:xxxxxx"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -85,17 +90,11 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const usersRef = db.collection("users");
 const reservationsRef = db.collection("reservations");
-
-/* ==== Beispiel-Datenbasis ==== */
-const csvData = [
-  { Ozean:"1", Inselgruppe:"12", Insel:"1", Spielername:"SpielerA", Allianzname:"Blau", Punkte:1200 },
-  { Ozean:"1", Inselgruppe:"13", Insel:"2", Spielername:"SpielerB", Allianzname:"Blau", Punkte:900 },
-  { Ozean:"2", Inselgruppe:"21", Insel:"3", Spielername:"SpielerC", Allianzname:"Rot", Punkte:1500 },
-  { Ozean:"2", Inselgruppe:"22", Insel:"4", Spielername:"SpielerD", Allianzname:"Rot", Punkte:700 }
-];
+const islandsRef = db.collection("islands");
 
 let currentUser = null;
 let currentRole = "member";
+let csvData = [];
 
 /* ==== Fake-Mail Helper ==== */
 function fakeEmail(name) {
@@ -120,14 +119,10 @@ async function register() {
     await auth.createUserWithEmailAndPassword(email, pass);
     await usersRef.doc(name).set({
       ingameName: name,
-      role: isAdminExists ? "member" : "admin" // Erster User wird Admin
+      role: isAdminExists ? "member" : "admin"
     });
 
-    if (!isAdminExists)
-      alert(`Willkommen ${name}! Du bist der erste Admin.`);
-    else
-      alert(`Registrierung erfolgreich als Mitglied!`);
-
+    alert(isAdminExists ? "Registrierung erfolgreich als Mitglied!" : "Du bist der erste Admin!");
   } catch (err) {
     alert(err.message);
   }
@@ -148,12 +143,15 @@ auth.onAuthStateChanged(async user => {
 
     if (currentRole === "admin") {
       document.getElementById("adminTab").classList.remove("hidden");
+      document.getElementById("csvTab").classList.remove("hidden");
       listenUsers();
     } else {
       document.getElementById("adminTab").classList.add("hidden");
+      document.getElementById("csvTab").classList.add("hidden");
     }
 
     listenReservations();
+    await loadCSVFromFirestore();
     showPage("reservationsView");
   } else {
     document.getElementById("loginDiv").classList.remove("hidden");
@@ -167,22 +165,66 @@ async function login() {
   const pass = document.getElementById("password").value.trim();
   if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
   const email = fakeEmail(name);
-
   try {
     await auth.signInWithEmailAndPassword(email, pass);
   } catch (err) {
     alert("Login fehlgeschlagen: " + err.message);
   }
 }
-
 async function logout() { await auth.signOut(); }
 
 /* ==== Navigation ==== */
 function showPage(id) {
-  ["reservationsView","mapView","adminView"].forEach(p =>
+  ["reservationsView","mapView","adminView","csvView"].forEach(p =>
     document.getElementById(p).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   if (id === "mapView") drawMapLive();
+}
+
+/* ==== CSV Upload ==== */
+async function uploadCSV() {
+  if (currentRole !== "admin") return alert("Nur Admin darf CSV hochladen!");
+  const file = document.getElementById("csvInput").files[0];
+  if (!file) return alert("Bitte CSV-Datei auswählen!");
+  document.getElementById("csvStatus").textContent = "CSV wird verarbeitet...";
+
+  const text = await file.text();
+  const rows = text.trim().split("\n").map(r => r.split(";"));
+  csvData = rows.map(cols => ({
+    Ozean: cols[0],
+    Inselgruppe: cols[1],
+    Insel: cols[2],
+    Inselname: cols[3],
+    SpielerID: cols[4],
+    Spielername: cols[5],
+    AllianzID: cols[6],
+    AllianzKuerzel: cols[7],
+    Allianzname: cols[8],
+    Punkte: cols[9]
+  }));
+
+  // Alte Daten löschen
+  const old = await islandsRef.get();
+  const batch = db.batch();
+  old.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+
+  // Neue Daten speichern
+  const batch2 = db.batch();
+  csvData.forEach((r, i) => {
+    const docRef = islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`);
+    batch2.set(docRef, r);
+  });
+  await batch2.commit();
+
+  document.getElementById("csvStatus").textContent = "CSV erfolgreich hochgeladen!";
+  await loadCSVFromFirestore();
+}
+
+/* ==== CSV Laden ==== */
+async function loadCSVFromFirestore() {
+  const snapshot = await islandsRef.get();
+  csvData = snapshot.docs.map(doc => doc.data());
 }
 
 /* ==== Echtzeit Reservierungen ==== */
@@ -191,7 +233,7 @@ function listenReservations() {
     const reservations = {};
     snapshot.forEach(doc => reservations[doc.id] = doc.data());
     renderInselTable(reservations);
-    if (document.getElementById("mapView") && !document.getElementById("mapView").classList.contains("hidden"))
+    if (!document.getElementById("mapView").classList.contains("hidden"))
       drawMapLive(reservations);
   });
 }
@@ -203,26 +245,20 @@ function renderInselTable(reservations) {
   csvData.forEach(r => {
     const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
     const res = reservations[key];
-    let cls = "";
-    if (res?.status === "requested") cls = "requested";
-    else if (res?.status === "approved") cls = "approved";
-    else if (res?.status === "denied") cls = "denied";
+    let cls = res?.status || "";
     html += `<tr class="${cls}">
       <td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td>
-      <td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td>
+      <td>${r.Spielername || "-"}</td><td>${r.Allianzname || "-"}</td><td>${r.Punkte || "-"}</td>
       <td>${res?.user || "-"}</td><td>${renderButton(key,res)}</td></tr>`;
   });
   html += "</tbody></table>";
   div.innerHTML = html;
 }
 
-/* ==== Buttons für Reservierungen ==== */
+/* ==== Reservierungen ==== */
 function renderButton(key, res) {
   if (!currentUser) return "<button disabled>Login nötig</button>";
-
-  if (!res || res.status === "denied") 
-    return `<button onclick="reserve('${key}')">Reservieren</button>`;
-
+  if (!res || res.status === "denied") return `<button onclick="reserve('${key}')">Reservieren</button>`;
   if (res.status === "requested") {
     if (res.user === currentUser.ingameName)
       return `<button disabled>Reserviert (wartet)</button>`;
@@ -230,34 +266,15 @@ function renderButton(key, res) {
       return `<button onclick="approve('${key}')">✔️</button><button onclick="deny('${key}')">✖️</button>`;
     return `<button disabled>Reserviert von ${res.user}</button>`;
   }
-
   if (res.status === "approved") {
     if (res.user === currentUser.ingameName)
       return `<button disabled>✅ Bestätigt</button>`;
     return `<button disabled>Reserviert von ${res.user}</button>`;
   }
 }
-
-/* ==== Reservierungsfunktionen ==== */
-async function reserve(key) {
-  const doc = await reservationsRef.doc(key).get();
-  if (doc.exists && doc.data().status !== "denied") return alert("Bereits reserviert!");
-  await reservationsRef.doc(key).set({
-    user: currentUser.ingameName,
-    status: "requested",
-    timestamp: new Date()
-  });
-}
-
-async function approve(key) {
-  if (currentRole !== "admin") return alert("Nur Admin darf bestätigen!");
-  await reservationsRef.doc(key).update({ status: "approved" });
-}
-
-async function deny(key) {
-  if (currentRole !== "admin") return alert("Nur Admin darf ablehnen!");
-  await reservationsRef.doc(key).update({ status: "denied" });
-}
+async function reserve(key) { await reservationsRef.doc(key).set({ user: currentUser.ingameName, status: "requested", timestamp: new Date() }); }
+async function approve(key) { if (currentRole!=="admin")return; await reservationsRef.doc(key).update({ status: "approved" }); }
+async function deny(key) { if (currentRole!=="admin")return; await reservationsRef.doc(key).update({ status: "denied" }); }
 
 /* ==== Rollenverwaltung ==== */
 function listenUsers() {
@@ -267,52 +284,37 @@ function listenUsers() {
     renderUserTable(users);
   });
 }
-
 function renderUserTable(users) {
   const div = document.getElementById("userTable");
   let html = "<table><thead><tr><th>Ingame-Name</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody>";
   users.forEach(u => {
-    html += `<tr>
-      <td>${u.ingameName}</td>
-      <td>${u.role}</td>
-      <td>${renderRoleButtons(u)}</td>
-    </tr>`;
+    html += `<tr><td>${u.ingameName}</td><td>${u.role}</td><td>${renderRoleButtons(u)}</td></tr>`;
   });
   html += "</tbody></table>";
   div.innerHTML = html;
 }
-
 function renderRoleButtons(u) {
-  if (u.ingameName === currentUser.ingameName)
-    return `<button disabled>👑 Du</button>`;
-  if (u.role === "admin")
-    return `<button onclick="setRole('${u.ingameName}','member')">⬇️ Zu Mitglied</button>`;
-  else
-    return `<button onclick="setRole('${u.ingameName}','admin')">⬆️ Zu Admin</button>`;
+  if (u.ingameName === currentUser.ingameName) return `<button disabled>👑 Du</button>`;
+  if (u.role === "admin") return `<button onclick="setRole('${u.ingameName}','member')">⬇️ Zu Mitglied</button>`;
+  else return `<button onclick="setRole('${u.ingameName}','admin')">⬆️ Zu Admin</button>`;
 }
+async function setRole(name, role) { await usersRef.doc(name).update({ role }); }
 
-async function setRole(name, role) {
-  await usersRef.doc(name).update({ role });
-}
-
-/* ==== Inselkarte (Live) ==== */
+/* ==== Inselkarte ==== */
 function drawMapLive(reservations = {}) {
   const canvas = document.getElementById("mapCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   csvData.forEach(r => {
     const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
     const res = reservations[key];
     const x = (parseInt(r.Inselgruppe) * 6) % 780 + 10;
     const y = (parseInt(r.Ozean) * 100) % 580 + 20;
-
-    let color = "#ccc"; // frei
-    if (res?.status === "requested") color = "#facc15"; // gelb
-    else if (res?.status === "approved") color = "#22c55e"; // grün
-    else if (res?.status === "denied") color = "#ef4444"; // rot
-
+    let color = "#ccc";
+    if (res?.status === "requested") color = "#facc15";
+    else if (res?.status === "approved") color = "#22c55e";
+    else if (res?.status === "denied") color = "#ef4444";
     ctx.beginPath();
     ctx.arc(x, y, 6, 0, Math.PI * 2);
     ctx.fillStyle = color;
@@ -320,12 +322,10 @@ function drawMapLive(reservations = {}) {
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 0.5;
     ctx.stroke();
-
     ctx.font = "10px Inter";
     ctx.fillStyle = "#111";
-    ctx.fillText(r.Spielername, x + 8, y + 4);
+    ctx.fillText(r.Spielername || "", x + 8, y + 4);
   });
-
   ctx.font = "13px Inter";
   ctx.fillStyle = "#000";
   ctx.fillText("🟢 bestätigt  🟡 reserviert  🔴 abgelehnt  ⚪ frei", 10, 590);
