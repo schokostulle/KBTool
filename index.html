@@ -2,13 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Allianz Dashboard – Rollenverwaltung</title>
+<title>Allianz Dashboard – Inselverwaltung</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   body { font-family: "Inter", sans-serif; background: #f9fafb; color: #111827; padding: 2rem; }
-  h1 { font-size: 1.8rem; }
+  h1 { font-size: 1.8rem; margin-bottom: 1rem; }
   input, button {
     padding: 8px; margin: 6px 0; border-radius: 8px; border: 1px solid #d1d5db;
   }
@@ -24,6 +24,8 @@
   tr.requested { background: #fff7d6; }
   tr.approved { background: #d1fae5; }
   tr.denied { background: #fee2e2; }
+
+  canvas { background: #fff; border: 1px solid #ddd; border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -44,14 +46,23 @@
   <p>Angemeldet als <b id="userDisplay"></b> (<span id="roleDisplay"></span>)</p>
   <div class="nav">
     <button onclick="showPage('reservationsView')">🏝 Inselübersicht</button>
+    <button onclick="showPage('mapView')">🗺 Inselkarte</button>
     <button id="adminTab" class="hidden" onclick="showPage('adminView')">⚙️ Rollenverwaltung</button>
     <button onclick="logout()">🚪 Abmelden</button>
   </div>
 
+  <!-- === Inselübersicht === -->
   <div id="reservationsView">
     <div id="inselTable"></div>
   </div>
 
+  <!-- === Inselkarte === -->
+  <div id="mapView" class="hidden">
+    <h2>🗺 Inselkarte</h2>
+    <canvas id="mapCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <!-- === Rollenverwaltung === -->
   <div id="adminView" class="hidden">
     <h2>⚙️ Rollenverwaltung</h2>
     <div id="userTable"></div>
@@ -59,213 +70,252 @@
 </div>
 
 <script>
-  /* ==== Firebase Setup ==== */
-  const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.firebasestorage.app",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
+/* ==== Firebase Setup ==== */
+const firebaseConfig = {
+  // 👉 Deine Firebase Config hier einfügen
+  apiKey: "DEINE-API-KEY",
+  authDomain: "DEINPROJEKT.firebaseapp.com",
+  projectId: "DEINPROJEKT",
+  storageBucket: "DEINPROJEKT.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:xxxxxx"
 };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const usersRef = db.collection("users");
-  const reservationsRef = db.collection("reservations");
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const usersRef = db.collection("users");
+const reservationsRef = db.collection("reservations");
 
-  /* ==== Fake-Mail Helper ==== */
-  function fakeEmail(name) {
-    return name.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
+/* ==== Beispiel-Datenbasis ==== */
+const csvData = [
+  { Ozean:"1", Inselgruppe:"12", Insel:"1", Spielername:"SpielerA", Allianzname:"Blau", Punkte:1200 },
+  { Ozean:"1", Inselgruppe:"13", Insel:"2", Spielername:"SpielerB", Allianzname:"Blau", Punkte:900 },
+  { Ozean:"2", Inselgruppe:"21", Insel:"3", Spielername:"SpielerC", Allianzname:"Rot", Punkte:1500 },
+  { Ozean:"2", Inselgruppe:"22", Insel:"4", Spielername:"SpielerD", Allianzname:"Rot", Punkte:700 }
+];
+
+let currentUser = null;
+let currentRole = "member";
+
+/* ==== Fake-Mail Helper ==== */
+function fakeEmail(name) {
+  return name.toLowerCase().replace(/\s+/g, "_") + "@alliancesystem.fake";
+}
+
+/* ==== Auth Listener ==== */
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    const ingameName = user.email.split("@")[0].replace(/_/g, " ");
+    const userDoc = await usersRef.doc(ingameName).get();
+    currentUser = { ...user, ingameName };
+    currentRole = userDoc.exists ? userDoc.data().role : "member";
+
+    document.getElementById("loginDiv").classList.add("hidden");
+    document.getElementById("mainDiv").classList.remove("hidden");
+    document.getElementById("userDisplay").textContent = ingameName;
+    document.getElementById("roleDisplay").textContent = currentRole;
+
+    if (currentRole === "admin") {
+      document.getElementById("adminTab").classList.remove("hidden");
+      listenUsers();
+    } else {
+      document.getElementById("adminTab").classList.add("hidden");
+    }
+
+    listenReservations();
+    showPage("reservationsView");
+  } else {
+    document.getElementById("loginDiv").classList.remove("hidden");
+    document.getElementById("mainDiv").classList.add("hidden");
+  }
+});
+
+/* ==== Registrierung ==== */
+async function register() {
+  const name = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
+  const email = fakeEmail(name);
+
+  try {
+    await auth.createUserWithEmailAndPassword(email, pass);
+    await usersRef.doc(name).set({ role: "member", ingameName: name });
+    alert("Registrierung erfolgreich! Du kannst dich jetzt anmelden.");
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+/* ==== Login ==== */
+async function login() {
+  const name = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
+  const email = fakeEmail(name);
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (err) {
+    alert("Login fehlgeschlagen: " + err.message);
+  }
+}
+
+async function logout() { await auth.signOut(); }
+
+/* ==== Navigation ==== */
+function showPage(id) {
+  ["reservationsView","mapView","adminView"].forEach(p =>
+    document.getElementById(p).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  if (id === "mapView") drawMapLive();
+}
+
+/* ==== Echtzeit Reservierungen ==== */
+function listenReservations() {
+  reservationsRef.onSnapshot(snapshot => {
+    const reservations = {};
+    snapshot.forEach(doc => reservations[doc.id] = doc.data());
+    renderInselTable(reservations);
+    if (document.getElementById("mapView") && !document.getElementById("mapView").classList.contains("hidden"))
+      drawMapLive(reservations);
+  });
+}
+
+/* ==== Inselübersicht ==== */
+function renderInselTable(reservations) {
+  const div = document.getElementById("inselTable");
+  let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
+  csvData.forEach(r => {
+    const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
+    const res = reservations[key];
+    let cls = "";
+    if (res?.status === "requested") cls = "requested";
+    else if (res?.status === "approved") cls = "approved";
+    else if (res?.status === "denied") cls = "denied";
+    html += `<tr class="${cls}">
+      <td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td>
+      <td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td>
+      <td>${res?.user || "-"}</td><td>${renderButton(key,res)}</td></tr>`;
+  });
+  html += "</tbody></table>";
+  div.innerHTML = html;
+}
+
+/* ==== Buttons für Reservierungen ==== */
+function renderButton(key, res) {
+  if (!currentUser) return "<button disabled>Login nötig</button>";
+
+  if (!res || res.status === "denied") 
+    return `<button onclick="reserve('${key}')">Reservieren</button>`;
+
+  if (res.status === "requested") {
+    if (res.user === currentUser.ingameName)
+      return `<button disabled>Reserviert (wartet)</button>`;
+    if (currentRole === "admin")
+      return `<button onclick="approve('${key}')">✔️</button><button onclick="deny('${key}')">✖️</button>`;
+    return `<button disabled>Reserviert von ${res.user}</button>`;
   }
 
-  /* ==== Beispiel-Inseln ==== */
-  const csvData = [
-    { Ozean:"1", Inselgruppe:"12", Insel:"1", "Spielername":"SpielerA", "Allianzname":"Blau", Punkte:1200 },
-    { Ozean:"1", Inselgruppe:"13", Insel:"2", "Spielername":"SpielerB", "Allianzname":"Blau", Punkte:900 },
-    { Ozean:"2", Inselgruppe:"21", Insel:"3", "Spielername":"SpielerC", "Allianzname":"Rot", Punkte:1500 },
-    { Ozean:"2", Inselgruppe:"22", Insel:"4", "Spielername":"SpielerD", "Allianzname":"Rot", Punkte:700 }
-  ];
+  if (res.status === "approved") {
+    if (res.user === currentUser.ingameName)
+      return `<button disabled>✅ Bestätigt</button>`;
+    return `<button disabled>Reserviert von ${res.user}</button>`;
+  }
+}
 
-  let currentUser = null;
-  let currentRole = "member";
+/* ==== Reservierungsfunktionen ==== */
+async function reserve(key) {
+  const doc = await reservationsRef.doc(key).get();
+  if (doc.exists && doc.data().status !== "denied") return alert("Bereits reserviert!");
+  await reservationsRef.doc(key).set({
+    user: currentUser.ingameName,
+    status: "requested",
+    timestamp: new Date()
+  });
+}
 
-  /* ==== Auth Listener ==== */
-  auth.onAuthStateChanged(async user => {
-    if (user) {
-      const ingameName = user.email.split("@")[0].replace(/_/g, " ");
-      const userDoc = await usersRef.doc(ingameName).get();
-      currentUser = { ...user, ingameName };
-      currentRole = userDoc.exists ? userDoc.data().role : "member";
+async function approve(key) {
+  if (currentRole !== "admin") return alert("Nur Admin darf bestätigen!");
+  await reservationsRef.doc(key).update({ status: "approved" });
+}
 
-      document.getElementById("loginDiv").classList.add("hidden");
-      document.getElementById("mainDiv").classList.remove("hidden");
-      document.getElementById("userDisplay").textContent = ingameName;
-      document.getElementById("roleDisplay").textContent = currentRole;
+async function deny(key) {
+  if (currentRole !== "admin") return alert("Nur Admin darf ablehnen!");
+  await reservationsRef.doc(key).update({ status: "denied" });
+}
 
-      if (currentRole === "admin") {
-        document.getElementById("adminTab").classList.remove("hidden");
-        listenUsers();
-      } else {
-        document.getElementById("adminTab").classList.add("hidden");
-      }
+/* ==== Rollenverwaltung ==== */
+function listenUsers() {
+  usersRef.onSnapshot(snapshot => {
+    const users = [];
+    snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+    renderUserTable(users);
+  });
+}
 
-      listenReservations();
-      showPage("reservationsView");
-    } else {
-      document.getElementById("loginDiv").classList.remove("hidden");
-      document.getElementById("mainDiv").classList.add("hidden");
-    }
+function renderUserTable(users) {
+  const div = document.getElementById("userTable");
+  let html = "<table><thead><tr><th>Ingame-Name</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody>";
+  users.forEach(u => {
+    html += `<tr>
+      <td>${u.ingameName}</td>
+      <td>${u.role}</td>
+      <td>${renderRoleButtons(u)}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  div.innerHTML = html;
+}
+
+function renderRoleButtons(u) {
+  if (u.ingameName === currentUser.ingameName)
+    return `<button disabled>👑 Du</button>`;
+  if (u.role === "admin")
+    return `<button onclick="setRole('${u.ingameName}','member')">⬇️ Zu Mitglied</button>`;
+  else
+    return `<button onclick="setRole('${u.ingameName}','admin')">⬆️ Zu Admin</button>`;
+}
+
+async function setRole(name, role) {
+  await usersRef.doc(name).update({ role });
+}
+
+/* ==== Inselkarte mit Live-Aktualisierung ==== */
+function drawMapLive(reservations = {}) {
+  const canvas = document.getElementById("mapCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  csvData.forEach(r => {
+    const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
+    const res = reservations[key];
+    const x = (parseInt(r.Inselgruppe) * 6) % 780 + 10;
+    const y = (parseInt(r.Ozean) * 100) % 580 + 20;
+
+    let color = "#ccc"; // frei
+    if (res?.status === "requested") color = "#facc15"; // gelb
+    else if (res?.status === "approved") color = "#22c55e"; // grün
+    else if (res?.status === "denied") color = "#ef4444"; // rot
+
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    ctx.font = "10px Inter";
+    ctx.fillStyle = "#111";
+    ctx.fillText(r.Spielername, x + 8, y + 4);
   });
 
-  /* ==== Registrierung ==== */
-  async function register() {
-    const name = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
-    if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
-    const email = fakeEmail(name);
-
-    try {
-      await auth.createUserWithEmailAndPassword(email, pass);
-      await usersRef.doc(name).set({ role: "member", ingameName: name });
-      alert("Registrierung erfolgreich! Du kannst dich jetzt anmelden.");
-    } catch (err) {
-      alert(err.message);
-    }
-  }
-
-  /* ==== Login ==== */
-  async function login() {
-    const name = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
-    if (!name || !pass) return alert("Bitte Ingame-Name und Passwort angeben!");
-    const email = fakeEmail(name);
-
-    try {
-      await auth.signInWithEmailAndPassword(email, pass);
-    } catch (err) {
-      alert("Login fehlgeschlagen: " + err.message);
-    }
-  }
-
-  async function logout() { await auth.signOut(); }
-
-  /* ==== Navigation ==== */
-  function showPage(id) {
-    document.getElementById("reservationsView").classList.add("hidden");
-    document.getElementById("adminView").classList.add("hidden");
-    document.getElementById(id).classList.remove("hidden");
-  }
-
-  /* ==== Reservation Listener ==== */
-  function listenReservations() {
-    reservationsRef.onSnapshot(snapshot => {
-      const reservations = {};
-      snapshot.forEach(doc => reservations[doc.id] = doc.data());
-      renderInselTable(reservations);
-    });
-  }
-
-  /* ==== Tabelle Inseln ==== */
-  function renderInselTable(reservations) {
-    const div = document.getElementById("inselTable");
-    let html = "<table><thead><tr><th>Oz</th><th>IG</th><th>I</th><th>Spieler</th><th>Allianz</th><th>Punkte</th><th>Reserviert von</th><th>Aktion</th></tr></thead><tbody>";
-    csvData.forEach(r => {
-      const key = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
-      const res = reservations[key];
-      let cls = "";
-      if (res?.status === "requested") cls = "requested";
-      else if (res?.status === "approved") cls = "approved";
-      else if (res?.status === "denied") cls = "denied";
-      html += `<tr class="${cls}">
-        <td>${r.Ozean}</td><td>${r.Inselgruppe}</td><td>${r.Insel}</td>
-        <td>${r.Spielername}</td><td>${r.Allianzname}</td><td>${r.Punkte}</td>
-        <td>${res?.user || "-"}</td><td>${renderButton(key,res)}</td></tr>`;
-    });
-    html += "</tbody></table>";
-    div.innerHTML = html;
-  }
-
-  /* ==== Buttons für Reservierungen ==== */
-  function renderButton(key, res) {
-    if (!currentUser) return "<button disabled>Login nötig</button>";
-
-    if (!res || res.status === "denied") 
-      return `<button onclick="reserve('${key}')">Reservieren</button>`;
-
-    if (res.status === "requested") {
-      if (res.user === currentUser.ingameName)
-        return `<button disabled>Reserviert (wartet)</button>`;
-      if (currentRole === "admin")
-        return `<button onclick="approve('${key}')">✔️</button><button onclick="deny('${key}')">✖️</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-
-    if (res.status === "approved") {
-      if (res.user === currentUser.ingameName)
-        return `<button disabled>✅ Bestätigt</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-  }
-
-  async function reserve(key) {
-    const doc = await reservationsRef.doc(key).get();
-    if (doc.exists && doc.data().status !== "denied") return alert("Bereits reserviert!");
-    await reservationsRef.doc(key).set({
-      user: currentUser.ingameName,
-      status: "requested",
-      timestamp: new Date()
-    });
-  }
-
-  async function approve(key) {
-    if (currentRole !== "admin") return alert("Nur Admin darf bestätigen!");
-    await reservationsRef.doc(key).update({ status: "approved" });
-  }
-
-  async function deny(key) {
-    if (currentRole !== "admin") return alert("Nur Admin darf ablehnen!");
-    await reservationsRef.doc(key).update({ status: "denied" });
-  }
-
-  /* ==== User-Listener für Rollenverwaltung ==== */
-  function listenUsers() {
-    usersRef.onSnapshot(snapshot => {
-      const users = [];
-      snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
-      renderUserTable(users);
-    });
-  }
-
-  /* ==== User-Tabelle ==== */
-  function renderUserTable(users) {
-    const div = document.getElementById("userTable");
-    let html = "<table><thead><tr><th>Ingame-Name</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody>";
-    users.forEach(u => {
-      html += `<tr>
-        <td>${u.ingameName}</td>
-        <td>${u.role}</td>
-        <td>${renderRoleButtons(u)}</td>
-      </tr>`;
-    });
-    html += "</tbody></table>";
-    div.innerHTML = html;
-  }
-
-  /* ==== Admin-Rollensteuerung ==== */
-  function renderRoleButtons(u) {
-    if (u.ingameName === currentUser.ingameName)
-      return `<button disabled>👑 Du</button>`;
-    if (u.role === "admin")
-      return `<button onclick="setRole('${u.ingameName}','member')">⬇️ Zu Mitglied</button>`;
-    else
-      return `<button onclick="setRole('${u.ingameName}','admin')">⬆️ Zu Admin</button>`;
-  }
-
-  async function setRole(name, role) {
-    await usersRef.doc(name).update({ role });
-  }
+  ctx.font = "13px Inter";
+  ctx.fillStyle = "#000";
+  ctx.fillText("🟢 bestätigt  🟡 reserviert  🔴 abgelehnt  ⚪ frei", 10, 590);
+}
 </script>
 </body>
 </html>
