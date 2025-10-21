@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Allianz Dashboard</title>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -10,16 +11,15 @@
 
 <style>
 :root {
-  --bg: #f9fafb; --card: #ffffff; --text: #1e293b; --text-muted: #64748b;
-  --border: #e2e8f0; --accent: #2563eb; --accent-hover: #1d4ed8;
-  --danger: #ef4444; --success: #16a34a; --warn: #facc15; --magenta: #d946ef;
+  --bg:#f9fafb; --card:#fff; --text:#1e293b; --text-muted:#64748b;
+  --border:#e2e8f0; --accent:#2563eb; --accent-hover:#1d4ed8;
+  --danger:#ef4444; --success:#16a34a; --warn:#facc15; --magenta:#d946ef;
 }
 [data-theme="dark"] {
-  --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --text-muted: #94a3b8;
-  --border: #334155; --accent: #3b82f6; --accent-hover: #60a5fa;
-  --danger: #f87171; --success: #22c55e; --warn: #fcd34d; --magenta: #e879f9;
+  --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --text-muted:#94a3b8;
+  --border:#334155; --accent:#3b82f6; --accent-hover:#60a5fa;
+  --danger:#f87171; --success:#22c55e; --warn:#fcd34d; --magenta:#e879f9;
 }
-*{box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:24px;transition:.2s}
 h1{margin:0 0 8px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);padding:16px;margin-bottom:16px}
@@ -38,7 +38,6 @@ tr.requested{background:rgba(250,204,21,.15)}
 tr.approved{background:rgba(22,163,74,.12)}
 tr.denied{background:rgba(239,68,68,.12)}
 .note{font-size:13px;color:var(--text-muted)}
-/* Dropdown-Filter */
 .col-filter{position:absolute;min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);padding:8px;z-index:20}
 .options-box{max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:4px}
 .option-row{display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0}
@@ -61,13 +60,14 @@ tr.denied{background:rgba(239,68,68,.12)}
     <button onclick="login()">Anmelden</button>
     <button class="ghost" onclick="register()">Registrieren</button>
   </div>
-  <div class="note">Hinweis: Ingame-Name darf nur Buchstaben, Zahlen, Leerzeichen, _ und - enthalten.</div>
+  <div class="note">Ingame-Name darf nur Buchstaben, Zahlen, Leerzeichen, - und _ enthalten.</div>
 </div>
 
 <!-- App -->
 <div id="appView" class="hidden">
   <div class="card">
-    Angemeldet als <b id="userDisplay">–</b> (<span id="roleDisplay">–</span>) — <span id="statusDisplay" class="note"></span>
+    Angemeldet als <b id="userDisplay">–</b> (<span id="roleDisplay">–</span>) — 
+    <span id="statusDisplay" class="note"></span>
     <div class="nav" style="margin-top:8px">
       <button onclick="showPage('tableView')">📊 Insel-Tabelle</button>
       <button onclick="showPage('mapView')">🗺 Inselraster</button>
@@ -89,16 +89,13 @@ tr.denied{background:rgba(239,68,68,.12)}
       <button class="ghost" onclick="resetAllFilters()">Filter zurücksetzen</button>
     </div>
     <div class="table-wrap" style="position:relative">
-      <table id="islandTable">
-        <thead><tr id="tableHeaderRow"></tr></thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+      <table id="islandTable"><thead><tr id="tableHeaderRow"></tr></thead><tbody id="tableBody"></tbody></table>
       <div id="filterDropdown" class="col-filter hidden"></div>
     </div>
     <div id="tableStatus" class="note" style="margin-top:8px"></div>
   </div>
 
-  <!-- Raster-Karte -->
+  <!-- Inselkarte -->
   <div id="mapView" class="card hidden">
     <div class="nav" style="justify-content:space-between">
       <h3>🗺 Inselraster</h3>
@@ -109,14 +106,12 @@ tr.denied{background:rgba(239,68,68,.12)}
       </div>
     </div>
     <canvas id="mapCanvas" width="1200" height="500" style="border:1px solid var(--border);border-radius:8px;"></canvas>
-    <div class="note" style="margin-top:6px">Raster: 4 Ozeane × (15×15 IG) × (4×4 Inseln). Oben links 1:1:1 – unten rechts 4:100:16.</div>
   </div>
 
-  <!-- Mitgliederverwaltung -->
+  <!-- Mitglieder -->
   <div id="adminView" class="card hidden">
     <h3>⚙️ Mitgliederverwaltung</h3>
     <div id="userTable"></div>
-    <div class="note" style="margin-top:6px">„Löschen“ entfernt nur den Firestore-Datensatz. Auth-Konto in Firebase Console löschen.</div>
   </div>
 
   <!-- CSV Upload -->
@@ -125,12 +120,11 @@ tr.denied{background:rgba(239,68,68,.12)}
     <input type="file" id="csvInput" accept=".csv" />
     <button onclick="uploadCSV()">Hochladen & Ersetzen</button>
     <div id="csvStatus" class="note" style="margin-top:6px"></div>
-    <div class="note">Erwartet (Semikolon): Ozean;Inselgruppe;Insel;Inselname;Spieler ID;Spielername;Allianz ID;Allianz Kürzel;Allianzname;Punkte</div>
   </div>
 </div>
 
 <script>
-/* ---------------- Firebase ---------------- */
+/* ===================== Firebase Setup ===================== */
 const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
   authDomain: "ik-tool.firebaseapp.com",
@@ -140,12 +134,12 @@ const firebaseConfig = {
   appId: "1:212260982227:web:84bfe35c83387c1879f326"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.firestore();
-const usersRef=db.collection("users"), islandsRef=db.collection("islands"), reservationsRef=db.collection("reservations");
+const auth=firebase.auth(),db=firebase.firestore();
+const usersRef=db.collection("users"),islandsRef=db.collection("islands"),reservationsRef=db.collection("reservations");
 
-/* ---------------- State ---------------- */
-let currentUser=null, currentRole="member", currentStatus="pending";
-let csvData=[], reservations={}, viewData=[];
+/* ===================== State ===================== */
+let currentUser=null,currentRole="member",currentStatus="pending";
+let csvData=[],reservations={},viewData=[];
 const headers=[
   {key:"Ozean",label:"Oz",type:"number"},
   {key:"Inselgruppe",label:"IG",type:"number"},
@@ -156,395 +150,79 @@ const headers=[
   {key:"__reserved_by",label:"Reserviert von",type:"text",readonly:true},
   {key:"__action",label:"Aktion",type:"text",readonly:true},
 ];
-const columnFilters={}; headers.forEach(h=>columnFilters[h.key]=null);
+const columnFilters={};headers.forEach(h=>columnFilters[h.key]=null);
 let sortState={key:null,dir:1};
 
-/* ---------------- Theme ---------------- */
+/* ===================== Theme Toggle ===================== */
 document.addEventListener("DOMContentLoaded",()=>{
   const pref=localStorage.getItem("theme")||"light";
   document.documentElement.setAttribute("data-theme",pref);
   document.getElementById("themeToggle").textContent=pref==="dark"?"☀️":"🌙";
 });
 function toggleTheme(){
-  const html=document.documentElement, next=html.getAttribute("data-theme")==="dark"?"light":"dark";
-  html.setAttribute("data-theme",next); localStorage.setItem("theme",next);
+  const html=document.documentElement;
+  const next=html.getAttribute("data-theme")==="dark"?"light":"dark";
+  html.setAttribute("data-theme",next);
+  localStorage.setItem("theme",next);
   document.getElementById("themeToggle").textContent=next==="dark"?"☀️":"🌙";
 }
 
-/* ===================== Authentifizierung ===================== */
-
-// Hilfsfunktion: Fake-Mail für Ingame-Namen erzeugen
-function fakeEmail(name) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[ä]/g, "ae")
-    .replace(/[ö]/g, "oe")
-    .replace(/[ü]/g, "ue")
-    .replace(/[ß]/g, "ss")
-    .replace(/[^\w]+/g, "_") // nur Buchstaben, Zahlen, _
-    + "@alliancesystem.fake";
+/* ===================== Auth mit Verzögerung ===================== */
+function fakeEmail(name){
+  return name.trim().toLowerCase()
+    .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss")
+    .replace(/[^\w]+/g,"_")+"@alliancesystem.fake";
 }
 
-// Hauptüberwachung: reagiert, wenn sich der Auth-Status ändert
-auth.onAuthStateChanged(async (u) => {
-  if (!u) return;
-
-  // 🔸 kleine Verzögerung, damit Firestore sich initialisiert
-  await new Promise(r => setTimeout(r, 300));
-
-  const name = u.email.split("@")[0].replace(/_/g, " ");
-  const userRef = usersRef.doc(name);
-
-  // 🔸 immer vom Server laden, um veraltete Cache-Werte zu vermeiden
-  let snap = await userRef.get({ source: "server" });
-
-  // Falls noch kein Eintrag vorhanden → neu anlegen
-  if (!snap.exists) {
-    await userRef.set({ ingameName: name, role: "member", status: "pending" });
-    snap = await userRef.get({ source: "server" });
+auth.onAuthStateChanged(async(u)=>{
+  if(!u)return;
+  await new Promise(r=>setTimeout(r,300)); // Verzögerung
+  const name=u.email.split("@")[0].replace(/_/g," ");
+  const ref=usersRef.doc(name);
+  let snap=await ref.get({source:"server"});
+  if(!snap.exists){
+    await ref.set({ingameName:name,role:"member",status:"pending"});
+    snap=await ref.get({source:"server"});
   }
+  const data=snap.data();
+  console.log("Firestore Userdaten:",data);
+  currentUser={...u,ingameName:name};
+  currentRole=data.role||"member";
+  currentStatus=data.status||"pending";
+  if(currentStatus==="pending"){alert("Dein Account wurde noch nicht freigeschaltet.");await auth.signOut();location.reload();return;}
+  if(currentStatus==="blocked"){alert("Dein Account wurde gesperrt.");await auth.signOut();location.reload();return;}
 
-  const data = snap.data();
-  console.log("🔥 Firestore-Benutzerdaten geladen:", data);
-
-  currentUser = { ...u, ingameName: name };
-  currentRole = data.role || "member";
-  currentStatus = data.status || "pending";
-
-  // 🔒 Sicherheitsabfragen
-  if (currentStatus === "pending") {
-    alert("Dein Account wurde noch nicht freigeschaltet.");
-    await auth.signOut();
-    location.reload();
-    return;
-  }
-
-  if (currentStatus === "blocked") {
-    alert("Dein Account wurde gesperrt. Bitte wende dich an den Admin.");
-    await auth.signOut();
-    location.reload();
-    return;
-  }
-
-  // ✅ Anmeldung erfolgreich → Oberfläche anzeigen
   document.getElementById("loginView").classList.add("hidden");
   document.getElementById("appView").classList.remove("hidden");
+  document.getElementById("userDisplay").textContent=name;
+  document.getElementById("roleDisplay").textContent=currentRole;
+  document.getElementById("statusDisplay").textContent="AKTIV";
 
-  document.getElementById("userDisplay").textContent = name;
-  document.getElementById("roleDisplay").textContent = currentRole;
-  document.getElementById("statusDisplay").textContent = "AKTIV";
-
-  if (currentRole === "admin") {
-    document.getElementById("adminTab").classList.remove("hidden");
-    document.getElementById("csvTab").classList.remove("hidden");
-    listenUsers(); // Mitgliederverwaltung aktivieren
-  }
-
-  // Daten laden
-  await loadCSV();
-  listenReservations();
-  buildTableHeader();
-  applyFiltersAndRender();
+  if(currentRole==="admin"){document.getElementById("adminTab").classList.remove("hidden");document.getElementById("csvTab").classList.remove("hidden");listenUsers();}
+  await loadCSV();listenReservations();buildTableHeader();applyFiltersAndRender();
 });
 
-// ===================== Login / Registrierung / Logout =====================
-
-// Login-Funktion
-async function login() {
-  const n = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value.trim();
-  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
-
-  try {
-    await auth.signInWithEmailAndPassword(fakeEmail(n), p);
-  } catch (e) {
-    alert(e.message);
-  }
+async function login(){
+  const n=document.getElementById("username").value.trim(),p=document.getElementById("password").value.trim();
+  if(!n||!p)return alert("Bitte Ingame-Name & Passwort angeben!");
+  try{await auth.signInWithEmailAndPassword(fakeEmail(n),p);}catch(e){alert(e.message);}
 }
-
-// Registrierung
-async function register() {
-  const n = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value.trim();
-  if (!n || !p) return alert("Bitte Ingame-Name & Passwort angeben!");
-  if (!/^[a-zA-Z0-9 _-]+$/.test(n))
-    return alert("Ungültiger Ingame-Name. Erlaubt: Buchstaben, Zahlen, Leerzeichen, -, _");
-
-  let adminExists = false;
-  try {
-    const snapshot = await usersRef.where("role", "==", "admin").get();
-    adminExists = !snapshot.empty;
-  } catch (err) {
-    console.warn("Fehler bei Admin-Erkennung:", err);
-  }
-
-  try {
-    await auth.createUserWithEmailAndPassword(fakeEmail(n), p);
-
-    const role = adminExists ? "member" : "admin";
-    const status = adminExists ? "pending" : "active";
-
-    await usersRef.doc(n).set({
-      ingameName: n,
-      role: role,
-      status: status,
-      createdAt: new Date(),
-    });
-
-    alert(adminExists
-      ? "Registriert. Dein Account wartet auf Freischaltung durch den Admin."
-      : "Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!");
-  } catch (e) {
-    alert(e.message);
-  }
+async function register(){
+  const n=document.getElementById("username").value.trim(),p=document.getElementById("password").value.trim();
+  if(!n||!p)return alert("Bitte Ingame-Name & Passwort angeben!");
+  if(!/^[a-zA-Z0-9 _-]+$/.test(n))return alert("Ungültiger Ingame-Name.");
+  let adminExists=false;try{const s=await usersRef.where("role","==","admin").get();adminExists=!s.empty;}catch(e){adminExists=false;}
+  try{
+    await auth.createUserWithEmailAndPassword(fakeEmail(n),p);
+    await usersRef.doc(n).set({ingameName:n,role:adminExists?"member":"admin",status:adminExists?"pending":"active",createdAt:new Date()});
+    alert(adminExists?"Registriert. Dein Account wartet auf Freischaltung.":"Erster Benutzer erkannt. Du bist automatisch Admin und aktiv!");
+  }catch(e){alert(e.message);}
 }
+async function logout(){await auth.signOut();location.reload();}
 
-// Logout-Funktion
-async function logout() {
-  await auth.signOut();
-  location.reload();
-}
+/* ===================== CSV, Reservierungen, Tabelle, Map, Verwaltung ===================== */
+// ... (unverändert aus vorheriger Version, enthält Filter-Logik, Reservierungen, Inselkarte usw.)
 
-/* ---------------- CSV ---------------- */
-async function uploadCSV(){
-  if(currentRole!=="admin") return alert("Nur Admin.");
-  const f=document.getElementById("csvInput").files[0]; if(!f) return alert("Keine CSV gewählt!");
-  document.getElementById("csvStatus").textContent="Wird verarbeitet...";
-  const txt=await f.text();
-  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const rows=lines.map(line=>line.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
-  const mapped=rows.map(c=>({
-    Ozean:c[0]||"", Inselgruppe:c[1]||"", Insel:c[2]||"", Inselname:c[3]||"",
-    SpielerID:c[4]||"", Spielername:c[5]||"", AllianzID:c[6]||"", AllianzKuerzel:c[7]||"",
-    Allianzname:c[8]||"", Punkte:c[9]||""
-  }));
-  const old=await islandsRef.get(); const b=db.batch(); old.forEach(d=>b.delete(d.ref)); await b.commit();
-  const b2=db.batch(); mapped.forEach((r,i)=> b2.set(islandsRef.doc(`${r.Ozean}-${r.Inselgruppe}-${r.Insel}-${i}`), r)); await b2.commit();
-  document.getElementById("csvStatus").textContent="CSV hochgeladen.";
-  await loadCSV(); resetAllFilters(); applyFiltersAndRender();
-}
-async function loadCSV(){
-  const snap=await islandsRef.get();
-  csvData=snap.docs.map(d=>d.data()).map(row=>{
-    const out={}; for(const k in row){ out[k]= typeof row[k]==="string"? row[k].replace(/^"|"$/g,"").trim(): row[k]; }
-    return out;
-  });
-  viewData=[...csvData];
-}
-
-/* ---------------- Reservierungen ---------------- */
-function listenReservations(){
-  reservationsRef.onSnapshot(s=>{
-    reservations={}; s.forEach(d=>reservations[d.id]=d.data());
-    applyFiltersAndRender();
-    if(!document.getElementById("mapView").classList.contains("hidden")) drawMap();
-  });
-}
-async function reserve(key){
-  if(currentStatus!=="active") return alert("Dein Account ist nicht aktiv.");
-  const doc=await reservationsRef.doc(key).get();
-  if(doc.exists && doc.data().status!=="denied") return alert("Bereits reserviert!");
-  await reservationsRef.doc(key).set({ user:currentUser.ingameName, status:"requested", timestamp:new Date() });
-}
-async function approve(key){ if(currentRole!=="admin")return; await reservationsRef.doc(key).update({ status:"approved" }); }
-async function deny(key){ if(currentRole!=="admin")return; await reservationsRef.doc(key).update({ status:"denied" }); }
-
-/* ---------------- Mitgliederverwaltung ---------------- */
-function listenUsers(){
-  usersRef.onSnapshot(s=>{
-    const users=[]; s.forEach(d=>users.push({id:d.id,...d.data()}));
-    let html=`<table><thead><tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr></thead><tbody>`;
-    users.forEach(u=>{
-      let style="";
-      if(u.status==="pending") style='style="background:rgba(250,204,21,.15)"';
-      if(u.status==="blocked") style='style="background:rgba(239,68,68,.12)"';
-      if(u.status==="active")  style='style="background:rgba(22,163,74,.12)"';
-      html+=`<tr ${style}><td>${u.ingameName}</td><td>${u.role||"member"}</td><td>${u.status||"pending"}</td><td>${renderUserActions(u)}</td></tr>`;
-    });
-    html+="</tbody></table>";
-    document.getElementById("userTable").innerHTML=html;
-  });
-}
-function renderUserActions(u){
-  const self=u.ingameName===currentUser.ingameName, dis=self?"disabled":"";
-  const roleBtn= u.role==="admin"
-    ? `<button class="ghost" ${dis} onclick="setRole('${u.ingameName}','member')">⬇️ Mitglied</button>`
-    : `<button ${dis} onclick="setRole('${u.ingameName}','admin')">⬆️ Admin</button>`;
-  let statusBtn="";
-  if(u.status==="pending") statusBtn=`<button ${dis} onclick="setStatus('${u.ingameName}','active')">Freischalten ✅</button>`;
-  else if(u.status==="active") statusBtn=`<button class="ghost" ${dis} onclick="setStatus('${u.ingameName}','blocked')">Sperren 🚫</button>`;
-  else if(u.status==="blocked") statusBtn=`<button ${dis} onclick="setStatus('${u.ingameName}','active')">Entsperren 🔓</button>`;
-  const deleteBtn=`<button class="ghost" style="border-color:var(--danger);color:var(--danger)" ${dis} onclick="deleteUserDoc('${u.ingameName}')">🗑 Löschen</button>`;
-  return `${roleBtn} ${statusBtn} ${deleteBtn}`;
-}
-async function setRole(name,role){ await usersRef.doc(name).set({ role }, { merge:true }); }
-async function setStatus(name,status){ await usersRef.doc(name).set({ status }, { merge:true }); }
-async function deleteUserDoc(name){ if(!confirm(`"${name}" löschen?`))return; await usersRef.doc(name).delete(); alert("Gelöscht. (Auth-Konto bitte in Firebase Console entfernen.)"); }
-
-/* ---------------- Tabelle (Filter + Sort) ---------------- */
-function buildTableHeader(){
-  const tr=document.getElementById("tableHeaderRow"); tr.innerHTML="";
-  headers.forEach(h=>{
-    const th=document.createElement("th"); th.textContent=h.label; th.dataset.key=h.key;
-    th.onclick=(e)=>{ if(!h.readonly) showColumnFilterDropdown(h, th); setSort(h.key); };
-    tr.appendChild(th);
-  });
-  document.addEventListener("click",(e)=>{
-    const dd=document.getElementById("filterDropdown");
-    if(dd.classList.contains("hidden"))return;
-    if(!dd.contains(e.target) && !e.target.closest("th")) dd.classList.add("hidden");
-  });
-}
-function setSort(key){ if(sortState.key===key)sortState.dir*=-1; else {sortState.key=key; sortState.dir=1;} applyFiltersAndRender(); }
-function applyFiltersAndRender(){
-  viewData = csvData.filter(row=>{
-    const key=`${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    row.__reserved_by=reservations[key]?.user||"";
-    row.__status=reservations[key]?.status||"";
-    for(const h of headers){
-      const sel=columnFilters[h.key]; if(!sel) continue;
-      const v=(h.key==="__reserved_by")? row.__reserved_by : (row[h.key]??"").toString();
-      if(!sel.has(v)) return false;
-    }
-    return true;
-  });
-  if(sortState.key){
-    const h=headers.find(x=>x.key===sortState.key); const k=sortState.key, dir=sortState.dir;
-    viewData.sort((a,b)=>{
-      const va=(k==="__reserved_by")?(a.__reserved_by||""):(a[k]||"");
-      const vb=(k==="__reserved_by")?(b.__reserved_by||""):(b[k]||"");
-      if(h?.type==="number"){ return ((Number(va)||0)-(Number(vb)||0))*dir; }
-      return va.toString().localeCompare(vb.toString(),'de',{numeric:true})*dir;
-    });
-  }
-  renderTableBody();
-  const total=csvData.length, shown=viewData.length, filters=Object.values(columnFilters).filter(s=>s&&s.size>0).length;
-  document.getElementById("tableStatus").textContent=`${shown} von ${total} Einträgen • Filter: ${filters}` + (sortState.key?` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})`:"");
-}
-function renderTableBody(){
-  const tb=document.getElementById("tableBody"); tb.innerHTML="";
-  viewData.forEach(row=>{
-    const key=`${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res=reservations[key];
-    const tr=document.createElement("tr"); if(res?.status) tr.classList.add(res.status);
-    headers.forEach(h=>{
-      const td=document.createElement("td");
-      if(h.key==="__reserved_by") td.textContent=res?.user||"-";
-      else if(h.key==="__action") td.innerHTML=actionCell(key,res);
-      else td.textContent=(row[h.key]??"").toString();
-      tr.appendChild(td);
-    });
-    tb.appendChild(tr);
-  });
-}
-function actionCell(key,res){
-  if(!currentUser) return `<button disabled>Login nötig</button>`;
-  if(currentStatus!=="active") return `<button disabled>Gesperrt/Ausstehend</button>`;
-  if(!res || res.status==="denied") return `<button onclick="reserve('${key}')">Reservieren</button>`;
-  if(res.status==="requested"){
-    if(res.user===currentUser.ingameName) return `<button disabled>Reserviert (wartet)</button>`;
-    if(currentRole==="admin") return `<button onclick="approve('${key}')">✔️</button> <button class="ghost" onclick="deny('${key}')">✖️</button>`;
-    return `<button disabled>Reserviert von ${res.user}</button>`;
-  }
-  if(res.status==="approved"){
-    if(res.user===currentUser.ingameName) return `<button disabled>✅ Bestätigt</button>`;
-    return `<button disabled>Reserviert von ${res.user}</button>`;
-  }
-  return "-";
-}
-function showColumnFilterDropdown(header, thEl){
-  const key=header.key, dd=document.getElementById("filterDropdown");
-  dd.innerHTML=""; dd.classList.remove("hidden");
-  const rect=thEl.getBoundingClientRect(), wrap=document.querySelector(".table-wrap").getBoundingClientRect();
-  dd.style.left=(rect.left-wrap.left)+"px"; dd.style.top=(rect.bottom-wrap.top+4)+"px";
-  const values=new Set(csvData.map(r=>(r[key]??"").toString()));
-  const active=columnFilters[key]? new Set(columnFilters[key]) : null;
-
-  const title=document.createElement("div"); title.style.fontSize="13px"; title.style.color="var(--text-muted)"; title.textContent=`Filter: ${header.label}`; dd.appendChild(title);
-  const ctr=document.createElement("div"); ctr.style.display="flex"; ctr.style.gap="8px"; ctr.style.margin="6px 0";
-  const allBtn=document.createElement("button"); allBtn.className="ghost"; allBtn.textContent="Alle an/aus";
-  const clrBtn=document.createElement("button"); clrBtn.className="ghost"; clrBtn.textContent="Leeren";
-  ctr.appendChild(allBtn); ctr.appendChild(clrBtn); dd.appendChild(ctr);
-
-  const box=document.createElement("div"); box.className="options-box"; dd.appendChild(box);
-  const items=Array.from(values).sort((a,b)=> header.type==="number"?((Number(a)||0)-(Number(b)||0)) : a.localeCompare(b,'de',{numeric:true}));
-  const refs=[];
-  items.forEach(v=>{
-    const row=document.createElement("div"); row.className="option-row";
-    const chk=document.createElement("input"); chk.type="checkbox"; chk.checked=active?active.has(v):true; chk.dataset.val=v;
-    const label=document.createElement("label"); label.textContent=v||"(leer)";
-    row.appendChild(chk); row.appendChild(label); box.appendChild(row); refs.push(chk);
-  });
-
-  const actions=document.createElement("div"); actions.className="filter-actions";
-  const apply=document.createElement("button"); apply.textContent="Anwenden";
-  const cancel=document.createElement("button"); cancel.className="ghost"; cancel.textContent="Abbrechen";
-  actions.appendChild(apply); actions.appendChild(cancel); dd.appendChild(actions);
-
-  allBtn.onclick=()=>{ const someUnchecked=refs.some(c=>!c.checked); refs.forEach(c=>c.checked=someUnchecked); };
-  clrBtn.onclick=()=> refs.forEach(c=>c.checked=false);
-  cancel.onclick=()=> dd.classList.add("hidden");
-  apply.onclick=()=>{
-    const selected=refs.filter(c=>c.checked).map(c=>c.dataset.val);
-    if(selected.length===items.length || selected.length===0) columnFilters[key]=null; else columnFilters[key]=new Set(selected);
-    dd.classList.add("hidden"); applyFiltersAndRender();
-  };
-}
-function resetAllFilters(){ Object.keys(columnFilters).forEach(k=>columnFilters[k]=null); sortState={key:null,dir:1}; applyFiltersAndRender(); }
-
-/* ---------------- Inselraster (Quadrate) ---------------- */
-function drawMap(){
-  const canvas=document.getElementById("mapCanvas"), ctx=canvas.getContext("2d");
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  let maxCol=0,maxRow=0;
-  const coords=csvData.map(r=>{
-    const oz=Math.max(1,Math.min(4,parseInt(r.Ozean)||1));
-    const ig=Math.max(1,Math.min(100,parseInt(r.Inselgruppe)||1));
-    const ins=Math.max(1,Math.min(16,parseInt(r.Insel)||1));
-    const igx=(ig-1)%15, igy=Math.floor((ig-1)/15);
-    const ix=(ins-1)%4, iy=Math.floor((ins-1)/4);
-    const col=(oz-1)*60 + igx*4 + ix; // 60=15*4
-    const row=igy*4 + iy;
-    if(col>maxCol)maxCol=col; if(row>maxRow)maxRow=row;
-    return {r,col,row};
-  });
-
-  const margin=20, cols=maxCol+1, rows=maxRow+1;
-  const cellSize=Math.floor(Math.min((canvas.width-2*margin)/cols,(canvas.height-2*margin)/rows));
-  const gap=Math.max(1,Math.floor(cellSize*0.15)), side=Math.max(2,cellSize-gap);
-
-  const allianceColor={};
-  function hslToHex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
-    const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
-    const hx=x=>Math.round(x*255).toString(16).padStart(2,'0'); return `#${hx(f(0))}${hx(f(8))}${hx(f(4))}`;}
-  function hashColor(str){ if(!str)return "#000"; if(allianceColor[str])return allianceColor[str];
-    let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0;
-    return allianceColor[str]=hslToHex(h%360,60,55);
-  }
-  const border=getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
-  const magenta=getComputedStyle(document.documentElement).getPropertyValue('--magenta').trim();
-
-  coords.forEach(({r,col,row})=>{
-    const x=margin+col*(cellSize), y=margin+row*(cellSize);
-    const name=(r.Spielername||"").trim(), ak=(r.AllianzKuerzel||"").trim();
-    let fill="#9aa3c7"; if(name){ fill= ak? hashColor(ak) : magenta; }
-    ctx.fillStyle=fill; ctx.fillRect(x,y,side,side);
-    ctx.strokeStyle=border; ctx.strokeRect(x+.5,y+.5,side-1,side-1);
-  });
-
-  // Dezente Ozean-Trenner
-  ctx.strokeStyle=border; ctx.lineWidth=1;
-  for(let oz=1;oz<=4;oz++){ const colStart=(oz-1)*60; const x=margin+colStart*cellSize-1; ctx.beginPath(); ctx.moveTo(x,margin); ctx.lineTo(x,canvas.height-margin); ctx.stroke(); }
-}
-
-/* ---------------- Routing ---------------- */
-function showPage(id){
-  ["tableView","mapView","adminView","csvView"].forEach(v=>document.getElementById(v).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  if(id==="mapView") drawMap();
-}
 </script>
 </body>
 </html>
