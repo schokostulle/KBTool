@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Bullfrog Tools – Dashboard</title>
+
+  <!-- Tabulator (Tabellen-Engine) -->
+  <link href="https://unpkg.com/tabulator-tables@5.6.2/dist/css/tabulator_midnight.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/tabulator-tables@5.6.2/dist/js/tabulator.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#101316;--panel:#14191e;--card:#151a1f;--text:#e8efe9;--muted:#97a09a;--border:#27313a;
+      --accent:#3b5f4a;--accent-2:#2e4d38;--ok:#2ea44f;--warn:#c28b2a;--danger:#c23a3a;
+    }
+    [data-theme="light"]{
+      --bg:#f5f6f3;--panel:#fafbfa;--card:#ffffff;--text:#202522;--muted:#57605a;--border:#d6ddd6;
+      --accent:#2e4d38;--accent-2:#23402e;--ok:#1f8a3e;--warn:#a8701f;--danger:#b32d2d;
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    aside{background:var(--panel);border-right:1px solid var(--border);padding:14px;position:sticky;top:0;height:100vh}
+    .brand{font-weight:800;margin-bottom:8px}
+    .user{font-size:13px;color:var(--muted);margin-bottom:14px}
+    nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none}
+    nav a:hover{background:rgba(59,95,74,.2)}
+    nav a.active{background:rgba(59,95,74,.35)}
+    header{display:flex;justify-content:flex-end;gap:8px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50}
+    button{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer}
+    button.ghost{background:transparent;color:var(--text)}
+    main{padding:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .muted{color:var(--muted)}
+    /* Responsive: mobile bottom nav */
+    @media (max-width:900px){
+      .layout{grid-template-columns:1fr}
+      aside{display:none}
+      .bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 6px;z-index:60}
+      main{padding-bottom:64px}
+    }
+    /* Tabulator Optik */
+    .tabulator{border:1px solid var(--border);border-radius:10px}
+    .tab-wrap{height:65vh;overflow:hidden}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">🐸 Bullfrog Tools</div>
+      <div class="user">Eingeloggt als <span id="uName">–</span> • <span id="uRole">–</span></div>
+      <nav id="sideNav">
+        <a data-page="events" class="active">📰 Ereignisse</a>
+        <a data-page="reports">⚔️ Kampfberichte</a>
+        <a data-page="reserves">🏝 Inselreservierung</a>
+        <a data-page="map">🗺 Inselkarte</a>
+        <a data-page="attack">⏱ Angriff/Verteidigung</a>
+        <div id="adminGroup" style="margin-top:10px;display:none">
+          <div class="muted" style="padding:6px 12px">Admin</div>
+          <a data-page="csv">📁 CSV-Tabelle</a>
+          <a data-page="members">👥 Mitgliederverwaltung</a>
+          <a data-page="diplomacy">🤝 Diplomatie</a>
+        </div>
+      </nav>
+    </aside>
+
+    <div>
+      <header>
+        <button id="themeToggle" class="ghost">🌙</button>
+        <button id="logoutBtn" class="ghost">Abmelden</button>
+      </header>
+      <main>
+        <section id="view" class="card">
+          <!-- Standard: Ereignisse -->
+          <h2>Ereignisse</h2>
+          <p class="muted">Schnelle Infos, Ankündigungen und laufende Aktionen.</p>
+          <div class="tab-wrap"><div id="eventsTable"></div></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottomnav" id="bottomNav" style="display:none">
+    <a data-page="events">📰</a>
+    <a data-page="reports">⚔️</a>
+    <a data-page="reserves">🏝</a>
+    <a data-page="map">🗺</a>
+    <a data-page="attack">⏱</a>
+  </nav>
+
+  <script type="module">
+    import { initTheme, toggleTheme, protectDashboard, getUserInfo, logout,
+             loadEvents, isAdmin } from "./firebase.js";
+
+    // Theme
+    initTheme(document.documentElement);
+    document.getElementById("themeToggle").onclick = ()=> toggleTheme(document.documentElement);
+
+    // Schutz + User anzeigen
+    await protectDashboard(); // redirectet zu index.html, wenn nicht aktiv
+    const { name, role } = await getUserInfo();
+    document.getElementById("uName").textContent = name;
+    document.getElementById("uRole").textContent = role;
+    if (await isAdmin()) document.getElementById("adminGroup").style.display = "block";
+
+    document.getElementById("logoutBtn").onclick = logout;
+
+    // Navigation (Side & Bottom)
+    function setActive(page){
+      document.querySelectorAll('nav a[data-page]').forEach(a=>a.classList.toggle('active', a.dataset.page===page));
+      // Content-Wechsel (hier minimal – später echte Module/Pages laden)
+      const view = document.getElementById('view');
+      if(page==="events"){
+        view.innerHTML = `<h2>Ereignisse</h2><p class="muted">Schnelle Infos, Ankündigungen und laufende Aktionen.</p><div class="tab-wrap"><div id="eventsTable"></div></div>`;
+        renderEvents();
+      }else{
+        const titles = {
+          reports:"Kampfberichte",
+          reserves:"Inselreservierung",
+          map:"Inselkarte",
+          attack:"Angriff/Verteidigung",
+          csv:"CSV-Tabelle",
+          members:"Mitgliederverwaltung",
+          diplomacy:"Diplomatie"
+        };
+        view.innerHTML = `<h2>${titles[page]||"Bereich"}</h2><p class="muted">Inhalt folgt in der nächsten Ausbaustufe.</p>`;
+      }
+    }
+    document.getElementById("sideNav").addEventListener("click",(e)=>{
+      const a=e.target.closest("a[data-page]"); if(!a) return; setActive(a.dataset.page);
+    });
+    const bottom = document.getElementById("bottomNav");
+    const isMobile = () => window.matchMedia("(max-width:900px)").matches;
+    const syncBottom = ()=> bottom.style.display = isMobile() ? "flex" : "none";
+    window.addEventListener("resize", syncBottom); syncBottom();
+    bottom.addEventListener("click",(e)=>{const a=e.target.closest("a[data-page]"); if(!a) return; setActive(a.dataset.page);});
+
+    // Ereignisse mit Tabulator
+    async function renderEvents(){
+      const data = await loadEvents(); // [{title,message,timestamp,author}]
+      if(!window._eventsTable){
+        window._eventsTable = new Tabulator("#eventsTable",{
+          data, layout:"fitColumns", placeholder:"Keine Ereignisse",
+          columns:[
+            {title:"Zeit", field:"timestamp", sorter:"datetime", hozAlign:"left",
+             formatter:(c)=> new Date(c.getValue()).toLocaleString()},
+            {title:"Titel", field:"title"},
+            {title:"Info", field:"message"},
+            {title:"Autor", field:"author"}
+          ],
+          initialSort:[{column:"timestamp",dir:"desc"}]
+        });
+      } else {
+        window._eventsTable.replaceData(data);
+      }
+    }
+    // Startansicht
+    setActive("events");
+  </script>
+</body>
+</html>
