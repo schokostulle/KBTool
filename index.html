@@ -1,420 +1,88 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Allianz-Dashboard</title>
-
-<!-- Tabulator (Excel-Style Tabellen) -->
-<link href="https://unpkg.com/tabulator-tables@5.6.2/dist/css/tabulator_midnight.min.css" rel="stylesheet">
-<script src="https://unpkg.com/tabulator-tables@5.6.2/dist/js/tabulator.min.js"></script>
-
-<style>
-:root{
-  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#8b949e;--border:#30363d;
-  --accent:#60a5fa;--accent-2:#3b82f6;--ok:#22c55e;--warn:#fbbf24;--danger:#ef4444;--magenta:#e879f9;
-  --map-bg:#0b1220;--grid-i:#6b7280;--grid-ig:#3f3f46;--grid-o:rgba(255,70,70,.8);
-}
-:root.light{
-  --bg:#f9fafb;--card:#fff;--text:#111827;--muted:#374151;--border:#d1d5db;
-  --accent:#3b82f6;--accent-2:#2563eb;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--magenta:#db2777;
-  --map-bg:#f3f4f6;--grid-i:#d1d5db;--grid-ig:#9ca3af;--grid-o:rgba(239,68,68,.4);
-}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;transition:.25s}
-.hidden{display:none}.muted{color:var(--muted)}
-.header{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;padding:10px 16px}
-.header .spacer{flex:1}
-.container{max-width:1200px;margin:auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:16px;margin-top:16px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.spacer{flex:1}.badge{font-size:13px;color:var(--muted)}
-button,input,select{border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;font-size:14px}
-button{background:var(--accent);border:none;cursor:pointer}button:hover{background:var(--accent-2)}
-button.ghost{background:transparent;border:1px solid var(--border)}button.ok{background:var(--ok)}button.warn{background:var(--warn)}button.danger{background:var(--danger)}
-.tabbar{display:flex;gap:8px;margin-top:8px}.tabcontent{margin-top:12px}
-.tablewrap{border-radius:10px;border:1px solid var(--border)}
-/* Tabulator optische Anpassung */
-.tabulator{border-radius:10px;border:1px solid var(--border)}
-.tabulator-row:hover{background:rgba(96,165,250,.15)!important}
-@media (max-width:900px){#islandTable,#playerTable,#diplomacyTable{height:60vh!important}}
-#mapCanvas{display:block;width:100%;max-width:100%;height:auto;background:var(--map-bg);border:1px solid var(--border);border-radius:12px}
-.legend{display:flex;gap:12px;align-items:center;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bullfrog Tools – Login</title>
+  <style>
+    :root{
+      --bg:#101316;--card:#151a1f;--text:#e8efe9;--muted:#97a09a;--border:#27313a;
+      --accent:#3b5f4a;--accent-2:#2e4d38;--ok:#2ea44f;--warn:#c28b2a;--danger:#c23a3a;
+    }
+    [data-theme="light"]{
+      --bg:#f5f6f3;--card:#ffffff;--text:#202522;--muted:#57605a;--border:#d6ddd6;
+      --accent:#2e4d38;--accent-2:#23402e;--ok:#1f8a3e;--warn:#a8701f;--danger:#b32d2d;
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--card)}
+    .brand{font-weight:700;letter-spacing:.3px}
+    .container{min-height:calc(100vh - 58px); display:grid; place-items:center; padding:20px}
+    .card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .row{display:flex;gap:10px;align-items:center}
+    .field{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+    label{font-size:13px;color:var(--muted)}
+    input{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:15px}
+    button{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
+    button:hover{background:var(--accent-2)}
+    .ghost{background:transparent;color:var(--text)}
+    .muted{color:var(--muted);font-size:13px}
+  </style>
 </head>
 <body>
-  <div class="header">
-    <div><b>🏝 Allianz-Dashboard</b></div>
-    <div class="spacer"></div>
-    <button id="btnTheme" class="ghost">🌙 Dark</button>
-  </div>
-
-  <div class="container">
-    <!-- LOGIN -->
-    <div id="loginView" class="card">
-      <h2>Login / Registrierung</h2>
-      <div class="row"><input id="username" placeholder="Ingame-Name"><input id="password" type="password" placeholder="Passwort"></div>
-      <div class="row"><button id="btnLogin">Anmelden</button><button id="btnRegister" class="ghost">Registrieren</button><span class="badge">Erster Account wird Admin.</span></div>
+  <header class="header">
+    <div class="brand">🐸 Bullfrog Tools</div>
+    <div class="row">
+      <button id="themeToggle" class="ghost">🌙</button>
     </div>
+  </header>
 
-    <!-- APP -->
-    <div id="appView" class="hidden">
-      <div class="card row">
-        <div>👤 <b id="userDisplay">–</b> • Rolle: <b id="roleDisplay">–</b> • Status: <b id="statusDisplay">–</b></div>
-        <div class="spacer"></div>
-        <button id="btnLogout" class="ghost">Abmelden</button>
+  <main class="container">
+    <section class="card">
+      <h2 style="margin:0 0 6px">Anmelden</h2>
+      <p class="muted" style="margin:0 0 12px">Mit Ingame-Namen und Passwort anmelden oder registrieren.</p>
+
+      <div class="field">
+        <label for="username">Ingame-Name</label>
+        <input id="username" autocomplete="username" placeholder="z. B. Aegir"/>
+      </div>
+      <div class="field">
+        <label for="password">Passwort</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••"/>
       </div>
 
-      <div class="card">
-        <div class="tabbar">
-          <button data-tab="tab-islands">📊 Inselübersicht</button>
-          <button data-tab="tab-players">🧑‍✈️ Spielerübersicht (Feinde)</button>
-          <button data-tab="tab-attack">⚔️ Angriff / Verteidigung</button>
-          <button data-tab="tab-map">🗺 Inselkarte</button>
-          <button data-tab="tab-diplomacy" id="tabDiplBtn" class="hidden">🤝 Diplomatie (Admin)</button>
-        </div>
+      <div class="row" style="justify-content:space-between;margin-top:12px">
+        <button id="loginBtn">Anmelden</button>
+        <button id="registerBtn" class="ghost">Registrieren</button>
       </div>
+      <p id="loginMsg" class="muted" style="margin-top:12px"></p>
+    </section>
+  </main>
 
-      <!-- Inselübersicht -->
-      <div id="tab-islands" class="tabcontent card">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div><span id="tableStatus" class="badge"></span></div>
-          <div>
-            <input type="file" id="csvInput" accept=".csv" class="hidden">
-            <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
-            <span id="csvStatus" class="badge"></span>
-          </div>
-        </div>
-        <div id="islandTable" style="margin-top:10px;height:70vh;"></div>
-      </div>
+  <script type="module">
+    import { initTheme, toggleTheme, login, register, onIndexReady } from "./firebase.js";
+    // Theme init
+    initTheme(document.documentElement);
+    document.getElementById("themeToggle").onclick = ()=> toggleTheme(document.documentElement);
 
-      <!-- Spielerübersicht (nur Feinde) -->
-      <div id="tab-players" class="tabcontent card hidden">
-        <h3>Spielerübersicht (Feinde)</h3>
-        <div id="playerTable" style="margin-top:10px;height:70vh;"></div>
-      </div>
+    // Auth handlers
+    const u = document.getElementById("username");
+    const p = document.getElementById("password");
+    const msg = document.getElementById("loginMsg");
 
-      <!-- Angriff / Verteidigung -->
-      <div id="tab-attack" class="tabcontent card hidden">
-        <h3>Angriff / Verteidigung</h3>
-        <div class="row">
-          <input id="atk_from" placeholder="Angreifende Insel z. B. 2:201:16">
-          <input id="atk_to" placeholder="Zielinsel z. B. 1:171:5">
-          <input id="atk_start" placeholder="Start HH:mm:ss">
-          <select id="atk_unit">
-            <option value="Spähschiff">Spähschiff (12 kn)</option>
-            <option value="Fregatte">Fregatte (8 kn)</option>
-            <option value="Handelskogge">Handelskogge (6 kn)</option>
-            <option value="Kolonisationsschiff">Kolonisationsschiff (2 kn)</option>
-          </select>
-          <select id="atk_relation">
-            <option value="friendly">Freundlich</option>
-            <option value="hostile">Feindlich</option>
-            <option value="neutral">Neutral</option>
-          </select>
-          <button id="atk_calc">Berechnen</button>
-        </div>
-        <div class="badge">Entfernung 1 Dezimalstelle • Zeit lokal • Reisezeit intern 5 Stellen (h) gerundet • Ausgabe HH:mm:ss</div>
-        <div class="tablewrap" style="margin-top:8px">
-          <table id="atkTable"><thead>
-            <tr><th>Spieler</th><th>Startinsel</th><th>Zielinsel</th><th>Einheit</th><th>Distanz (sm)</th><th>Reisezeit</th><th>Ankunft</th><th>Rückkehr</th></tr>
-          </thead><tbody id="atkTbody"></tbody></table>
-        </div>
-      </div>
+    document.getElementById("loginBtn").onclick = async ()=>{
+      msg.textContent = "";
+      try { await login(u.value.trim(), p.value.trim()); }
+      catch(e){ msg.textContent = e.message || String(e); }
+    };
 
-      <!-- Inselkarte -->
-      <div id="tab-map" class="tabcontent card hidden">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div class="legend">
-            <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
-            <span><span class="sw" style="background:var(--magenta)"></span> allianzlos</span>
-          </div>
-          <div class="row">
-            <select id="mapColorMode">
-              <option value="diplomacy">Farben nach Diplomatie</option>
-              <option value="points">Farben nach Punkten</option>
-            </select>
-            <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
-          </div>
-        </div>
-        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
-      </div>
+    document.getElementById("registerBtn").onclick = async ()=>{
+      msg.textContent = "";
+      try { await register(u.value.trim(), p.value.trim()); }
+      catch(e){ msg.textContent = e.message || String(e); }
+    };
 
-      <!-- Diplomatie -->
-      <div id="tab-diplomacy" class="tabcontent card hidden">
-        <h3>Diplomatie verwalten</h3>
-        <div id="diplomacyTable" style="height:60vh;"></div>
-      </div>
-    </div>
-  </div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-/* ----- Firebase Config: HIER EINTRAGEN ----- */
-const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.firebasestorage.app",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-
-/* ----- Utils & State ----- */
-const $=id=>document.getElementById(id);
-function fakeEmail(n){return n.trim().toLowerCase().replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss").replace(/[^\w]+/g,"_")+"@fake.local";}
-function numberify(x){return Number(String(x??"").replace(/^"|"$/g,"").replace(/\./g,"").replace(/\s/g,""))||0;}
-function round1(v){return Math.round(v*10)/10;}function round5(v){return Math.round(v*1e5)/1e5;}
-const shipKnots={Spähschiff:12,Fregatte:8,Handelskogge:6,Kolonisationsschiff:2};
-
-let currentUser=null,currentRole="member",currentStatus="pending";
-let islands=[],reservations={},allyMap={},playerOverrides={};
-
-/* ----- Theme ----- */
-(function(){const isLight=localStorage.theme==="light";document.documentElement.classList.toggle("light",isLight);$("btnTheme").textContent=isLight?"☀️ Light":"🌙 Dark";})();
-$("btnTheme").onclick=()=>{const willLight=!document.documentElement.classList.contains("light");document.documentElement.classList.toggle("light",willLight);localStorage.theme=willLight?"light":"dark";$("btnTheme").textContent=willLight?"☀️ Light":"🌙 Dark";drawMap();};
-
-/* ----- Tabs ----- */
-const tabs=["tab-islands","tab-players","tab-attack","tab-map","tab-diplomacy"];
-document.querySelectorAll(".tabbar button").forEach(b=>b.addEventListener("click",()=>{const id=b.getAttribute("data-tab");tabs.forEach(t=>$(t).classList.add("hidden"));$(id).classList.remove("hidden");if(id==="tab-map")drawMap();if(id==="tab-players")renderPlayers();if(id==="tab-diplomacy")renderDiplomacy();}));
-
-/* ----- Auth ----- */
-$("btnRegister").onclick=async()=>{const n=$("username").value.trim(),p=$("password").value.trim();if(!n||!p)return alert("Name & Passwort!");
-  try{const cred=await createUserWithEmailAndPassword(auth,fakeEmail(n),p);const all=await getDocs(collection(db,"users"));
-    const first=all.empty;await setDoc(doc(db,"users",cred.user.uid),{name:n,role:first?"admin":"member",status:first?"active":"pending"});
-    alert(first?"Admin erstellt.":"Registriert. Bitte Freischaltung abwarten.");
-  }catch(e){alert(e.message);}
-};
-$("btnLogin").onclick=async()=>{const n=$("username").value.trim(),p=$("password").value.trim();if(!n||!p)return alert("Name & Passwort!");try{await signInWithEmailAndPassword(auth,fakeEmail(n),p);}catch(e){alert(e.message);}};
-$("btnLogout").onclick=()=>signOut(auth);
-
-onAuthStateChanged(auth, async u=>{
-  if(!u){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");return;}
-  const d=await getDoc(doc(db,"users",u.uid)); if(!d.exists()){await signOut(auth);return;}
-  const data=d.data(); if(data.status!=="active"){alert("Noch nicht freigeschaltet.");await signOut(auth);return;}
-  currentUser=u; currentRole=data.role; currentStatus=data.status;
-  $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
-  $("userDisplay").textContent=data.name; $("roleDisplay").textContent=currentRole; $("statusDisplay").textContent="AKTIV";
-  if(currentRole==="admin"){$("btnCSV").classList.remove("hidden");$("tabDiplBtn").classList.remove("hidden");}
-
-  await Promise.all([loadIslands(), loadDiplomacy()]);
-  listenReservations();
-
-  renderIslandTable();   // <— wichtig: nach Login Tabelle zeichnen
-  renderPlayers();
-  drawMap();
-});
-
-/* ----- Data: islands + CSV ----- */
-const islandsRef = collection(db, "islands");
-async function loadIslands() {
-  const snapshot = await getDocs(islandsRef);
-  islands = snapshot.docs.map(doc => doc.data()).map(r=>{
-    const o={...r};for(const k in o){if(typeof o[k]==="string")o[k]=o[k].replace(/^"|"$/g,"").trim();}
-    o.Punkte=numberify(o.Punkte);return o;
-  });
-  if(islands && islands.length>0){ /* optional: render direkt hier */ }
-}
-$("btnCSV").onclick=()=>$("csvInput").click();
-$("csvInput").addEventListener("change", async e=>{
-  if(currentRole!=="admin")return alert("Nur Admins dürfen CSV hochladen.");
-  const file=e.target.files[0]; if(!file) return;
-  $("csvStatus").textContent="Importiere...";
-  try{
-    const text=await file.text();
-    const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-    const rows=lines.map(l=>l.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
-    const existing=await getDocs(islandsRef); for(const d of existing.docs) await deleteDoc(doc(db,"islands",d.id));
-    let i=0; for(const c of rows){
-      const rec={Ozean:c[0]||"",Inselgruppe:c[1]||"",Insel:c[2]||"",Spielername:c[5]||"",AllianzKuerzel:c[7]||"",Punkte:numberify(c[9]||0)};
-      await setDoc(doc(db,"islands",`${i++}`),rec);
-    }
-    $("csvStatus").textContent="Fertig.";
-    await loadIslands();
-    renderIslandTable();  // <— wichtig: nach Upload Tabelle erneuern
-    renderPlayers();
-    drawMap();
-    renderDiplomacy();
-  }catch(err){console.error(err);$("csvStatus").textContent="Fehler beim Import.";}
-});
-
-/* ----- Reservations ----- */
-const reservationsRef=collection(db,"reservations");
-function listenReservations(){ onSnapshot(reservationsRef,(s)=>{reservations={};s.forEach(d=>reservations[d.id]=d.data()); if(islandTable) islandTable.replaceData(islands.map(extendIslandRow)); });}
-window.reserve=async id=>{await setDoc(doc(db,"reservations",id),{user:(await getDoc(doc(db,"users",currentUser.uid))).data().name,status:"requested"});};
-window.approve=async id=>{if(currentRole!=="admin")return;await setDoc(doc(db,"reservations",id),{status:"approved"},{merge:true}); if(islandTable) islandTable.replaceData(islands.map(extendIslandRow));};
-window.deny=async id=>{if(currentRole!=="admin")return;await setDoc(doc(db,"reservations",id),{status:"denied"},{merge:true}); if(islandTable) islandTable.replaceData(islands.map(extendIslandRow));};
-
-/* ----- Diplomatie (alliances & overrides) ----- */
-async function loadDiplomacy(){
-  allyMap={}; playerOverrides={};
-  const a=await getDocs(collection(db,"alliances")); a.forEach(d=>allyMap[d.id]=d.data());
-  const p=await getDocs(collection(db,"playerOverrides")); p.forEach(d=>playerOverrides[d.id]=d.data());
-}
-function relationOfRow(row){
-  const pn=(row.Spielername||"").trim(), ak=(row.AllianzKuerzel||"").trim();
-  if(playerOverrides[pn]?.relation) return playerOverrides[pn].relation;
-  if(ak && allyMap[ak]?.relation) return allyMap[ak].relation;
-  return "neutral";
-}
-
-/* ----- Inselübersicht (Tabulator) ----- */
-let islandTable=null;
-function extendIslandRow(r){
-  const id=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`,res=reservations[id];
-  return {...r,__reserved_by:res?.user||"",__status:res?.status||"",__resid:id,__action:actionCell(id,res)};
-}
-function renderIslandTable(){
-  const data = islands.map(extendIslandRow);
-  if(islandTable){ islandTable.replaceData(data); updateIslandStatus(); return; }
-  islandTable = new Tabulator("#islandTable",{
-    data, layout:"fitColumns", pagination:"local", paginationSize:25, placeholder:"Keine Daten",
-    movableColumns:true, resizableRows:false,
-    columns:[
-      {title:"Oz",field:"Ozean",sorter:"number",headerFilter:"input",width:70},
-      {title:"IG",field:"Inselgruppe",sorter:"number",headerFilter:"input",width:80},
-      {title:"I", field:"Insel",sorter:"number",headerFilter:"input",width:70},
-      {title:"Spieler",field:"Spielername",sorter:"string",headerFilter:"input"},
-      {title:"Allianz",field:"AllianzKuerzel",sorter:"string",headerFilter:"input"},
-      {title:"Punkte",field:"Punkte",sorter:"number",headerFilter:"input",formatter:c=>{const v=Number(c.getValue()||0);return v?v.toLocaleString('de-DE'):"";}},
-      {title:"Reserviert von",field:"__reserved_by",sorter:"string"},
-      {title:"Aktion",field:"__action",formatter:"html",hozAlign:"center",width:150},
-    ],
-    rowFormatter:row=>{
-      const d=row.getData(), el=row.getElement();
-      el.style.transition="background .25s";
-      if(d.__status==="requested") el.style.background="rgba(251,191,36,.15)";
-      else if(d.__status==="approved") el.style.background="rgba(34,197,94,.15)";
-      else if(d.__status==="denied") el.style.background="rgba(239,68,68,.15)";
-      else el.style.background="";
-    }
-  });
-  islandTable.on("dataFiltered", updateIslandStatus);
-  islandTable.on("dataSorted", updateIslandStatus);
-  islandTable.on("pageLoaded", updateIslandStatus);
-  updateIslandStatus();
-}
-function updateIslandStatus(){
-  if(!islandTable) return;
-  const total=islands.length, vis=islandTable.getDataCount("active");
-  $("tableStatus").textContent=`${vis} von ${total} Inseln angezeigt`;
-}
-function actionCell(id,res){
-  if(!currentUser) return "<button disabled>Login nötig</button>";
-  if(currentStatus!=="active") return "<button disabled>Ausstehend</button>";
-  if(res){
-    if(res.status==="requested"&&currentRole==="admin")
-      return `<button class="ok" onclick="approve('${id}')">✔</button> <button class="ghost" onclick="deny('${id}')">✖</button>`;
-    if(res.status==="requested") return "<button disabled>Wartet</button>";
-    if(res.status==="approved") return "<button disabled>✅</button>";
-    if(res.status==="denied")   return `<button onclick="reserve('${id}')">Reservieren</button>`;
-  }
-  return `<button onclick="reserve('${id}')">Reservieren</button>`;
-}
-
-/* ----- Spielerübersicht (nur Feinde, Tabulator) ----- */
-let playerTable=null;
-function renderPlayers(){
-  // nur feindliche Spieler sammeln
-  const hostileIslands = islands.filter(r=>{
-    const pn=(r.Spielername||"").trim(), ak=(r.AllianzKuerzel||"").trim();
-    const rel = playerOverrides[pn]?.relation || (ak ? (allyMap[ak]?.relation||"neutral") : "neutral");
-    return rel==="hostile";
-  });
-  // gruppieren
-  const map=new Map();
-  hostileIslands.forEach(r=>{
-    const key=(r.Spielername||"").trim(); if(!key) return;
-    const ak=(r.AllianzKuerzel||"").trim(); const pts=Number(r.Punkte||0);
-    const ig=String(r.Inselgruppe||"");
-    if(!map.has(key)) map.set(key,{Spieler:key, Allianz:ak, IGs:new Set(), Inseln:0, Punkte:0});
-    const o=map.get(key); o.IGs.add(ig); o.Inseln++; o.Punkte+=pts;
-  });
-  const rows=[...map.values()].map(o=>({Spieler:o.Spieler,Allianz:o.Allianz,IGs:[...o.IGs].filter(Boolean).map(x=>+x||0).sort((a,b)=>a-b).join(", "),Inseln:o.Inseln,Punkte:o.Punkte,Avg:o.Inseln?Math.round(o.Punkte/o.Inseln):0}));
-
-  if(playerTable){ playerTable.replaceData(rows); return; }
-  playerTable = new Tabulator("#playerTable",{
-    data:rows, layout:"fitColumns", pagination:"local", paginationSize:25, placeholder:"Keine Daten",
-    columns:[
-      {title:"Spieler",field:"Spieler",sorter:"string",headerFilter:"input"},
-      {title:"Allianz",field:"Allianz",sorter:"string",headerFilter:"input"},
-      {title:"IG (sortiert)",field:"IGs",sorter:"string"},
-      {title:"Inseln",field:"Inseln",sorter:"number"},
-      {title:"Punkte",field:"Punkte",sorter:"number",formatter:c=>Number(c.getValue()||0).toLocaleString('de-DE')},
-      {title:"Ø Punkte/ Insel",field:"Avg",sorter:"number",formatter:c=>Number(c.getValue()||0).toLocaleString('de-DE')}
-    ]
-  });
-}
-
-/* ----- Diplomatie-Tab (Tabulator) ----- */
-let diplomacyTable=null;
-function renderDiplomacy(){
-  const tags=[...new Set(islands.map(i=>i.AllianzKuerzel).filter(Boolean))];
-  const data=tags.map(tag=>({tag, relation:(allyMap[tag]?.relation)||"neutral"}));
-  if(diplomacyTable){ diplomacyTable.replaceData(data); return; }
-  diplomacyTable=new Tabulator("#diplomacyTable",{
-    data, layout:"fitColumns", placeholder:"Keine Allianzen",
-    columns:[
-      {title:"Allianz",field:"tag",sorter:"string"},
-      {title:"Beziehung",field:"relation",editor:"select",
-        editorParams:{values:{friendly:"Freundlich",neutral:"Neutral",hostile:"Feindlich"}},
-        cellEdited: async (cell)=>{ const tag=cell.getRow().getData().tag; const val=cell.getValue(); await setDoc(doc(db,"alliances",tag),{relation: val},{merge:true}); allyMap[tag]={...(allyMap[tag]||{}), relation:val}; renderPlayers(); drawMap(); }
-      }
-    ]
-  });
-}
-
-/* ----- Angriff / Verteidigung ----- */
-function parseCoordString(s){const p=String(s).replace(/[,;\s-]+/g,":").split(":").map(Number);const oz=Math.max(1,p[0]||1),IG=Math.max(1,p[1]||1),ins=Math.max(1,p[2]||1);const igc=(IG-1)%15,igr=Math.floor((IG-1)/15),inc=(ins-1)%4,inr=Math.floor((ins-1)/4);const oColOff=(oz===1||oz===3)?0:60,oRowOff=(oz===1||oz===2)?0:60;const col=oColOff+igc*4+inc,row=oRowOff+igr*4+inr;return {col,row,oz,IG,ins};}
-function distanceTiles(aStr,bStr){const a=parseCoordString(aStr),b=parseCoordString(bStr);const dx=a.col-b.col,dy=a.row-b.row;return Math.sqrt(dx*dx+dy*dy);}
-function fmtHHMMSS(sec){const s=Math.max(0,Math.round(sec));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`;}
-function fmtLocal(d){return d.toLocaleString();}
-$("atk_calc").onclick=()=>{
-  const from=$("atk_from").value.trim(),to=$("atk_to").value.trim(),t=$("atk_start").value.trim(),unit=$("atk_unit").value,rel=$("atk_relation").value;
-  if(!from||!to||!t)return alert("Start/Ziel/Startzeit angeben.");
-  const dist=round1(distanceTiles(from,to));const knots=shipKnots[unit];const travelHours=round5(dist/(knots||1));const travelSeconds=Math.round(travelHours*3600);
-  const [HH,MM,SS]=t.split(":").map(n=>Number(n)||0);const now=new Date();const start=new Date(now.getFullYear(),now.getMonth(),now.getDate(),HH,MM,SS);const arrive=new Date(start.getTime()+travelSeconds*1000);const back=new Date(arrive.getTime()+travelSeconds*1000);
-  const rows = islands.filter(r=>{const pn=(r.Spielername||"").trim(),ak=(r.AllianzKuerzel||"").trim();const rln=playerOverrides[pn]?.relation||(ak?(allyMap[ak]?.relation||"neutral"):"neutral");return rln===rel;})
-  .map(r=>{const home=`${r.Ozean}:${r.Inselgruppe}:${r.Insel}`;const d2=round1(distanceTiles(home,to));const h2=round5(d2/(knots||1));const s2=Math.round(h2*3600);const a2=new Date(start.getTime()+s2*1000),b2=new Date(a2.getTime()+s2*1000);return {player:(r.Spielername||"-"),home,unit,dist:d2,secs:s2,arr:a2,ret:b2};})
-  .sort((a,b)=>a.secs-b.secs).slice(0,300);
-  $("atkTbody").innerHTML=[
-    `<tr><td><b>—</b></td><td>${from}</td><td>${to}</td><td>${unit}</td><td>${dist.toFixed(1)}</td><td>${fmtHHMMSS(travelSeconds)}</td><td>${fmtLocal(arrive)}</td><td>${fmtLocal(back)}</td></tr>`,
-    ...rows.map(x=>`<tr><td>${x.player}</td><td>${x.home}</td><td>${to}</td><td>${unit}</td><td>${x.dist.toFixed(1)}</td><td>${fmtHHMMSS(x.secs)}</td><td>${fmtLocal(x.arr)}</td><td>${fmtLocal(x.ret)}</td></tr>`)
-  ].join("")||`<tr><td colspan="8" class="muted">Keine Treffer</td></tr>`;
-};
-
-/* ----- Map ----- */
-const mapCanvas=$("mapCanvas"),ctx=mapCanvas.getContext("2d");$("mapColorMode").onchange=()=>drawMap();
-function drawMap(){
-  const c=ctx,W=mapCanvas.width,H=mapCanvas.height,cs=getComputedStyle(document.documentElement);
-  const bg=cs.getPropertyValue("--map-bg").trim(),gi=cs.getPropertyValue("--grid-i").trim(),gg=cs.getPropertyValue("--grid-ig").trim(),go=cs.getPropertyValue("--grid-o").trim();
-  c.clearRect(0,0,W,H);c.fillStyle=bg;c.fillRect(0,0,W,H);
-  const TOTAL=120,cell=10,x0=60,y0=60;
-  c.strokeStyle=gi;c.lineWidth=0.4;for(let i=0;i<=TOTAL;i++){const p=y0+i*cell;c.beginPath();c.moveTo(x0,p);c.lineTo(x0+TOTAL*cell,p);c.stroke();const q=x0+i*cell;c.beginPath();c.moveTo(q,y0);c.lineTo(q,y0+TOTAL*cell);c.stroke();}
-  c.strokeStyle=gg;c.lineWidth=0.8;for(let i=0;i<=TOTAL;i+=4){c.beginPath();c.moveTo(x0,y0+i*cell);c.lineTo(x0+TOTAL*cell,y0+i*cell);c.stroke();c.beginPath();c.moveTo(x0+i*cell,y0);c.lineTo(x0+i*cell,y0+TOTAL*cell);c.stroke();}
-  c.strokeStyle=go;c.lineWidth=1.2;c.beginPath();c.moveTo(x0+60*cell,y0);c.lineTo(x0+60*cell,y0+TOTAL*cell);c.moveTo(x0,y0+60*cell);c.lineTo(x0+TOTAL*cell,y0+60*cell);c.stroke();
-  const mode=$("mapColorMode").value,txt=cs.getPropertyValue("--text").trim();
-  const maxP=Math.max(1,...islands.map(z=>Number(z.Punkte||0)));
-  islands.forEach(r=>{
-    const oz=+r.Ozean||1,IG=+r.Inselgruppe||1,ins=+r.Insel||1;const igc=(IG-1)%15,igr=Math.floor((IG-1)/15),inc=(ins-1)%4,inr=Math.floor((ins-1)/4);
-    const oColOff=(oz===1||oz===3)?0:60,oRowOff=(oz===1||oz===2)?0:60;const col=oColOff+igc*4+inc,row=oRowOff+igr*4+inr,x=x0+col*cell,y=y0+row*cell;
-    const name=(r.Spielername||"").trim(),ak=(r.AllianzKuerzel||"").trim(),pts=Number(r.Punkte||0);
-    let fill="#9aa3c7"; if(name){ if(!ak){fill=getComputedStyle(document.documentElement).getPropertyValue("--magenta").trim();} else {const rel=relationOfRow(r);fill=rel==="friendly"?"#3b82f6":rel==="hostile"?"#ef4444":"#6b7280";}}
-    if(mode==="points"){const t=Math.min(1,pts/maxP);const v=255-Math.floor(t*160);fill=`rgb(${v},${255-v},200)`;}
-    c.fillStyle=fill;c.fillRect(x,y,cell,cell);
-    c.fillStyle=txt;c.font=`${Math.max(6,cell*0.9)}px sans-serif`;const lh=Math.max(6,cell*0.9);
-    const t1=name?name.slice(0,6):"",t2=ak?ak.slice(0,6):"",t3=pts?String(pts):""; if(cell>=10){c.fillText(t1,x+1,y+lh-1);c.fillText(t2,x+1,y+2*lh-1);c.fillText(t3,x+1,y+3*lh-1);}
-  });
-  c.fillStyle=txt;c.font="10px sans-serif";for(let i=0;i<225;i++){const igc=i%15,igr=Math.floor(i/15);const cx=x0+igc*4*cell+2*cell,cy=y0+igr*4*cell+2*cell;c.fillText(String(i+1),cx-6,cy+4);}
-}
-
-/* ----- Default Tab ----- */
-document.querySelector('[data-tab="tab-islands"]').click();
-</script>
+    // Redirect when already logged in
+    onIndexReady();
+  </script>
 </body>
 </html>
