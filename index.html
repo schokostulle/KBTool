@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Allianz-Dashboard</title>
-
-<!-- Tabulator.js -->
-<link href="https://unpkg.com/tabulator-tables@5.6.2/dist/css/tabulator.min.css" rel="stylesheet">
 <style>
 :root{
   --bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#8b949e;--border:#30363d;
@@ -79,20 +76,17 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
         </div>
       </div>
 
-      <!-- Inselübersicht (modern mit Tabulator) -->
-<div id="tab-islands" class="tabcontent card">
-  <div class="row" style="justify-content:space-between">
-    <div class="row">
-      <span class="badge" id="tableStatus"></span>
-    </div>
-    <div>
-      <input type="file" id="csvInput" accept=".csv" class="hidden">
-      <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
-      <span id="csvStatus" class="badge"></span>
-    </div>
-  </div>
-  <div id="islandTable" style="margin-top:10px; height:70vh;"></div>
-</div>
+      <!-- Inselübersicht -->
+      <div id="tab-islands" class="tabcontent card">
+        <div class="row" style="justify-content:space-between">
+          <div class="row"><button id="btnResetFilters" class="ghost">Filter zurücksetzen</button><span class="badge" id="tableStatus"></span></div>
+          <div><input type="file" id="csvInput" accept=".csv" class="hidden"><button id="btnCSV" class="hidden">CSV hochladen (Admin)</button><span id="csvStatus" class="badge"></span></div>
+        </div>
+        <div class="tablewrap">
+          <table id="islandTable"><thead><tr id="theadRow"></tr></thead><tbody id="tbodyRows"></tbody></table>
+          <div id="filterDropdown" class="col-filter hidden"></div>
+        </div>
+      </div>
 
       <!-- Spielerübersicht -->
       <div id="tab-players" class="tabcontent card hidden">
@@ -148,7 +142,7 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
             <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
           </div>
         </div>
-        <canvas id="mapCanvas" width="7200" height="7200"></canvas>
+        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
       </div>
 
       <!-- Diplomatie -->
@@ -221,7 +215,8 @@ onAuthStateChanged(auth, async u=>{
   $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
   $("userDisplay").textContent=data.name; $("roleDisplay").textContent=currentRole; $("statusDisplay").textContent="AKTIV";
   if(currentRole==="admin"){$("btnCSV").classList.remove("hidden");$("tabDiplBtn").classList.remove("hidden");}
-  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations(); renderIslandTable(); renderPlayers(); drawMap();
+  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations();
+  buildIslandHeader(); renderIslandTable(); renderPlayers(); drawMap();
 });
 
 /* Data: islands + CSV */
@@ -259,56 +254,76 @@ function renderDiplTables(){
   const pov=Object.keys(playerOverrides).sort((a,b)=>a.localeCompare(b,'de'));$("povTbody").innerHTML=pov.map(p=>`<tr><td>${p}</td><td>${playerOverrides[p].relation}</td></tr>`).join("")||`<tr><td colspan="2" class="muted">Keine Overrides</td></tr>`;
 }
 
-/* Inselübersicht (Tabulator.js) */
-import "https://unpkg.com/tabulator-tables@5.6.2/dist/js/tabulator.min.js";
+/* Inselübersicht (Filter+Sort) */
+const headers=[
+  {key:"Ozean",label:"Oz",type:"number"},
+  {key:"Inselgruppe",label:"IG",type:"number"},
+  {key:"Insel",label:"I",type:"number"},
+  {key:"Spielername",label:"Spieler",type:"text"},
+  {key:"AllianzKuerzel",label:"Allianz",type:"text"},
+  {key:"Punkte",label:"Punkte",type:"number"},
+  {key:"__reserved_by",label:"Reserviert von",readonly:true},
+  {key:"__action",label:"Aktion",readonly:true},
+];
+const columnFilters={};headers.forEach(h=>columnFilters[h.key]=null);
+let sortState={key:null,dir:1};
 
-let islandTable=null;
-function renderIslandTable(){
-  if(islandTable){ islandTable.replaceData(islands.map(extendRows)); return; }
-  islandTable = new Tabulator("#islandTable", {
-    data:islands.map(extendRows),
-    layout:"fitColumns",
-    pagination:"local",
-    paginationSize:25,
-    height:"100%",
-    placeholder:"Keine Daten",
-    movableColumns:true,
-    resizableRows:true,
-    columns:[
-      {title:"Oz", field:"Ozean", sorter:"number", headerFilter:"input", width:80},
-      {title:"IG", field:"Inselgruppe", sorter:"number", headerFilter:"input", width:90},
-      {title:"I", field:"Insel", sorter:"number", headerFilter:"input", width:80},
-      {title:"Spieler", field:"Spielername", sorter:"string", headerFilter:"input"},
-      {title:"Allianz", field:"AllianzKuerzel", sorter:"string", headerFilter:"input"},
-      {title:"Punkte", field:"Punkte", sorter:"number", headerFilter:"input", formatter:(cell)=>cell.getValue().toLocaleString("de-DE")},
-      {title:"Reserviert von", field:"__reserved_by", sorter:"string"},
-      {title:"Aktion", field:"__action", formatter:"html"}
-    ],
-    rowFormatter:function(row){
-      const d=row.getData();
-      if(d.__status==="requested") row.getElement().style.background="rgba(251,191,36,0.15)";
-      if(d.__status==="approved") row.getElement().style.background="rgba(34,197,94,0.15)";
-      if(d.__status==="denied") row.getElement().style.background="rgba(239,68,68,0.15)";
-    },
-  });
+function buildIslandHeader(){
+  const tr=$("theadRow");tr.innerHTML="";
+  headers.forEach(h=>{const th=document.createElement("th");th.textContent=h.label;th.dataset.key=h.key;th.onclick=(e)=>{if(!h.readonly)showFilter(h,th);toggleSort(h.key);};tr.appendChild(th);});
+  $("btnResetFilters").onclick=()=>{Object.keys(columnFilters).forEach(k=>columnFilters[k]=null);sortState={key:null,dir:1};renderIslandTable();};
 }
-function extendRows(r){
-  const id=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`,res=reservations[id];
-  return {...r,__reserved_by:res?.user||"",__status:res?.status||"",__resid:id,__action:actionCell(id,res)};
+function toggleSort(k){if(sortState.key===k)sortState.dir*=-1;else sortState={key:k,dir:1};renderIslandTable();}
+function renderIslandTable(){
+  const rows=islands.map(r=>{const id=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`,res=reservations[id];return {...r,__reserved_by:res?.user||"",__status:res?.status||"",__resid:id};}).filter(row=>{
+    for(const h of headers){const sel=columnFilters[h.key];if(!sel)continue;const v=h.key==="__reserved_by"?row.__reserved_by:(row[h.key]??"");const vs=h.type==="number"?String(numberify(v)):String(v);if(!sel.has(vs))return false;}return true;
+  });
+  if(sortState.key){const h=headers.find(x=>x.key===sortState.key),k=sortState.key,dir=sortState.dir;rows.sort((a,b)=>{const va=k==="__reserved_by"?a.__reserved_by:(a[k]??""),vb=k==="__reserved_by"?b.__reserved_by:(b[k]??"");return (h?.type==="number"?numberify(va)-numberify(vb):String(va).localeCompare(String(vb),'de',{numeric:true}))*dir;});}
+  const tb=$("tbodyRows");tb.innerHTML="";rows.forEach(r=>{const tr=document.createElement("tr");if(r.__status)tr.classList.add(r.__status);
+    headers.forEach(h=>{const td=document.createElement("td");td.setAttribute("data-label",h.label);
+      if(h.key==="__reserved_by")td.textContent=r.__reserved_by||"-";
+      else if(h.key==="__action")td.innerHTML=actionCell(r.__resid,reservations[r.__resid]);
+      else if(h.key==="Punkte")td.textContent=numberify(r.Punkte).toLocaleString('de-DE');
+      else td.textContent=(r[h.key]??"")||""; tr.appendChild(td);});
+    tb.appendChild(tr);
+  });
+  $("tableStatus").textContent=`${rows.length} von ${islands.length} Einträgen${sortState.key?` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})`:""}`;
 }
 function actionCell(id,res){
   if(!currentUser)return"<button disabled>Login nötig</button>";
   if(currentStatus!=="active")return"<button disabled>Ausstehend</button>";
   if(res){
-    if(res.status==="requested"&&currentRole==="admin")
-      return `<button class="ok" onclick="approve('${id}')">✔</button>
-              <button class="ghost" onclick="deny('${id}')">✖</button>`;
+    if(res.status==="requested"&&currentRole==="admin")return `<button class="ok" onclick="approve('${id}')">✔</button><button class="ghost" onclick="deny('${id}')">✖</button>`;
     if(res.status==="requested")return"<button disabled>Wartet</button>";
     if(res.status==="approved")return"<button disabled>✅</button>";
     if(res.status==="denied")return `<button onclick="reserve('${id}')">Reservieren</button>`;
   }
   return `<button onclick="reserve('${id}')">Reservieren</button>`;
 }
+function showFilter(header,thEl){
+  const key=header.key,dd=$("filterDropdown");dd.innerHTML="";dd.classList.remove("hidden");
+  const rect=thEl.getBoundingClientRect(),wrap=thEl.closest(".tablewrap").getBoundingClientRect();
+  dd.style.left=(rect.left-wrap.left)+"px";dd.style.top=(rect.bottom-wrap.top+4)+"px";
+  const vals=new Set(islands.map(r=>String(header.type==="number"?numberify(r[key]??""):(r[key]??""))));
+  const items=[...vals].sort((a,b)=>header.type==="number"?(Number(a)-Number(b)):a.localeCompare(b,'de',{numeric:true}));
+  const active=columnFilters[key]?new Set(columnFilters[key]):null;
+  dd.insertAdjacentHTML("beforeend",`<div class="badge" style="margin-bottom:6px">Filter: ${header.label}</div>`);
+  const ctrl=document.createElement("div");ctrl.className="row";
+  const btnAll=document.createElement("button");btnAll.className="ghost";btnAll.textContent="Alle an/aus";
+  const btnClear=document.createElement("button");btnClear.className="ghost";btnClear.textContent="Leeren";
+  ctrl.append(btnAll,btnClear);dd.appendChild(ctrl);
+  const list=document.createElement("div");list.className="options";dd.appendChild(list);
+  const refs=[];for(const v of items){const row=document.createElement("div");row.className="option-row";const cb=document.createElement("input");cb.type="checkbox";cb.checked=active?active.has(v):true;cb.dataset.val=v;const lab=document.createElement("label");lab.textContent=v===""?"(leer)":(header.type==="number"?Number(v).toLocaleString('de-DE'):v);row.append(cb,lab);list.appendChild(row);refs.push(cb);}
+  const actions=document.createElement("div");actions.className="filter-actions";
+  const apply=document.createElement("button");apply.textContent="Anwenden";
+  const cancel=document.createElement("button");cancel.className="ghost";cancel.textContent="Abbrechen";
+  actions.append(apply,cancel);dd.appendChild(actions);
+  btnAll.onclick=()=>{const some=refs.some(c=>!c.checked);refs.forEach(c=>c.checked=some);};
+  btnClear.onclick=()=>refs.forEach(c=>c.checked=false);
+  cancel.onclick=()=>dd.classList.add("hidden");
+  apply.onclick=()=>{const sel=refs.filter(c=>c.checked).map(c=>c.dataset.val);columnFilters[key]=(sel.length===items.length||sel.length===0)?null:new Set(sel);dd.classList.add("hidden");renderIslandTable();};
+}
+document.addEventListener("click",e=>{const dd=$("filterDropdown");if(dd.classList.contains("hidden"))return;if(!dd.contains(e.target)&&!e.target.closest("th"))dd.classList.add("hidden");});
 
 /* Spielerübersicht */
 function renderPlayers(){
