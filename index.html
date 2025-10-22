@@ -174,7 +174,7 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
             <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
           </div>
         </div>
-        <canvas id="mapCanvas" width="7200" height="7200"></canvas>
+        <canvas id="mapCanvas" width="800" height="800"></canvas>
       </div>
 
       <!-- Diplomatie -->
@@ -308,11 +308,11 @@ function renderIslandTable() {
     resizableRows: false,
     headerSortElement: "<span class='sort-icon'></span>",
     columns: [
-      { title: "Oz", field: "Ozean", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "IG", field: "Inselgruppe", sorter: "number", headerFilter: "input", width: 80 },
-      { title: "I", field: "Insel", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "Spieler", field: "Spielername", sorter: "string", headerFilter: "input" },
-      { title: "Allianz", field: "AllianzKuerzel", sorter: "string", headerFilter: "input" },
+      { title: "Oz", field: "Oz", sorter: "number", headerFilter: "input", width: 70 },
+      { title: "IG", field: "IG", sorter: "number", headerFilter: "input", width: 80 },
+      { title: "I", field: "I", sorter: "number", headerFilter: "input", width: 70 },
+      { title: "Spieler", field: "Spieler", sorter: "string", headerFilter: "input" },
+      { title: "Allianz", field: "Allianz", sorter: "string", headerFilter: "input" },
       {
         title: "Punkte",
         field: "Punkte",
