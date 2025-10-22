@@ -256,6 +256,7 @@ const islandsRef=collection(db,"islands");
 async function loadIslands(){
   const s=await getDocs(islandsRef);
   islands=s.docs.map(d=>d.data()).map(r=>{const o={...r};for(const k in o){if(typeof o[k]==="string")o[k]=o[k].replace(/^"|"$/g,"").trim();}o.Punkte=numberify(o.Punkte);return o;});
+if (islands && islands.length > 0) renderIslandTable();
 }
 $("btnCSV").onclick=()=>$("csvInput").click();
 $("csvInput").addEventListener("change",async e=>{
