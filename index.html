@@ -1,75 +1,50 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Allianz-Dashboard</title>
 <style>
 :root{
-  /* 🌙 Dark */
-  --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e; --border:#30363d;
-  --accent:#60a5fa; --accent-2:#3b82f6; --ok:#22c55e; --warn:#fbbf24; --danger:#ef4444; --magenta:#e879f9;
-  --map-bg:#0b1220; --map-grid-light:#6b7280; --map-grid-dark:#3f3f46; --map-ocean:rgba(255,70,70,0.8);
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#8b949e;--border:#30363d;
+  --accent:#60a5fa;--accent-2:#3b82f6;--ok:#22c55e;--warn:#fbbf24;--danger:#ef4444;--magenta:#e879f9;
+  --map-bg:#0b1220;--grid-i:#6b7280;--grid-ig:#3f3f46;--grid-o:rgba(255,70,70,.8);
 }
 :root.light{
-  /* ☀️ Light */
-  --bg:#f9fafb; --card:#ffffff; --text:#111827; --muted:#374151; --border:#d1d5db;
-  --accent:#3b82f6; --accent-2:#2563eb; --ok:#16a34a; --warn:#d97706; --danger:#dc2626; --magenta:#db2777;
-  --map-bg:#f3f4f6; --map-grid-light:#d1d5db; --map-grid-dark:#9ca3af; --map-ocean:rgba(239,68,68,0.4);
+  --bg:#f9fafb;--card:#fff;--text:#111827;--muted:#374151;--border:#d1d5db;
+  --accent:#3b82f6;--accent-2:#2563eb;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--magenta:#db2777;
+  --map-bg:#f3f4f6;--grid-i:#d1d5db;--grid-ig:#9ca3af;--grid-o:rgba(239,68,68,.4);
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;transition:background .3s,color .3s}
-h1,h2,h3{margin:0}
-.hidden{display:none}
-.header{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:10px 16px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;transition:.25s}
+.hidden{display:none}.muted{color:var(--muted)}
+.header{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;padding:10px 16px}
 .header .spacer{flex:1}
-.container{max-width:1200px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);padding:16px;margin-top:16px}
-button,input{border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px 12px;font-size:14px;transition:background .2s,color .2s,border .2s}
-button{background:var(--accent);border-color:transparent;cursor:pointer}
-button:hover{background:var(--accent-2)}
-button.ghost{background:transparent;border:1px solid var(--border)}
-button.ghost:hover{background:var(--card)}
-button.ok{background:var(--ok)}
-button.warn{background:var(--warn)}
-button.danger{background:var(--danger)}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.spacer{flex:1}
-.badge{color:var(--muted);font-size:13px}
-.sep{height:1px;background:var(--border);margin:10px 0}
-.tabbar{display:flex;gap:8px;margin-top:8px}
-.tabcontent{margin-top:12px}
-
-/* Map */
-#mapCanvas{display:block;width:100%;max-width:100%;height:auto;background:var(--map-bg);border:1px solid var(--border);border-radius:12px;margin:auto}
-.legend{display:flex;gap:16px;align-items:center;color:var(--muted);font-size:13px}
-.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
-
-/* Table */
-.tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.container{max-width:1200px;margin:auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:16px;margin-top:16px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.spacer{flex:1}.badge{font-size:13px;color:var(--muted)}
+button,input,select{border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;font-size:14px}
+button{background:var(--accent);border:none;cursor:pointer}button:hover{background:var(--accent-2)}
+button.ghost{background:transparent;border:1px solid var(--border)}button.ok{background:var(--ok)}button.warn{background:var(--warn)}button.danger{background:var(--danger)}
+.tabbar{display:flex;gap:8px;margin-top:8px}.tabcontent{margin-top:12px}
+.tablewrap{overflow:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--border);white-space:nowrap}
 th{position:sticky;top:0;background:var(--card);color:var(--muted);cursor:pointer}
-tr.requested{background:rgba(251,191,36,.12)}
-tr.approved{background:rgba(34,197,94,.12)}
-tr.denied{background:rgba(239,68,68,.12)}
-.col-filter{position:absolute;min-width:240px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40}
-.col-filter .options{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px}
-.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 6px}
+tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,94,.12)}tr.denied{background:rgba(239,68,68,.12)}
+.col-filter{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40}
+.col-filter .options{max-height:240px;overflow:auto}
+.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 0}
 .filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
-
-/* Responsive tables */
-@media (max-width: 900px){
+@media (max-width:900px){
   table,thead,tbody,th,td,tr{display:block;width:100%}
-  th{position:relative;top:0}
-  tr{border-bottom:1px solid var(--border);margin-bottom:8px;padding:6px 0}
+  th{display:none}tr{border-bottom:1px solid var(--border);margin-bottom:8px;padding:6px 0}
   td{display:flex;justify-content:space-between;padding:6px 10px}
   td::before{content:attr(data-label);font-weight:600;color:var(--muted)}
-  th,#theadRow{display:none}
 }
+#mapCanvas{display:block;width:100%;max-width:100%;height:auto;background:var(--map-bg);border:1px solid var(--border);border-radius:12px}
+.legend{display:flex;gap:12px;align-items:center;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
 </style>
 </head>
-
 <body>
   <div class="header">
     <div><b>🏝 Allianz-Dashboard</b></div>
@@ -78,79 +53,122 @@ tr.denied{background:rgba(239,68,68,.12)}
   </div>
 
   <div class="container">
-
-    <!-- LOGIN -->
     <div id="loginView" class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;">
-        <h2>Login / Registrierung</h2>
-      </div>
-      <div class="sep"></div>
-      <div class="row" style="gap:12px;">
-        <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1;min-width:220px">
-        <input id="password" type="password" placeholder="Passwort" style="flex:1;min-width:220px">
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button id="btnLogin">Anmelden</button>
-        <button id="btnRegister" class="ghost">Registrieren</button>
-        <span class="badge">Der erste registrierte Account wird automatisch als Admin aktiviert.</span>
-      </div>
+      <h2>Login / Registrierung</h2>
+      <div class="row"><input id="username" placeholder="Ingame-Name"><input id="password" type="password" placeholder="Passwort"></div>
+      <div class="row"><button id="btnLogin">Anmelden</button><button id="btnRegister" class="ghost">Registrieren</button><span class="badge">Erster Account wird Admin.</span></div>
     </div>
 
-    <!-- APP -->
     <div id="appView" class="hidden">
+      <div class="card row">
+        <div>👤 <b id="userDisplay">–</b> • Rolle: <b id="roleDisplay">–</b> • Status: <b id="statusDisplay">–</b></div>
+        <div class="spacer"></div>
+        <button id="btnLogout" class="ghost">Abmelden</button>
+      </div>
+
       <div class="card">
-        <div class="row">
-          <div>👤 <b id="userDisplay">–</b> • Rolle: <b id="roleDisplay">–</b> • Status: <b id="statusDisplay">–</b></div>
-          <span class="spacer"></span>
-          <button id="btnLogout" class="ghost">Abmelden</button>
-        </div>
         <div class="tabbar">
-          <button data-tab="tab-map">🗺 Inselkarte</button>
           <button data-tab="tab-islands">📊 Inselübersicht</button>
-          <button data-tab="tab-members" id="tabMembersBtn" class="hidden">👥 Mitglieder</button>
+          <button data-tab="tab-players">🧑‍✈️ Spielerübersicht</button>
+          <button data-tab="tab-attack">⚔️ Angriff / Verteidigung</button>
+          <button data-tab="tab-map">🗺 Inselkarte</button>
+          <button data-tab="tab-diplomacy" id="tabDiplBtn" class="hidden">🤝 Diplomatie (Admin)</button>
         </div>
       </div>
 
-      <!-- MAP -->
-      <div id="tab-map" class="tabcontent card">
-        <div class="legend" style="margin-bottom:8px">
-          <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
-          <span><span class="sw" style="background:var(--magenta)"></span> keine Allianz</span>
-          <span>Farben = Allianzen</span>
+      <!-- Inselübersicht -->
+      <div id="tab-islands" class="tabcontent card">
+        <div class="row" style="justify-content:space-between">
+          <div class="row"><button id="btnResetFilters" class="ghost">Filter zurücksetzen</button><span class="badge" id="tableStatus"></span></div>
+          <div><input type="file" id="csvInput" accept=".csv" class="hidden"><button id="btnCSV" class="hidden">CSV hochladen (Admin)</button><span id="csvStatus" class="badge"></span></div>
+        </div>
+        <div class="tablewrap">
+          <table id="islandTable"><thead><tr id="theadRow"></tr></thead><tbody id="tbodyRows"></tbody></table>
+          <div id="filterDropdown" class="col-filter hidden"></div>
+        </div>
+      </div>
+
+      <!-- Spielerübersicht -->
+      <div id="tab-players" class="tabcontent card hidden">
+        <h3>Spielerübersicht</h3>
+        <div class="tablewrap">
+          <table id="playerTable">
+            <thead><tr><th>Spieler</th><th>Allianz</th><th>IG (sortiert)</th><th>Inseln</th><th>Punkte</th></tr></thead>
+            <tbody id="playerTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Angriff / Verteidigung -->
+      <div id="tab-attack" class="tabcontent card hidden">
+        <h3>Angriff / Verteidigung</h3>
+        <div class="row">
+          <input id="atk_from" placeholder="Angreifende Insel z. B. 2:201:16">
+          <input id="atk_to" placeholder="Zielinsel z. B. 1:171:5">
+          <input id="atk_start" placeholder="Start HH:mm:ss">
+          <select id="atk_unit">
+            <option value="Spähschiff">Spähschiff (12 kn)</option>
+            <option value="Fregatte">Fregatte (8 kn)</option>
+            <option value="Handelskogge">Handelskogge (6 kn)</option>
+            <option value="Kolonisationsschiff">Kolonisationsschiff (2 kn)</option>
+          </select>
+          <select id="atk_relation">
+            <option value="friendly">Freundlich</option>
+            <option value="hostile">Feindlich</option>
+            <option value="neutral">Neutral</option>
+          </select>
+          <button id="atk_calc">Berechnen</button>
+        </div>
+        <div class="badge">Entfernung 1 Dezimalstelle • Zeit lokal • Reisezeit intern 5 Stellen (h) gerundet • Ausgabe HH:mm:ss</div>
+        <div class="tablewrap" style="margin-top:8px">
+          <table id="atkTable"><thead>
+            <tr><th>Spieler</th><th>Startinsel</th><th>Zielinsel</th><th>Einheit</th><th>Distanz (sm)</th><th>Reisezeit</th><th>Ankunft</th><th>Rückkehr</th></tr>
+          </thead><tbody id="atkTbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- Inselkarte -->
+      <div id="tab-map" class="tabcontent card hidden">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="legend">
+            <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
+            <span><span class="sw" style="background:var(--magenta)"></span> allianzlos</span>
+          </div>
+          <div class="row">
+            <select id="mapColorMode">
+              <option value="diplomacy">Farben nach Diplomatie</option>
+              <option value="points">Farben nach Punkten</option>
+            </select>
+            <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
+          </div>
         </div>
         <canvas id="mapCanvas" width="1800" height="1800"></canvas>
       </div>
 
-      <!-- ISLANDS -->
-      <div id="tab-islands" class="tabcontent card hidden">
-        <div class="row" style="justify-content:space-between;margin-bottom:6px">
-          <button id="btnResetFilters" class="ghost">Filter zurücksetzen</button>
-          <div>
-            <input type="file" id="csvInput" accept=".csv" class="hidden">
-            <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
-            <span id="csvStatus" class="badge"></span>
-          </div>
+      <!-- Diplomatie -->
+      <div id="tab-diplomacy" class="tabcontent card hidden">
+        <h3>Diplomatie verwalten</h3>
+        <div class="row">
+          <input id="ally_code" placeholder="Allianzkürzel"><input id="ally_name" placeholder="Allianzname">
+          <select id="ally_rel"><option value="friendly">freundlich</option><option value="hostile">feindlich</option><option value="neutral">neutral</option></select>
+          <button id="ally_save">Speichern</button>
         </div>
-        <div class="tablewrap">
-          <table id="islandTable">
-            <thead><tr id="theadRow"></tr></thead>
-            <tbody id="tbodyRows"></tbody>
-          </table>
-          <div id="filterDropdown" class="col-filter hidden"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="pov_player" placeholder="Spielername (Override)">
+          <select id="pov_rel"><option value="friendly">freundlich</option><option value="hostile">feindlich</option><option value="neutral">neutral</option></select>
+          <button id="pov_save">Override speichern</button>
         </div>
-        <div id="tableStatus" class="badge" style="margin-top:6px"></div>
-      </div>
-
-      <!-- MEMBERS -->
-      <div id="tab-members" class="tabcontent card hidden">
-        <h3>Mitgliederverwaltung</h3>
-        <div id="membersTable" style="margin-top:6px"></div>
+        <div class="tablewrap" style="margin-top:12px">
+          <table><thead><tr><th>Kürzel</th><th>Name</th><th>Beziehung</th></tr></thead><tbody id="allyTbody"></tbody></table>
+        </div>
+        <div class="tablewrap" style="margin-top:12px">
+          <table><thead><tr><th>Spieler</th><th>Beziehung</th></tr></thead><tbody id="povTbody"></tbody></table>
+        </div>
       </div>
     </div>
   </div>
 
 <script type="module">
-/* ===== Firebase ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -167,454 +185,203 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const usersRef = collection(db,"users");
-const metaRef  = collection(db,"meta");
-const islandsRef = collection(db,"islands");
-const reservationsRef = collection(db,"reservations");
+const $=id=>document.getElementById(id);
+function fakeEmail(n){return n.trim().toLowerCase().replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss").replace(/[^\w]+/g,"_")+"@fake.local";}
+function numberify(x){return Number(String(x??"").replace(/^"|"$/g,"").replace(/\./g,"").replace(/\s/g,""))||0;}
+function round1(v){return Math.round(v*10)/10;}function round5(v){return Math.round(v*1e5)/1e5;}
+const shipKnots={Spähschiff:12,Fregatte:8,Handelskogge:6,Kolonisationsschiff:2};
 
-/* ===== State & Helpers ===== */
-let currentUser=null, currentRole="member", currentStatus="pending";
-let islands=[], viewData=[], reservations={};
+let currentUser=null,currentRole="member",currentStatus="pending";
+let islands=[],reservations={},allyMap={},playerOverrides={};
 
-const headers = [
-  { key:"Ozean",           label:"Oz",            type:"number" },
-  { key:"Inselgruppe",     label:"IG",            type:"number" },
-  { key:"Insel",           label:"I",             type:"number" },
-  { key:"Spielername",     label:"Spielername",   type:"text"   },
-  { key:"AllianzKuerzel",  label:"Allianzkürzel", type:"text"   },
-  { key:"Punkte",          label:"Punkte",        type:"number" },
-  { key:"__reserved_by",   label:"Reserviert von",type:"text", readonly:true },
-  { key:"__action",        label:"Aktion",        type:"text", readonly:true },
-];
-const columnFilters = {}; headers.forEach(h=>columnFilters[h.key]=null);
-let sortState = { key:null, dir:1 };
+/* Theme */
+(function(){const isLight=localStorage.theme==="light";document.documentElement.classList.toggle("light",isLight);$("btnTheme").textContent=isLight?"☀️ Light":"🌙 Dark";})();
+$("btnTheme").onclick=()=>{const willLight=!document.documentElement.classList.contains("light");document.documentElement.classList.toggle("light",willLight);localStorage.theme=willLight?"light":"dark";$("btnTheme").textContent=willLight?"☀️ Light":"🌙 Dark";drawMap();};
 
-const $ = id => document.getElementById(id);
-function fakeEmail(name){
-  return name.trim().toLowerCase()
-    .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss")
-    .replace(/[^\w]+/g,"_")+"@alliancesystem.fake";
-}
-function numberify(x){
-  if (typeof x === "number") return x;
-  if (!x) return 0;
-  return Number(String(x).replace(/^"|"$/g,"").replace(/\./g,"").replace(/\s/g,"").replace(/[^0-9-]/g,""))||0;
-}
+/* Tabs */
+const tabs=["tab-islands","tab-players","tab-attack","tab-map","tab-diplomacy"];
+document.querySelectorAll(".tabbar button").forEach(b=>b.addEventListener("click",()=>{const id=b.getAttribute("data-tab");tabs.forEach(t=>$(t).classList.add("hidden"));$(id).classList.remove("hidden");if(id==="tab-map")drawMap();if(id==="tab-players")renderPlayers();}));
 
-/* ===== Theme Toggle ===== */
-const themeBtn = $("btnTheme");
-(function initTheme(){
-  const isLight = localStorage.theme==="light";
-  document.documentElement.classList.toggle("light", isLight);
-  themeBtn.textContent = isLight ? "☀️ Light" : "🌙 Dark";
-})();
-themeBtn.onclick = ()=>{
-  const willLight = !document.documentElement.classList.contains("light");
-  document.documentElement.classList.toggle("light", willLight);
-  localStorage.theme = willLight ? "light" : "dark";
-  themeBtn.textContent = willLight ? "☀️ Light" : "🌙 Dark";
-  drawMap();
-};
+/* Auth */
+$("btnRegister").onclick=async()=>{const n=$("username").value.trim(),p=$("password").value.trim();if(!n||!p)return alert("Name & Passwort!");try{const cred=await createUserWithEmailAndPassword(auth,fakeEmail(n),p);const all=await getDocs(collection(db,"users"));const first=all.empty;await setDoc(doc(db,"users",cred.user.uid),{name:n,role:first?"admin":"member",status:first?"active":"pending"});alert(first?"Admin erstellt.":"Registriert. Bitte Freischaltung abwarten.");}catch(e){alert(e.message);}};
+$("btnLogin").onclick=async()=>{const n=$("username").value.trim(),p=$("password").value.trim();if(!n||!p)return alert("Name & Passwort!");try{await signInWithEmailAndPassword(auth,fakeEmail(n),p);}catch(e){alert(e.message);}};
+$("btnLogout").onclick=()=>signOut(auth);
 
-/* ===== Tabs ===== */
-const tabs = ["tab-map","tab-islands","tab-members"];
-document.querySelectorAll(".tabbar button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const id = btn.getAttribute("data-tab");
-    tabs.forEach(t=>$(t).classList.add("hidden"));
-    $(id).classList.remove("hidden");
-    if (id==="tab-map") drawMap();
-  });
+onAuthStateChanged(auth, async u=>{
+  if(!u){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");return;}
+  const d=await getDoc(doc(db,"users",u.uid)); if(!d.exists()){await signOut(auth);return;}
+  const data=d.data(); if(data.status!=="active"){alert("Noch nicht freigeschaltet.");await signOut(auth);return;}
+  currentUser=u; currentRole=data.role; currentStatus=data.status;
+  $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
+  $("userDisplay").textContent=data.name; $("roleDisplay").textContent=currentRole; $("statusDisplay").textContent="AKTIV";
+  if(currentRole==="admin"){$("btnCSV").classList.remove("hidden");$("tabDiplBtn").classList.remove("hidden");}
+  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations();
+  buildIslandHeader(); renderIslandTable(); renderPlayers(); drawMap();
 });
 
-/* ===== Auth: Register/Login/Logout ===== */
-$("btnRegister").onclick = async ()=>{
-  const n=$("username").value.trim(), p=$("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort eingeben!");
-  try{
-    const cred = await createUserWithEmailAndPassword(auth, fakeEmail(n), p);
-    const uid = cred.user.uid;
-
-    // bootstrap meta/config (einmalig)
-    const metaCfg = doc(db,"meta","config");
-    const metaSnap = await getDoc(metaCfg);
-    const isFirst = !metaSnap.exists();
-    if(isFirst){
-      await setDoc(metaCfg, { adminInitialized:true, createdAt:new Date(), bootstrapBy:n }, { merge:false });
-    }
-
-    await setDoc(doc(db,"users",uid), {
-      uid, name:n, role:isFirst?"admin":"member", status:isFirst?"active":"pending", created:new Date()
-    }, { merge:true });
-
-    alert(isFirst ? "Erster Benutzer erkannt. Admin & aktiv!" : "Registriert. Bitte auf Freischaltung warten.");
-  }catch(e){ alert("Fehler bei Registrierung: "+e.message); }
-};
-$("btnLogin").onclick = async ()=>{
-  const n=$("username").value.trim(), p=$("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort eingeben!");
-  try{ await signInWithEmailAndPassword(auth, fakeEmail(n), p); }
-  catch(e){ alert("Fehler bei Anmeldung: "+e.message); }
-};
-$("btnLogout").onclick = async ()=>{ await signOut(auth); location.reload(); };
-
-/* ===== Auth State + Fallback ===== */
-onAuthStateChanged(auth, async (u)=>{
-  if(!u){ $("loginView").classList.remove("hidden"); $("appView").classList.add("hidden"); return; }
-  await new Promise(r=>setTimeout(r,200));
-
-  const userDoc = doc(db,"users",u.uid);
-  let uSnap = await getDoc(userDoc);
-  // Fallback: falls Datensatz fehlt, anlegen als pending member
-  if(!uSnap.exists()){
-    await setDoc(userDoc,{ uid:u.uid, name: (u.email||"").split("@")[0].replace(/_/g," "), role:"member", status:"pending", created:new Date() });
-    uSnap = await getDoc(userDoc);
-  }
-  const data = uSnap.data();
-  currentUser = u;
-  currentRole = data.role||"member";
-  currentStatus = data.status||"pending";
-
-  // Meta-Fallback: falls config fehlt → anlegen & aktuellen User zum Admin machen
-  const metaCfg = doc(db,"meta","config");
-  const metaSnap = await getDoc(metaCfg);
-  if(!metaSnap.exists()){
-    await setDoc(metaCfg,{ adminInitialized:true, createdAt:new Date(), bootstrapBy: data.name||"unknown" }, { merge:false });
-    await setDoc(userDoc,{ role:"admin", status:"active" }, { merge:true });
-    currentRole="admin"; currentStatus="active";
-  }
-
-  if(currentStatus!=="active"){
-    alert("Dein Account ist noch nicht freigeschaltet.");
-    await signOut(auth); return;
-  }
-
-  $("loginView").classList.add("hidden");
-  $("appView").classList.remove("hidden");
-  $("userDisplay").textContent = data.name||"–";
-  $("roleDisplay").textContent = currentRole;
-  $("statusDisplay").textContent = "AKTIV";
-  if(currentRole==="admin"){ $("tabMembersBtn").classList.remove("hidden"); $("btnCSV").classList.remove("hidden"); }
-
-  await loadIslands();
-  listenReservations();
-  buildTableHeader();
-  renderTable();
-  drawMap();
-  if(currentRole==="admin") listenMembers();
-});
-
-/* ===== CSV Upload (Admin) → islands ersetzen ===== */
-$("btnCSV").onclick = ()=> $("csvInput").click();
-$("csvInput").addEventListener("change", async (e)=>{
-  if(currentRole!=="admin") return alert("Nur Admin darf CSV hochladen.");
-  const f = e.target.files[0]; if(!f) return;
-  $("csvStatus").textContent = "Importiere CSV...";
-
-  const txt = await f.text();
-  const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const rows  = lines.map(line=> line.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
-
-  // Alte islands löschen
-  const snap = await getDocs(islandsRef);
-  for (const d of snap.docs) { await deleteDoc(doc(db,"islands", d.id)); }
-
-  // Neu schreiben
-  let i=0;
-  for(const c of rows){
-    const rec = {
-      Ozean:c[0]||"", Inselgruppe:c[1]||"", Insel:c[2]||"", Inselname:c[3]||"",
-      SpielerID:c[4]||"", Spielername:c[5]||"", AllianzID:c[6]||"", AllianzKuerzel:c[7]||"",
-      Allianzname:c[8]||"", Punkte: numberify(c[9]||0)
-    };
-    const id = `${rec.Ozean||'0'}-${rec.Inselgruppe||'0'}-${rec.Insel||'0'}-${i++}`;
-    await setDoc(doc(db,"islands",id), rec);
-  }
-  $("csvStatus").textContent = "CSV hochgeladen.";
-  await loadIslands(); resetFilters(); renderTable(); drawMap();
-});
-
-/* ===== Daten laden & Listener ===== */
+/* Data: islands + CSV */
+const islandsRef=collection(db,"islands");
 async function loadIslands(){
-  const snap = await getDocs(islandsRef);
-  islands = snap.docs.map(d=>d.data()).map(row=>{
-    const out={}; for(const k in row){ out[k] = typeof row[k]==="string" ? row[k].replace(/^"|"$/g,"").trim() : row[k]; }
-    out.Punkte = numberify(out.Punkte);
-    return out;
-  });
-  viewData = [...islands];
+  const s=await getDocs(islandsRef);
+  islands=s.docs.map(d=>d.data()).map(r=>{const o={...r};for(const k in o){if(typeof o[k]==="string")o[k]=o[k].replace(/^"|"$/g,"").trim();}o.Punkte=numberify(o.Punkte);return o;});
 }
-function listenReservations(){
-  onSnapshot(reservationsRef, (s)=>{
-    reservations={}; s.forEach(d=> reservations[d.id]=d.data() );
-    renderTable();
-  });
+$("btnCSV").onclick=()=>$("csvInput").click();
+$("csvInput").addEventListener("change",async e=>{
+  if(currentRole!=="admin")return alert("Nur Admin.");
+  const f=e.target.files[0];if(!f)return;$("csvStatus").textContent="Importiere...";
+  const txt=await f.text();const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const rows=lines.map(l=>l.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
+  const snap=await getDocs(islandsRef);for(const d of snap.docs)await deleteDoc(doc(db,"islands",d.id));
+  let i=0;for(const c of rows){const rec={Ozean:c[0]||"",Inselgruppe:c[1]||"",Insel:c[2]||"",Spielername:c[5]||"",AllianzKuerzel:c[7]||"",Punkte:numberify(c[9]||0)};await setDoc(doc(db,"islands",`${i++}`),rec);}
+  $("csvStatus").textContent="Fertig.";await loadIslands();buildIslandHeader();renderIslandTable();renderPlayers();drawMap();
+});
+
+/* Reservations */
+const reservationsRef=collection(db,"reservations");
+function listenReservations(){onSnapshot(reservationsRef,s=>{reservations={};s.forEach(d=>reservations[d.id]=d.data());renderIslandTable();});}
+window.reserve=async id=>{await setDoc(doc(db,"reservations",id),{user:(await getDoc(doc(db,"users",currentUser.uid))).data().name,status:"requested"});};
+window.approve=async id=>{if(currentRole!=="admin")return;await setDoc(doc(db,"reservations",id),{status:"approved"},{merge:true});};
+window.deny=async id=>{if(currentRole!=="admin")return;await setDoc(doc(db,"reservations",id),{status:"denied"},{merge:true});};
+
+/* Diplomacy */
+async function loadDiplomacy(){allyMap={};playerOverrides={};const a=await getDocs(collection(db,"alliances"));a.forEach(d=>allyMap[d.id]=d.data());const p=await getDocs(collection(db,"playerOverrides"));p.forEach(d=>playerOverrides[d.id]=d.data());renderDiplTables();}
+function relationOf(row){const pn=(row.Spielername||"").trim(),ak=(row.AllianzKuerzel||"").trim();if(playerOverrides[pn]?.relation)return playerOverrides[pn].relation; if(ak&&allyMap[ak]?.relation)return allyMap[ak].relation; return ak?"neutral":"neutral";}
+$("ally_save").onclick=async()=>{if(currentRole!=="admin")return;const code=$("ally_code").value.trim();if(!code)return alert("Kürzel fehlt.");await setDoc(doc(db,"alliances",code),{name:$("ally_name").value.trim(),relation:$("ally_rel").value},{merge:true});await loadDiplomacy();drawMap();};
+$("pov_save").onclick=async()=>{if(currentRole!=="admin")return;const pl=$("pov_player").value.trim();if(!pl)return alert("Spieler fehlt.");await setDoc(doc(db,"playerOverrides",pl),{relation:$("pov_rel").value},{merge:true});await loadDiplomacy();drawMap();};
+function renderDiplTables(){
+  const uniq=new Set(islands.map(r=>r.AllianzKuerzel||"").filter(Boolean));
+  const arr=[...uniq].sort((a,b)=>a.localeCompare(b,'de'));$("allyTbody").innerHTML=arr.map(k=>`<tr><td>${k}</td><td>${allyMap[k]?.name||""}</td><td>${allyMap[k]?.relation||"neutral"}</td></tr>`).join("")||`<tr><td colspan="3" class="muted">Keine Einträge</td></tr>`;
+  const pov=Object.keys(playerOverrides).sort((a,b)=>a.localeCompare(b,'de'));$("povTbody").innerHTML=pov.map(p=>`<tr><td>${p}</td><td>${playerOverrides[p].relation}</td></tr>`).join("")||`<tr><td colspan="2" class="muted">Keine Overrides</td></tr>`;
 }
 
-/* ===== Tabelle: Header, Filter, Sort, Render ===== */
-function buildTableHeader(){
-  const tr = $("theadRow"); tr.innerHTML="";
-  headers.forEach(h=>{
-    const th=document.createElement("th");
-    th.textContent=h.label; th.dataset.key=h.key;
-    th.onclick = (e)=>{ if(!h.readonly) showFilter(h, th); toggleSort(h.key); };
-    tr.appendChild(th);
-  });
-  document.addEventListener("click",(e)=>{
-    const dd=$("filterDropdown");
-    if(dd.classList.contains("hidden")) return;
-    if(!dd.contains(e.target) && !e.target.closest("th")) dd.classList.add("hidden");
-  });
-  $("btnResetFilters").onclick = ()=>{ resetFilters(); renderTable(); };
+/* Inselübersicht (Filter+Sort) */
+const headers=[
+  {key:"Ozean",label:"Oz",type:"number"},
+  {key:"Inselgruppe",label:"IG",type:"number"},
+  {key:"Insel",label:"I",type:"number"},
+  {key:"Spielername",label:"Spieler",type:"text"},
+  {key:"AllianzKuerzel",label:"Allianz",type:"text"},
+  {key:"Punkte",label:"Punkte",type:"number"},
+  {key:"__reserved_by",label:"Reserviert von",readonly:true},
+  {key:"__action",label:"Aktion",readonly:true},
+];
+const columnFilters={};headers.forEach(h=>columnFilters[h.key]=null);
+let sortState={key:null,dir:1};
+
+function buildIslandHeader(){
+  const tr=$("theadRow");tr.innerHTML="";
+  headers.forEach(h=>{const th=document.createElement("th");th.textContent=h.label;th.dataset.key=h.key;th.onclick=(e)=>{if(!h.readonly)showFilter(h,th);toggleSort(h.key);};tr.appendChild(th);});
+  $("btnResetFilters").onclick=()=>{Object.keys(columnFilters).forEach(k=>columnFilters[k]=null);sortState={key:null,dir:1};renderIslandTable();};
 }
-function resetFilters(){ Object.keys(columnFilters).forEach(k=>columnFilters[k]=null); sortState={key:null,dir:1}; }
-function toggleSort(key){
-  if (sortState.key===key) sortState.dir*=-1;
-  else { sortState.key=key; sortState.dir=1; }
-  renderTable();
-}
-function renderTable(){
-  const filtered = islands.filter(row=>{
-    const resid = `${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res = reservations[resid];
-    row.__reserved_by = res?.user || "";
-    row.__status      = res?.status || "";
-
-    for(const h of headers){
-      const sel = columnFilters[h.key];
-      if (!sel) continue;
-      const value = (h.key==="__reserved_by") ? row.__reserved_by : (row[h.key] ?? "");
-      const valStr = h.type==="number" ? String(numberify(value)) : String(value);
-      if (!sel.has(valStr)) return false;
-    }
-    return true;
+function toggleSort(k){if(sortState.key===k)sortState.dir*=-1;else sortState={key:k,dir:1};renderIslandTable();}
+function renderIslandTable(){
+  const rows=islands.map(r=>{const id=`${r.Ozean}-${r.Inselgruppe}-${r.Insel}`,res=reservations[id];return {...r,__reserved_by:res?.user||"",__status:res?.status||"",__resid:id};}).filter(row=>{
+    for(const h of headers){const sel=columnFilters[h.key];if(!sel)continue;const v=h.key==="__reserved_by"?row.__reserved_by:(row[h.key]??"");const vs=h.type==="number"?String(numberify(v)):String(v);if(!sel.has(vs))return false;}return true;
   });
-
-  if (sortState.key){
-    const h = headers.find(x=>x.key===sortState.key);
-    const k = sortState.key, dir = sortState.dir;
-    filtered.sort((a,b)=>{
-      const va = (k==="__reserved_by")? (a.__reserved_by||"") : (a[k]??"");
-      const vb = (k==="__reserved_by")? (b.__reserved_by||"") : (b[k]??"");
-      if (h?.type==="number") return (numberify(va)-numberify(vb))*dir;
-      return String(va).localeCompare(String(vb),'de',{numeric:true})*dir;
-    });
-  }
-
-  viewData = filtered;
-  const tb = $("tbodyRows"); tb.innerHTML="";
-  filtered.forEach(row=>{
-    const resid=`${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res=reservations[resid];
-    const tr=document.createElement("tr");
-    if(res?.status) tr.classList.add(res.status);
-
-    headers.forEach(h=>{
-      const td=document.createElement("td");
-      const label = h.label + ": ";
-      if (h.key==="__reserved_by") td.textContent = res?.user || "-";
-      else if (h.key==="__action") td.innerHTML = actionCell(resid,res);
-      else if (h.key==="Punkte")   td.textContent = numberify(row.Punkte).toLocaleString('de-DE');
-      else td.textContent = (row[h.key]??"").toString();
-      td.setAttribute("data-label", label);
-      tr.appendChild(td);
-    });
+  if(sortState.key){const h=headers.find(x=>x.key===sortState.key),k=sortState.key,dir=sortState.dir;rows.sort((a,b)=>{const va=k==="__reserved_by"?a.__reserved_by:(a[k]??""),vb=k==="__reserved_by"?b.__reserved_by:(b[k]??"");return (h?.type==="number"?numberify(va)-numberify(vb):String(va).localeCompare(String(vb),'de',{numeric:true}))*dir;});}
+  const tb=$("tbodyRows");tb.innerHTML="";rows.forEach(r=>{const tr=document.createElement("tr");if(r.__status)tr.classList.add(r.__status);
+    headers.forEach(h=>{const td=document.createElement("td");td.setAttribute("data-label",h.label);
+      if(h.key==="__reserved_by")td.textContent=r.__reserved_by||"-";
+      else if(h.key==="__action")td.innerHTML=actionCell(r.__resid,reservations[r.__resid]);
+      else if(h.key==="Punkte")td.textContent=numberify(r.Punkte).toLocaleString('de-DE');
+      else td.textContent=(r[h.key]??"")||""; tr.appendChild(td);});
     tb.appendChild(tr);
   });
-
-  $("tableStatus").textContent = `${filtered.length} von ${islands.length} Einträgen`
-    + (sortState.key ? ` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})` : "");
+  $("tableStatus").textContent=`${rows.length} von ${islands.length} Einträgen${sortState.key?` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})`:""}`;
 }
-function actionCell(key,res){
-  if(!currentUser) return `<button disabled>Login nötig</button>`;
-  if(currentStatus!=="active") return `<button disabled>Ausstehend</button>`;
-
+function actionCell(id,res){
+  if(!currentUser)return"<button disabled>Login nötig</button>";
+  if(currentStatus!=="active")return"<button disabled>Ausstehend</button>";
   if(res){
-    if(res.status==="requested"){
-      if(currentRole==="admin"){
-        return `<div class="row"><span>von ${res.user}</span><button class="ok" onclick="approve('${key}')">✔</button><button class="ghost" onclick="deny('${key}')">✖</button></div>`;
-      }
-      if(res.reservedBy===currentUser.uid) return `<button disabled>Reserviert (wartet)</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    if(res.status==="approved"){
-      if(res.reservedBy===currentUser.uid) return `<button disabled>✅ Bestätigt</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    if(res.status==="denied"){
-      return `<button onclick="reserve('${key}')">Reservieren</button>`;
-    }
+    if(res.status==="requested"&&currentRole==="admin")return `<button class="ok" onclick="approve('${id}')">✔</button><button class="ghost" onclick="deny('${id}')">✖</button>`;
+    if(res.status==="requested")return"<button disabled>Wartet</button>";
+    if(res.status==="approved")return"<button disabled>✅</button>";
+    if(res.status==="denied")return `<button onclick="reserve('${id}')">Reservieren</button>`;
   }
-  return `<button onclick="reserve('${key}')">Reservieren</button>`;
+  return `<button onclick="reserve('${id}')">Reservieren</button>`;
 }
-function showFilter(header, thEl){
-  const key=header.key, dd=$("filterDropdown");
-  dd.innerHTML=""; dd.classList.remove("hidden");
-  const rect=thEl.getBoundingClientRect(), wrap=thEl.closest(".tablewrap").getBoundingClientRect();
-  dd.style.left=(rect.left-wrap.left)+"px"; dd.style.top=(rect.bottom-wrap.top+4)+"px";
-
-  const vals = new Set(islands.map(r=>{
-    let v = (key==="__reserved_by") ? "" : (r[key]??"");
-    if (header.type==="number") v = String(numberify(v));
-    return String(v);
-  }));
-  const items = Array.from(vals).sort((a,b)=> header.type==="number" ? (Number(a)-Number(b)) : a.localeCompare(b,'de',{numeric:true}));
-  const active = columnFilters[key] ? new Set(Array.from(columnFilters[key])) : null;
-
-  const title=document.createElement("div"); title.className="badge"; title.style.margin="2px 2px 6px"; title.textContent=`Filter: ${header.label}`; dd.appendChild(title);
-
-  const ctrl=document.createElement("div"); ctrl.className="row"; ctrl.style.margin="6px 0";
-  const btnAll=document.createElement("button"); btnAll.className="ghost"; btnAll.textContent="Alle an/aus";
-  const btnClear=document.createElement("button"); btnClear.className="ghost"; btnClear.textContent="Leeren";
-  ctrl.appendChild(btnAll); ctrl.appendChild(btnClear); dd.appendChild(ctrl);
-
-  const list=document.createElement("div"); list.className="options"; dd.appendChild(list);
-  const refs=[];
-  for(const v of items){
-    const r=document.createElement("div"); r.className="option-row";
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked = active? active.has(v) : true; cb.dataset.val=v;
-    const lab=document.createElement("label"); lab.textContent= v==="" ? "(leer)" : (header.type==="number" ? Number(v).toLocaleString('de-DE') : v);
-    r.appendChild(cb); r.appendChild(lab); list.appendChild(r); refs.push(cb);
-  }
-
-  const actions=document.createElement("div"); actions.className="filter-actions";
-  const btnApply=document.createElement("button"); btnApply.textContent="Anwenden";
-  const btnCancel=document.createElement("button"); btnCancel.className="ghost"; btnCancel.textContent="Abbrechen";
-  actions.appendChild(btnApply); actions.appendChild(btnCancel); dd.appendChild(actions);
-
-  btnAll.onclick=()=>{ const someUnchecked=refs.some(c=>!c.checked); refs.forEach(c=>c.checked=someUnchecked); };
-  btnClear.onclick=()=> refs.forEach(c=>c.checked=false);
-  btnCancel.onclick=()=> dd.classList.add("hidden");
-  btnApply.onclick=()=>{
-    const sel=refs.filter(c=>c.checked).map(c=>c.dataset.val);
-    if (sel.length===items.length || sel.length===0) columnFilters[key]=null; else columnFilters[key]=new Set(sel);
-    dd.classList.add("hidden"); renderTable();
-  };
+function showFilter(header,thEl){
+  const key=header.key,dd=$("filterDropdown");dd.innerHTML="";dd.classList.remove("hidden");
+  const rect=thEl.getBoundingClientRect(),wrap=thEl.closest(".tablewrap").getBoundingClientRect();
+  dd.style.left=(rect.left-wrap.left)+"px";dd.style.top=(rect.bottom-wrap.top+4)+"px";
+  const vals=new Set(islands.map(r=>String(header.type==="number"?numberify(r[key]??""):(r[key]??""))));
+  const items=[...vals].sort((a,b)=>header.type==="number"?(Number(a)-Number(b)):a.localeCompare(b,'de',{numeric:true}));
+  const active=columnFilters[key]?new Set(columnFilters[key]):null;
+  dd.insertAdjacentHTML("beforeend",`<div class="badge" style="margin-bottom:6px">Filter: ${header.label}</div>`);
+  const ctrl=document.createElement("div");ctrl.className="row";
+  const btnAll=document.createElement("button");btnAll.className="ghost";btnAll.textContent="Alle an/aus";
+  const btnClear=document.createElement("button");btnClear.className="ghost";btnClear.textContent="Leeren";
+  ctrl.append(btnAll,btnClear);dd.appendChild(ctrl);
+  const list=document.createElement("div");list.className="options";dd.appendChild(list);
+  const refs=[];for(const v of items){const row=document.createElement("div");row.className="option-row";const cb=document.createElement("input");cb.type="checkbox";cb.checked=active?active.has(v):true;cb.dataset.val=v;const lab=document.createElement("label");lab.textContent=v===""?"(leer)":(header.type==="number"?Number(v).toLocaleString('de-DE'):v);row.append(cb,lab);list.appendChild(row);refs.push(cb);}
+  const actions=document.createElement("div");actions.className="filter-actions";
+  const apply=document.createElement("button");apply.textContent="Anwenden";
+  const cancel=document.createElement("button");cancel.className="ghost";cancel.textContent="Abbrechen";
+  actions.append(apply,cancel);dd.appendChild(actions);
+  btnAll.onclick=()=>{const some=refs.some(c=>!c.checked);refs.forEach(c=>c.checked=some);};
+  btnClear.onclick=()=>refs.forEach(c=>c.checked=false);
+  cancel.onclick=()=>dd.classList.add("hidden");
+  apply.onclick=()=>{const sel=refs.filter(c=>c.checked).map(c=>c.dataset.val);columnFilters[key]=(sel.length===items.length||sel.length===0)?null:new Set(sel);dd.classList.add("hidden");renderIslandTable();};
 }
+document.addEventListener("click",e=>{const dd=$("filterDropdown");if(dd.classList.contains("hidden"))return;if(!dd.contains(e.target)&&!e.target.closest("th"))dd.classList.add("hidden");});
 
-/* ===== Reservierungen ===== */
-window.reserve = async (key)=>{
-  if(currentStatus!=="active") return alert("Nicht freigeschaltet.");
-  const ref = doc(db,"reservations",key);
-  const s = await getDoc(ref);
-  if (s.exists() && s.data().status!=="denied") return alert("Bereits reserviert.");
-  await setDoc(ref, { islandId:key, reservedBy:currentUser.uid, user: (await getDoc(doc(db,"users",currentUser.uid))).data().name, status:"requested", timestamp:new Date() }, { merge:true });
-};
-window.approve = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"approved" }, { merge:true }); };
-window.deny    = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"denied" }, { merge:true }); };
-
-/* ===== Mitglieder (Admin) ===== */
-function listenMembers(){
-  onSnapshot(usersRef, (snap)=>{
-    const arr=[]; snap.forEach(d=>arr.push({ id:d.id, ...d.data() }));
-    let html = `<div class="tablewrap"><table><thead><tr>
-      <th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr></thead><tbody>`;
-    arr.forEach(u=>{
-      const style = u.status==="pending" ? 'style="background:rgba(251,191,36,.12)"'
-                  : u.status==="blocked" ? 'style="background:rgba(239,68,68,.12)"'
-                  : 'style="background:rgba(34,197,94,.12)"';
-      html += `<tr ${style}>
-        <td>${u.name||u.id}</td>
-        <td>${u.role||'member'}</td>
-        <td>${u.status||'pending'}</td>
-        <td>
-          ${u.role==='admin'
-            ? `<button class="ghost" onclick="setRole('${u.id}','member')">⬇ Mitglied</button>`
-            : `<button onclick="setRole('${u.id}','admin')">⬆ Admin</button>`}
-          ${u.status==='pending'
-            ? `<button class="ok" onclick="setStatus('${u.id}','active')">Freischalten</button>`
-            : u.status==='active'
-              ? `<button class="ghost" onclick="setStatus('${u.id}','blocked')">Sperren</button>`
-              : `<button class="ok" onclick="setStatus('${u.id}','active')">Entsperren</button>`}
-          <button class="danger" onclick="deleteUserDoc('${u.id}')">Löschen</button>
-        </td>
-      </tr>`;
-    });
-    html += `</tbody></table></div>`;
-    $("membersTable").innerHTML = html;
+/* Spielerübersicht */
+function renderPlayers(){
+  const by=new Map();
+  islands.forEach(r=>{const p=(r.Spielername||"").trim();const a=(r.AllianzKuerzel||"").trim();if(!p)return;
+    if(!by.has(p))by.set(p,{player:p,ally:a,igs:new Set(),count:0,pts:0});
+    const o=by.get(p);o.igs.add(String(r.Inselgruppe||""));o.count++;o.pts+=Number(r.Punkte||0);
   });
+  const rows=[...by.values()].sort((a,b)=>a.player.localeCompare(b.player,'de'));
+  $("playerTbody").innerHTML=rows.map(o=>`<tr><td>${o.player}</td><td>${o.ally||"-"}</td><td>${[...o.igs].filter(Boolean).map(x=>+x||0).sort((a,b)=>a-b).join(", ")||"-"}</td><td>${o.count}</td><td>${o.pts.toLocaleString('de-DE')}</td></tr>`).join("")||`<tr><td colspan="5" class="muted">Keine Daten</td></tr>`;
 }
-window.setRole = async (uid, role)=> await setDoc(doc(db,"users",uid), { role }, { merge:true });
-window.setStatus= async (uid, st)=> await setDoc(doc(db,"users",uid), { status:st }, { merge:true });
-window.deleteUserDoc = async(uid)=>{
-  if(!confirm("Firestore-Eintrag löschen?")) return;
-  await deleteDoc(doc(db,"users",uid));
-  alert("Firestore-Datensatz entfernt. Auth-Account ggf. zusätzlich in der Firebase-Konsole löschen.");
+
+/* Angriff / Verteidigung */
+function parseCoordString(s){const p=String(s).replace(/[,;\s-]+/g,":").split(":").map(Number);const oz=Math.max(1,p[0]||1),IG=Math.max(1,p[1]||1),ins=Math.max(1,p[2]||1);const igc=(IG-1)%15,igr=Math.floor((IG-1)/15),inc=(ins-1)%4,inr=Math.floor((ins-1)/4);const oColOff=(oz===1||oz===3)?0:60,oRowOff=(oz===1||oz===2)?0:60;const col=oColOff+igc*4+inc,row=oRowOff+igr*4+inr;return {col,row,oz,IG,ins};}
+function distanceTiles(aStr,bStr){const a=parseCoordString(aStr),b=parseCoordString(bStr);const dx=a.col-b.col,dy=a.row-b.row;return Math.sqrt(dx*dx+dy*dy);}
+function fmtHHMMSS(sec){const s=Math.max(0,Math.round(sec));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`;}
+function fmtLocal(d){return d.toLocaleString();}
+$("atk_calc").onclick=()=>{
+  const from=$("atk_from").value.trim(),to=$("atk_to").value.trim(),t=$("atk_start").value.trim(),unit=$("atk_unit").value,rel=$("atk_relation").value;
+  if(!from||!to||!t)return alert("Start/Ziel/Startzeit angeben.");
+  const dist=round1(distanceTiles(from,to));const knots=shipKnots[unit];const travelHours=round5(dist/(knots||1));const travelSeconds=Math.round(travelHours*3600);
+  const [HH,MM,SS]=t.split(":").map(n=>Number(n)||0);const now=new Date();const start=new Date(now.getFullYear(),now.getMonth(),now.getDate(),HH,MM,SS);const arrive=new Date(start.getTime()+travelSeconds*1000);const back=new Date(arrive.getTime()+travelSeconds*1000);
+  const rows = islands.filter(r=>{const pn=(r.Spielername||"").trim(),ak=(r.AllianzKuerzel||"").trim();const rln=playerOverrides[pn]?.relation||(ak?(allyMap[ak]?.relation||"neutral"):"neutral");return rln===rel;})
+  .map(r=>{const home=`${r.Ozean}:${r.Inselgruppe}:${r.Insel}`;const d2=round1(distanceTiles(home,to));const h2=round5(d2/(knots||1));const s2=Math.round(h2*3600);const a2=new Date(start.getTime()+s2*1000),b2=new Date(a2.getTime()+s2*1000);return {player:(r.Spielername||"-"),home,unit,dist:d2,secs:s2,arr:a2,ret:b2};})
+  .sort((a,b)=>a.secs-b.secs).slice(0,300);
+  $("atkTbody").innerHTML=[
+    `<tr><td><b>—</b></td><td>${from}</td><td>${to}</td><td>${unit}</td><td>${dist.toFixed(1)}</td><td>${fmtHHMMSS(travelSeconds)}</td><td>${fmtLocal(arrive)}</td><td>${fmtLocal(back)}</td></tr>`,
+    ...rows.map(x=>`<tr><td>${x.player}</td><td>${x.home}</td><td>${to}</td><td>${unit}</td><td>${x.dist.toFixed(1)}</td><td>${fmtHHMMSS(x.secs)}</td><td>${fmtLocal(x.arr)}</td><td>${fmtLocal(x.ret)}</td></tr>`)
+  ].join("")||`<tr><td colspan="8" class="muted">Keine Treffer</td></tr>`;
 };
 
-/* ===== Map (statisch) ===== */
-const mapCanvas = $("mapCanvas"), ctx = mapCanvas.getContext("2d");
+/* Map */
+const mapCanvas=$("mapCanvas"),ctx=mapCanvas.getContext("2d");$("mapColorMode").onchange=()=>drawMap();
 function drawMap(){
-  const c = ctx, W = mapCanvas.width, H = mapCanvas.height;
-  const style = getComputedStyle(document.documentElement);
-  const bg = style.getPropertyValue("--map-bg").trim();
-  const gridLight = style.getPropertyValue("--map-grid-light").trim();
-  const gridDark = style.getPropertyValue("--map-grid-dark").trim();
-  const oceanLine = style.getPropertyValue("--map-ocean").trim();
-
-  c.clearRect(0,0,W,H);
-  c.fillStyle = bg;
-  c.fillRect(0,0,W,H);
-
-  const TOTAL=120, cell=10;
-  const x0=60, y0=60;
-
-  // Insel-Gitter
-  c.strokeStyle=gridLight; c.lineWidth=0.4;
-  for(let i=0;i<=TOTAL;i++){
-    const p=y0+i*cell; c.beginPath(); c.moveTo(x0,p); c.lineTo(x0+TOTAL*cell,p); c.stroke();
-    const q=x0+i*cell; c.beginPath(); c.moveTo(q,y0); c.lineTo(q,y0+TOTAL*cell); c.stroke();
-  }
-  // IG-Gitter (4x4)
-  c.strokeStyle=gridDark; c.lineWidth=0.8;
-  for(let i=0;i<=TOTAL;i+=4){
-    c.beginPath(); c.moveTo(x0,y0+i*cell); c.lineTo(x0+TOTAL*cell,y0+i*cell); c.stroke();
-    c.beginPath(); c.moveTo(x0+i*cell,y0); c.lineTo(x0+i*cell,y0+TOTAL*cell); c.stroke();
-  }
-  // Ozeane (60x60)
-  c.strokeStyle=oceanLine; c.lineWidth=1.2;
-  c.beginPath();
-  c.moveTo(x0+60*cell,y0); c.lineTo(x0+60*cell,y0+TOTAL*cell);
-  c.moveTo(x0,y0+60*cell); c.lineTo(x0+TOTAL*cell,y0+60*cell);
-  c.stroke();
-
-  // Allianzfarben
-  const palette={}; const magenta=style.getPropertyValue("--magenta").trim();
-  function hslToHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));const to=x=>Math.round(x*255).toString(16).padStart(2,"0");return `#${to(f(0))}${to(f(8))}${to(f(4))}`;}
-  function colOf(ak){ if(!ak) return "#9aa3c7"; if(palette[ak]) return palette[ak]; let h=0; for(let i=0;i<ak.length;i++) h=(h*31+ak.charCodeAt(i))>>>0; return palette[ak]=hslToHex(h%360,60,55); }
-
-  // Insel-Zellen einfärben
+  const c=ctx,W=mapCanvas.width,H=mapCanvas.height,cs=getComputedStyle(document.documentElement);
+  const bg=cs.getPropertyValue("--map-bg").trim(),gi=cs.getPropertyValue("--grid-i").trim(),gg=cs.getPropertyValue("--grid-ig").trim(),go=cs.getPropertyValue("--grid-o").trim();
+  c.clearRect(0,0,W,H);c.fillStyle=bg;c.fillRect(0,0,W,H);
+  const TOTAL=120,cell=10,x0=60,y0=60;
+  c.strokeStyle=gi;c.lineWidth=0.4;for(let i=0;i<=TOTAL;i++){const p=y0+i*cell;c.beginPath();c.moveTo(x0,p);c.lineTo(x0+TOTAL*cell,p);c.stroke();const q=x0+i*cell;c.beginPath();c.moveTo(q,y0);c.lineTo(q,y0+TOTAL*cell);c.stroke();}
+  c.strokeStyle=gg;c.lineWidth=0.8;for(let i=0;i<=TOTAL;i+=4){c.beginPath();c.moveTo(x0,y0+i*cell);c.lineTo(x0+TOTAL*cell,y0+i*cell);c.stroke();c.beginPath();c.moveTo(x0+i*cell,y0);c.lineTo(x0+i*cell,y0+TOTAL*cell);c.stroke();}
+  c.strokeStyle=go;c.lineWidth=1.2;c.beginPath();c.moveTo(x0+60*cell,y0);c.lineTo(x0+60*cell,y0+TOTAL*cell);c.moveTo(x0,y0+60*cell);c.lineTo(x0+TOTAL*cell,y0+60*cell);c.stroke();
+  const mode=$("mapColorMode").value,txt=cs.getPropertyValue("--text").trim();
+  const maxP=Math.max(1,...islands.map(z=>Number(z.Punkte||0)));
   islands.forEach(r=>{
-    const oz = Math.max(1,Math.min(4,parseInt(r.Ozean)||1));
-    const IG = Math.max(1,Math.min(225,parseInt(r.Inselgruppe)||1));
-    const ins= Math.max(1,Math.min(16,parseInt(r.Insel)||1));
-    const oColOff = (oz===1||oz===3) ? 0 : 60;
-    const oRowOff = (oz===1||oz===2) ? 0 : 60;
-    const igc=(IG-1)%15, igr=Math.floor((IG-1)/15);
-    const inc=(ins-1)%4, inr=Math.floor((ins-1)/4);
-    const col=oColOff+igc*4+inc, row=oRowOff+igr*4+inr;
-    const x=x0+col*cell, y=y0+row*cell;
-
-    const name=(r.Spielername||"").trim();
-    const ak=(r.AllianzKuerzel||"").trim();
-    let fill="#9aa3c7"; if(name) fill = ak ? colOf(ak) : magenta;
-
-    c.fillStyle=fill; c.fillRect(x,y,cell,cell);
+    const oz=+r.Ozean||1,IG=+r.Inselgruppe||1,ins=+r.Insel||1;const igc=(IG-1)%15,igr=Math.floor((IG-1)/15),inc=(ins-1)%4,inr=Math.floor((ins-1)/4);
+    const oColOff=(oz===1||oz===3)?0:60,oRowOff=(oz===1||oz===2)?0:60;const col=oColOff+igc*4+inc,row=oRowOff+igr*4+inr,x=x0+col*cell,y=y0+row*cell;
+    const name=(r.Spielername||"").trim(),ak=(r.AllianzKuerzel||"").trim(),pts=Number(r.Punkte||0);
+    let fill="#9aa3c7"; if(name){ if(!ak){fill=getComputedStyle(document.documentElement).getPropertyValue("--magenta").trim();} else {const rel=relationOf(r);fill=rel==="friendly"?"#3b82f6":rel==="hostile"?"#ef4444":"#6b7280";}}
+    if(mode==="points"){const t=Math.min(1,pts/maxP);const v=255-Math.floor(t*160);fill=`rgb(${v},${255-v},200)`;}
+    c.fillStyle=fill;c.fillRect(x,y,cell,cell);
+    c.fillStyle=txt;c.font=`${Math.max(6,cell*0.9)}px sans-serif`;const lh=Math.max(6,cell*0.9);
+    const t1=name?name.slice(0,6):"",t2=ak?ak.slice(0,6):"",t3=pts?String(pts):""; if(cell>=10){c.fillText(t1,x+1,y+lh-1);c.fillText(t2,x+1,y+2*lh-1);c.fillText(t3,x+1,y+3*lh-1);}
   });
-
-  // IG Nummern
-  c.fillStyle=style.getPropertyValue("--text").trim();
-  c.font="10px sans-serif";
-  for(let i=0;i<225;i++){
-    const igc=i%15, igr=Math.floor(i/15);
-    const cx=x0+igc*4*cell+2*cell, cy=y0+igr*4*cell+2*cell;
-    c.fillText(String(i+1),cx-6,cy+4);
-  }
+  c.fillStyle=txt;c.font="10px sans-serif";for(let i=0;i<225;i++){const igc=i%15,igr=Math.floor(i/15);const cx=x0+igc*4*cell+2*cell,cy=y0+igr*4*cell+2*cell;c.fillText(String(i+1),cx-6,cy+4);}
 }
-drawMap();
 
-/* ===== Default Tab ===== */
-document.querySelector('[data-tab="tab-map"]').click();
+/* Default Tab */
+document.querySelector('[data-tab="tab-islands"]').click();
 </script>
 </body>
 </html>
