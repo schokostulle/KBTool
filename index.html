@@ -286,18 +286,19 @@ function renderDiplTables(){
   const pov=Object.keys(playerOverrides).sort((a,b)=>a.localeCompare(b,'de'));$("povTbody").innerHTML=pov.map(p=>`<tr><td>${p}</td><td>${playerOverrides[p].relation}</td></tr>`).join("")||`<tr><td colspan="2" class="muted">Keine Overrides</td></tr>`;
 }
 
-/* Inselübersicht (Tabulator.js) */
-
+/* Inselübersicht (Tabulator.js, stabil) */
 let islandTable = null;
 
-// Tabelle initialisieren oder aktualisieren
 function renderIslandTable() {
+  if (!islands || islands.length === 0) {
+    document.getElementById("islandTable").innerHTML = "<p style='padding:1em;'>Keine Inseln geladen.</p>";
+    return;
+  }
   if (islandTable) {
     islandTable.replaceData(islands.map(extendRows));
     updateTableStatus();
     return;
   }
-
   islandTable = new Tabulator("#islandTable", {
     data: islands.map(extendRows),
     layout: "fitColumns",
@@ -306,13 +307,12 @@ function renderIslandTable() {
     placeholder: "Keine Daten",
     movableColumns: true,
     resizableRows: false,
-    headerSortElement: "<span class='sort-icon'></span>",
     columns: [
-      { title: "Oz", field: "Oz", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "IG", field: "IG", sorter: "number", headerFilter: "input", width: 80 },
-      { title: "I", field: "I", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "Spieler", field: "Spieler", sorter: "string", headerFilter: "input" },
-      { title: "Allianz", field: "Allianz", sorter: "string", headerFilter: "input" },
+      { title: "Oz", field: "Ozean", sorter: "number", headerFilter: "input", width: 70 },
+      { title: "IG", field: "Inselgruppe", sorter: "number", headerFilter: "input", width: 80 },
+      { title: "I", field: "Insel", sorter: "number", headerFilter: "input", width: 70 },
+      { title: "Spieler", field: "Spielername", sorter: "string", headerFilter: "input" },
+      { title: "Allianz", field: "AllianzKuerzel", sorter: "string", headerFilter: "input" },
       {
         title: "Punkte",
         field: "Punkte",
@@ -336,15 +336,9 @@ function renderIslandTable() {
       else el.style.background = "";
     },
   });
-
-  islandTable.on("dataFiltered", updateTableStatus);
-  islandTable.on("dataSorted", updateTableStatus);
-  islandTable.on("pageLoaded", updateTableStatus);
-
   updateTableStatus();
 }
 
-// Daten erweitern (Reservierungen etc.)
 function extendRows(r) {
   const id = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
   const res = reservations[id];
@@ -357,16 +351,13 @@ function extendRows(r) {
   };
 }
 
-// Tabellenstatus anzeigen
 function updateTableStatus() {
   if (!islandTable) return;
   const total = islands.length;
   const visible = islandTable.getDataCount("active");
-  document.getElementById("tableStatus").textContent =
-    `${visible} von ${total} Inseln angezeigt`;
+  document.getElementById("tableStatus").textContent = `${visible} von ${total} Inseln angezeigt`;
 }
 
-// Reservierungslogik
 function actionCell(id, res) {
   if (!currentUser) return "<button disabled>Login nötig</button>";
   if (currentStatus !== "active") return "<button disabled>Ausstehend</button>";
