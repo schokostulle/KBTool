@@ -3,164 +3,223 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Allianz Dashboard</title>
+<title>Allianz-Dashboard</title>
 
-<!-- Firebase (modular v10) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, getDocs, query } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
-  /* ===================== Basic UI Helpers ===================== */
-  const $ = (id)=>document.getElementById(id);
-
-  /* ===================== Theme / Styles ===================== */
-</script>
-
+<!-- Harmonische Themes -->
 <style>
-:root{
-  --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2937;
-  --accent:#3b82f6; --accent-2:#2563eb; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --magenta:#e879f9;
+:root {
+  /* 🌙 Dark Mode */
+  --bg: #0d1117;
+  --card: #161b22;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --border: #30363d;
+  --accent: #3b82f6;
+  --accent-2: #2563eb;
+  --ok: #22c55e;
+  --warn: #fbbf24;
+  --danger: #ef4444;
+  --magenta: #e879f9;
+
+  /* Map-Farben dark */
+  --map-bg: #0b1220;
+  --map-grid-light: #6b7280;  /* Insel */
+  --map-grid-dark: #3f3f46;   /* IG */
+  --map-ocean: rgba(255,70,70,0.8);
 }
-/* 🌞 DAY MODE */
-:root.light{
-  --bg:#f8fafc; --card:#ffffff; --text:#111827; --muted:#475569; --border:#cbd5e1;
-  --accent:#2563eb; --accent-2:#1d4ed8; --ok:#16a34a; --warn:#ca8a04; --danger:#dc2626; --magenta:#db2777;
+:root.light {
+  /* ☀️ Light Mode */
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #475569;
+  --border: #cbd5e1;
+  --accent: #2563eb;
+  --accent-2: #1d4ed8;
+  --ok: #16a34a;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --magenta: #db2777;
+
+  /* Map-Farben light */
+  --map-bg: #f1f5f9;
+  --map-grid-light: #94a3b8;  /* Insel */
+  --map-grid-dark: #64748b;   /* IG */
+  --map-ocean: rgba(239,68,68,0.6);
 }
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;transition:background .3s,color .3s}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;
+  transition:background .3s,color .3s;
+}
 h1,h2,h3{margin:0}
 .hidden{display:none}
 
-.container{max-width:1200px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);padding:16px;margin-bottom:16px;transition:background .3s,border .3s}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.spacer{flex:1}
-
-input,button,select{border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px 12px;font-size:14px}
-button{background:var(--accent);border-color:transparent;cursor:pointer;transition:background .2s}
+.header{
+  position:sticky; top:0; z-index:100;
+  background:var(--card); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:8px; padding:10px 16px;
+}
+.header .spacer{flex:1}
+button,input,select{
+  border-radius:10px;border:1px solid var(--border);
+  background:var(--card); color:var(--text);
+  padding:10px 12px; font-size:14px; transition:background .2s,color .2s,border .2s;
+}
+button{background:var(--accent); border-color:transparent; cursor:pointer;}
 button:hover{background:var(--accent-2)}
-button.ghost{background:transparent;border-color:var(--border)}
+button.ghost{background:transparent;border:1px solid var(--border)}
 button.ghost:hover{background:var(--card)}
-button.warn{background:var(--warn);border-color:transparent}
 button.ok{background:var(--ok);border-color:transparent}
+button.warn{background:var(--warn);border-color:transparent}
 button.danger{background:var(--danger);border-color:transparent}
 
-/* Tabellen, Dropdowns, Karte wie gehabt … */
-#mapCanvas{display:block;width:100%;height:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:grab;transition:background .3s,border .3s}
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.2); padding:16px; margin-top:16px;
+}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.spacer{flex:1}
+.badge{color:var(--muted); font-size:13px}
+.sep{height:1px;background:var(--border);margin:10px 0}
+
+/* Tabs */
+.tabbar{display:flex;gap:8px;margin-top:8px}
+.tabcontent{margin-top:12px}
+
+/* Map */
+#mapCanvas{
+  width:100%; height:auto; background:var(--map-bg);
+  border:1px solid var(--border); border-radius:10px;
+  cursor:grab; transition:background .3s;
+}
 #mapCanvas:active{cursor:grabbing}
+.legend{display:flex; gap:16px; align-items:center; color:var(--muted); font-size:13px}
+.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
+
+/* Tabelle */
+.tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);color:var(--muted);cursor:pointer}
+tr.requested{background:rgba(251,191,36,.12)}
+tr.approved{background:rgba(34,197,94,.12)}
+tr.denied{background:rgba(239,68,68,.12)}
+
+/* Dropdown-Filter */
+.col-filter{position:absolute;min-width:240px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40}
+.col-filter .options{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px}
+.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 6px}
+.filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 </style>
 </head>
 
 <body>
-<div class="container">
-  <h1>🏝 Allianz Dashboard</h1>
-
-  <!-- LOGIN -->
-  <!-- LOGIN / REGISTRATION VIEW -->
-<div id="loginView" class="card">
-  <div class="row" style="justify-content:space-between;align-items:center;">
-    <h2>Login / Registrierung</h2>
+  <!-- Immer sichtbare Kopfzeile (inkl. Theme-Button) -->
+  <div class="header">
+    <div><b>🏝 Allianz-Dashboard</b></div>
+    <div class="spacer"></div>
     <button id="btnTheme" class="ghost">🌙 Dark</button>
   </div>
 
-  <div class="sep"></div>
+  <div class="container">
 
-  <div class="row" style="margin-top:8px; flex-wrap:wrap; gap:12px;">
-    <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1; min-width:200px;" />
-    <input id="password" type="password" placeholder="Passwort" style="flex:1; min-width:200px;" />
-  </div>
-
-  <div class="row" style="margin-top:12px; gap:10px;">
-    <button id="btnLogin">Anmelden</button>
-    <button id="btnRegister" class="ghost">Registrieren</button>
-    <span class="badge">🔐 Login mit Ingame-Namen (Fake-Mail-System)</span>
-  </div>
-
-  <div class="sep"></div>
-
-  <div style="margin-top:6px;">
-    <p class="badge">
-      💡 Hinweis: Der erste registrierte Account wird automatisch als <b>Admin</b> aktiviert.<br>
-      Weitere Accounts müssen durch einen Admin freigeschaltet werden.
-    </p>
-  </div>
-</div>
-
-  <!-- APP -->
-  <div id="appView" class="hidden">
-    <div class="card">
-      <div class="row">
-        <div>👤 <b id="userDisplay">–</b> • Rolle: <b id="roleDisplay">–</b> • Status: <b id="statusDisplay">–</b></div>
-        <span class="spacer"></span>
-        <button id="btnLogout" class="ghost">Abmelden</button>
+    <!-- LOGIN -->
+    <div id="loginView" class="card">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <h2>Login / Registrierung</h2>
       </div>
-      <div class="tabbar">
-        <button data-tab="tab-map">🗺 Inselkarte</button>
-        <button data-tab="tab-islands">📊 Inselübersicht</button>
-        <button data-tab="tab-members" id="tabMembersBtn" class="hidden">👥 Mitglieder</button>
-      </div>
-    </div>
-
-    <!-- TAB: MAP -->
-    <div id="tab-map" class="tabcontent card">
-      <div class="row" style="justify-content:space-between;margin-bottom:8px">
-        <div class="legend">
-          <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
-          <span><span class="sw" style="background:var(--magenta)"></span> keine Allianz</span>
-          <span>Farben = Allianzen</span>
-        </div>
-        <div class="badge">Zoom: Mausrad • Verschieben: ziehen</div>
-      </div>
-      <canvas id="mapCanvas" width="1600" height="1600"></canvas>
-      <div class="badge" style="margin-top:6px">Ozeane: rot • Inselgruppen: dunkelgrau • Inseln: hellgrau • IG-Nummern erscheinen ab mittlerem Zoom</div>
-    </div>
-
-    <!-- TAB: ISLANDS -->
-    <div id="tab-islands" class="tabcontent card hidden">
-      <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <div class="row">
-          <button id="btnResetFilters" class="ghost">Filter zurücksetzen</button>
-        </div>
-        <div class="row">
-          <input type="file" id="csvInput" accept=".csv" class="hidden">
-          <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
-          <span id="csvStatus" class="badge"></span>
-        </div>
-      </div>
-      <div class="tablewrap">
-        <table id="islandTable">
-          <thead><tr id="theadRow"></tr></thead>
-          <tbody id="tbodyRows"></tbody>
-        </table>
-        <div id="filterDropdown" class="col-filter hidden"></div>
-      </div>
-      <div id="tableStatus" class="badge" style="margin-top:6px"></div>
-    </div>
-
-    <!-- TAB: MEMBERS -->
-    <div id="tab-members" class="tabcontent card hidden">
-      <h3>Mitgliederverwaltung</h3>
-      <div id="membersTable" style="margin-top:6px"></div>
       <div class="sep"></div>
-      <div class="badge">Hinweis: „Löschen“ entfernt den Firestore-Eintrag. Das Auth-Konto bitte separat in der Firebase Console löschen.</div>
+      <div class="row" style="gap:12px;">
+        <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1;min-width:220px">
+        <input id="password" type="password" placeholder="Passwort" style="flex:1;min-width:220px">
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="btnLogin">Anmelden</button>
+        <button id="btnRegister" class="ghost">Registrieren</button>
+        <span class="badge">Der erste registrierte Account wird automatisch als Admin aktiviert (Fallback vorhanden).</span>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="appView" class="hidden">
+      <div class="card">
+        <div class="row">
+          <div>👤 <b id="userDisplay">–</b> • Rolle: <b id="roleDisplay">–</b> • Status: <b id="statusDisplay">–</b></div>
+          <span class="spacer"></span>
+          <button id="btnLogout" class="ghost">Abmelden</button>
+        </div>
+
+        <div class="tabbar">
+          <button data-tab="tab-map">🗺 Inselkarte</button>
+          <button data-tab="tab-islands">📊 Inselübersicht</button>
+          <button data-tab="tab-members" id="tabMembersBtn" class="hidden">👥 Mitglieder</button>
+        </div>
+      </div>
+
+      <!-- TAB: MAP -->
+      <div id="tab-map" class="tabcontent card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="legend">
+            <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
+            <span><span class="sw" style="background:var(--magenta)"></span> keine Allianz</span>
+            <span>Farben = Allianzen</span>
+          </div>
+          <div class="badge">Zoom: Mausrad / Pinch • Verschieben: Ziehen/Wischen</div>
+        </div>
+        <canvas id="mapCanvas" width="1600" height="1600"></canvas>
+        <div class="badge" style="margin-top:6px">Ozeane: rot • Inselgruppen: dunkelgrau • Inseln: hellgrau • IG-Nummern erscheinen ab mittlerem Zoom</div>
+      </div>
+
+      <!-- TAB: ISLANDS -->
+      <div id="tab-islands" class="tabcontent card hidden">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div class="row">
+            <button id="btnResetFilters" class="ghost">Filter zurücksetzen</button>
+          </div>
+          <div class="row">
+            <input type="file" id="csvInput" accept=".csv" class="hidden">
+            <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
+            <span id="csvStatus" class="badge"></span>
+          </div>
+        </div>
+        <div class="tablewrap">
+          <table id="islandTable">
+            <thead><tr id="theadRow"></tr></thead>
+            <tbody id="tbodyRows"></tbody>
+          </table>
+          <div id="filterDropdown" class="col-filter hidden"></div>
+        </div>
+        <div id="tableStatus" class="badge" style="margin-top:6px"></div>
+      </div>
+
+      <!-- TAB: MEMBERS -->
+      <div id="tab-members" class="tabcontent card hidden">
+        <h3>Mitgliederverwaltung</h3>
+        <div id="membersTable" style="margin-top:6px"></div>
+        <div class="sep"></div>
+        <div class="badge">„Löschen“ entfernt den Firestore-Datensatz. Das Auth-Konto bitte in der Firebase Console löschen.</div>
+      </div>
     </div>
   </div>
-</div>
 
+<!-- Firebase + App -->
 <script type="module">
 /* ===================== Firebase Setup (modular) ===================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, getDocs, query } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
-  authDomain: "ik-tool.firebaseapp.com",
-  projectId: "ik-tool",
-  storageBucket: "ik-tool.firebasestorage.app",
-  messagingSenderId: "212260982227",
-  appId: "1:212260982227:web:84bfe35c83387c1879f326"
+  apiKey: "DEIN_API_KEY",
+  authDomain: "DEIN_PROJECT.firebaseapp.com",
+  projectId: "DEIN_PROJECT_ID",
+  storageBucket: "DEIN_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -171,7 +230,7 @@ const metaRef  = collection(db,"meta");
 const islandsRef = collection(db,"islands");
 const reservationsRef = collection(db,"reservations");
 
-/* ===================== State ===================== */
+/* ===================== State & Helpers ===================== */
 let currentUser=null, currentRole="member", currentStatus="pending";
 let islands=[], viewData=[], reservations={};
 
@@ -188,8 +247,7 @@ const headers = [
 const columnFilters = {}; headers.forEach(h=>columnFilters[h.key]=null);
 let sortState = { key:null, dir:1 };
 
-/* ===================== Helpers ===================== */
-const $ = (id)=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 function fakeEmail(name){
   return name.trim().toLowerCase()
     .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss")
@@ -201,7 +259,22 @@ function numberify(x){
   return Number(String(x).replace(/^"|"$/g,"").replace(/\./g,"").replace(/\s/g,"").replace(/[^0-9-]/g,""))||0;
 }
 
-/* ===================== UI: Tabs ===================== */
+/* ===================== Theme Toggle (global) ===================== */
+const themeBtn = $("btnTheme");
+(function initTheme(){
+  const isLight = localStorage.theme==="light";
+  document.documentElement.classList.toggle("light", isLight);
+  themeBtn.textContent = isLight ? "☀️ Light" : "🌙 Dark";
+})();
+themeBtn.onclick = ()=>{
+  const willLight = !document.documentElement.classList.contains("light");
+  document.documentElement.classList.toggle("light", willLight);
+  localStorage.theme = willLight ? "light" : "dark";
+  themeBtn.textContent = willLight ? "☀️ Light" : "🌙 Dark";
+  drawMap();
+};
+
+/* ===================== Tabs ===================== */
 const tabs = ["tab-map","tab-islands","tab-members"];
 document.querySelectorAll(".tabbar button").forEach(btn=>{
   btn.addEventListener("click", ()=>{
@@ -228,17 +301,11 @@ $("btnRegister").onclick = async ()=>{
     // Bootstrap: versuche /meta/config einmalig anzulegen
     const metaCfg = doc(db,"meta","config");
     let first=false;
-    try {
-      // create-ähnlich: ohne merge — schlägt fehl, wenn existiert
-      await setDoc(metaCfg, { adminInitialized:true, createdAt:new Date(), bootstrapBy:n }, { merge:false });
-      first=true;
-    } catch(_) { /* existiert bereits */ }
+    try { await setDoc(metaCfg, { adminInitialized:true, createdAt:new Date(), bootstrapBy:n }, { merge:false }); first=true; }
+    catch(_) { /* existiert bereits */ }
 
     await setDoc(doc(db,"users",uid), {
-      uid, ingameName:n,
-      role: first ? "admin" : "member",
-      status: first ? "active" : "pending",
-      createdAt:new Date()
+      uid, ingameName:n, role:first?"admin":"member", status:first?"active":"pending", createdAt:new Date()
     }, { merge:true });
 
     alert(first ? "Erster Benutzer erkannt. Admin & aktiv!" : "Registriert. Bitte auf Freischaltung warten.");
@@ -249,15 +316,13 @@ $("btnLogout").onclick = async ()=>{ await signOut(auth); location.reload(); };
 /* ===================== Auth State + Fallback ===================== */
 onAuthStateChanged(auth, async (u)=>{
   if(!u) return;
-
-  // kleine Verzögerung
-  await new Promise(r=>setTimeout(r,300));
+  await new Promise(r=>setTimeout(r,300)); // minimale Verzögerung
 
   const uid = u.uid;
   const userDoc = doc(db,"users",uid);
   const metaDoc = doc(db,"meta","config");
 
-  // Fallback: meta/config fehlt → wir legen sie an und machen diesen Benutzer Admin+active
+  // Fallback: meta/config fehlt → anlegen & aktuellen User Admin/active setzen
   const metaSnap = await getDoc(metaDoc);
   if (!metaSnap.exists()) {
     try{
@@ -272,7 +337,6 @@ onAuthStateChanged(auth, async (u)=>{
     await setDoc(userDoc, { uid, ingameName: u.email.split("@")[0].replace(/_/g," "), role:"member", status:"pending", createdAt:new Date() });
     uSnap = await getDoc(userDoc);
   }
-
   const data = uSnap.data();
   currentUser = { ...u, uid, ingameName: data.ingameName || u.email.split("@")[0].replace(/_/g," ") };
   currentRole  = data.role  || "member";
@@ -311,17 +375,15 @@ $("csvInput").addEventListener("change", async (e)=>{
   const txt = await f.text();
   const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   const rows  = lines.map(line => line.split(";").map(v => v.replace(/^"|"$/g,"").trim()));
-  const mapped = rows.map(c=>({
+  const mapped = rows.map((c,i)=>({
     Ozean: c[0]||"", Inselgruppe:c[1]||"", Insel:c[2]||"", Inselname:c[3]||"",
     SpielerID:c[4]||"", Spielername:c[5]||"", AllianzID:c[6]||"", AllianzKuerzel:c[7]||"",
     Allianzname:c[8]||"", Punkte: numberify(c[9]||0)
   }));
 
-  // Komplett-Replace: vorhandene Inseln lokal löschen & neu schreiben (Batch ersatzlos übersprungen, modular SDK: nutzerdefiniert)
-  // Für Einfachheit: existierende lesen und überschreiben (hier Demo: Nur neu setzen unter synthetischer ID)
+  // Schreiben (einfach: neue Datensätze hinzufügen mit synthetischer ID)
   let i=0;
   for (const r of mapped){
-    // synthetische ID stabilisieren:
     const id = `${r.Ozean||'0'}-${r.Inselgruppe||'0'}-${r.Insel||'0'}-${i++}`;
     await setDoc(doc(db,"islands",id), r);
   }
@@ -334,7 +396,7 @@ $("csvInput").addEventListener("change", async (e)=>{
 
 /* ===================== Load Islands + Reservations ===================== */
 async function loadIslands(){
-  const snap = await getDocs(query(islandsRef));
+  const snap = await getDocs(islandsRef);
   islands = snap.docs.map(d=>d.data()).map(row=>{
     const out={}; for(const k in row){
       out[k] = typeof row[k]==="string" ? row[k].replace(/^"|"$/g,"").trim() : row[k];
@@ -346,7 +408,7 @@ async function loadIslands(){
 }
 function listenReservations(){
   onSnapshot(reservationsRef, (s)=>{
-    reservations={}; s.forEach(d=> reservations[d.id]=d.data() );
+    reservations={}; s.forEach(d=>reservations[d.id]=d.data());
     renderTable();
     if (!$("tab-map").classList.contains("hidden")) drawMap();
   });
@@ -362,7 +424,6 @@ function buildTableHeader(){
     tr.appendChild(th);
   });
 
-  // Outside click hides dropdown
   document.addEventListener("click",(e)=>{
     const dd=$("filterDropdown");
     if(dd.classList.contains("hidden")) return;
@@ -408,7 +469,6 @@ function renderTable(){
   }
 
   viewData = filtered;
-  // body render
   const tb = $("tbodyRows"); tb.innerHTML="";
   filtered.forEach(row=>{
     const resid=`${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
@@ -427,7 +487,6 @@ function renderTable(){
     tb.appendChild(tr);
   });
 
-  // status
   $("tableStatus").textContent = `${filtered.length} von ${islands.length} Einträgen`
     + (sortState.key ? ` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})` : "");
 }
@@ -435,7 +494,6 @@ function actionCell(key,res){
   if(!currentUser) return `<button disabled>Login nötig</button>`;
   if(currentStatus!=="active") return `<button disabled>Gesperrt/Ausstehend</button>`;
 
-  // Bereits vorhanden?
   if(res){
     if(res.status==="requested"){
       if(currentRole==="admin"){
@@ -452,7 +510,6 @@ function actionCell(key,res){
       return `<button onclick="reserve('${key}')">Reservieren</button>`;
     }
   }
-  // Keine Reservierung vorhanden
   return `<button onclick="reserve('${key}')">Reservieren</button>`;
 }
 function showFilter(header, thEl){
@@ -462,7 +519,6 @@ function showFilter(header, thEl){
   const rect=thEl.getBoundingClientRect(), wrap=thEl.closest(".tablewrap").getBoundingClientRect();
   dd.style.left=(rect.left-wrap.left)+"px"; dd.style.top=(rect.bottom-wrap.top+4)+"px";
 
-  // Werte sammeln
   const vals = new Set(islands.map(r=>{
     let v = (key==="__reserved_by") ? "" : (r[key]??"");
     if (header.type==="number") v = String(numberify(v));
@@ -471,7 +527,7 @@ function showFilter(header, thEl){
   const items = Array.from(vals).sort((a,b)=> header.type==="number" ? (Number(a)-Number(b)) : a.localeCompare(b,'de',{numeric:true}));
   const active = columnFilters[key] ? new Set(Array.from(columnFilters[key])) : null;
 
-  const title=document.createElement("div"); title.style.color="var(--muted)"; title.style.margin="4px 2px"; title.textContent=`Filter: ${header.label}`; dd.appendChild(title);
+  const title=document.createElement("div"); title.className="badge"; title.style.margin="2px 2px 6px"; title.textContent=`Filter: ${header.label}`; dd.appendChild(title);
 
   const ctrl=document.createElement("div"); ctrl.className="row"; ctrl.style.margin="6px 0";
   const btnAll=document.createElement("button"); btnAll.className="ghost"; btnAll.textContent="Alle an/aus";
@@ -505,21 +561,13 @@ function showFilter(header, thEl){
 /* ===================== Reservations Actions ===================== */
 window.reserve = async (key)=>{
   if(currentStatus!=="active") return alert("Nicht freigeschaltet.");
-  // Prüfen ob bereits vorhanden (außer denied)
-  const id = key; // nutze key direkt als reservations doc id
-  const ref = doc(db,"reservations",id);
+  const ref = doc(db,"reservations",key);
   const s = await getDoc(ref);
   if (s.exists() && s.data().status!=="denied") return alert("Bereits reserviert.");
   await setDoc(ref, { islandId:key, reservedBy:currentUser.uid, user:currentUser.ingameName, status:"requested", timestamp:new Date() }, { merge:true });
 };
-window.approve = async (key)=>{
-  if(currentRole!=="admin") return;
-  await setDoc(doc(db,"reservations",key), { status:"approved" }, { merge:true });
-};
-window.deny = async (key)=>{
-  if(currentRole!=="admin") return;
-  await setDoc(doc(db,"reservations",key), { status:"denied" }, { merge:true });
-};
+window.approve = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"approved" }, { merge:true }); };
+window.deny    = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"denied" }, { merge:true }); };
 
 /* ===================== Members (Admin) ===================== */
 function listenMembers(){
@@ -528,7 +576,7 @@ function listenMembers(){
     let html = `<div class="tablewrap"><table><thead><tr>
       <th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr></thead><tbody>`;
     arr.forEach(u=>{
-      const style = u.status==="pending" ? 'style="background:rgba(245,158,11,.12)"'
+      const style = u.status==="pending" ? 'style="background:rgba(251,191,36,.12)"'
                   : u.status==="blocked" ? 'style="background:rgba(239,68,68,.12)"'
                   : 'style="background:rgba(34,197,94,.12)"';
       html += `<tr ${style}>
@@ -556,14 +604,15 @@ window.setRole = async (uid, role)=> await setDoc(doc(db,"users",uid), { role },
 window.setStatus= async (uid, st)=> await setDoc(doc(db,"users",uid), { status:st }, { merge:true });
 window.deleteUserDoc = async(uid)=>{
   if(!confirm("Firestore-Eintrag löschen?")) return;
-  await setDoc(doc(db,"users",uid), {}, { merge:false });
-  // In real: deleteDoc(doc(db,"users",uid))
+  await setDoc(doc(db,"users",uid), {}, { merge:false }); // Demo: in echt deleteDoc
   alert("Firestore-Datensatz entfernt. Auth-Account bitte in der Konsole löschen.");
 };
 
-/* ===================== Map (Zoom + Pan + Layer) ===================== */
+/* ===================== Map (Zoom + Pan + Touch + Layer) ===================== */
 let mapZoom=1.0, mapOffsetX=0, mapOffsetY=0, dragging=false, dragStart={x:0,y:0};
 const mapCanvas=$("mapCanvas"), ctx=mapCanvas.getContext("2d");
+
+// Maus
 mapCanvas.addEventListener("wheel", e=>{
   e.preventDefault();
   const z=(e.deltaY<0)?1.1:0.9;
@@ -579,17 +628,58 @@ mapCanvas.addEventListener("mousemove",(e)=>{
   drawMap();
 });
 
-function drawMap(){
-  const c=ctx, W=mapCanvas.width, H=mapCanvas.height;
-  c.clearRect(0,0,W,H);
-  const TOTAL=120, base=8, cell=base*mapZoom;
-  const x0=40+mapOffsetX, y0=40+mapOffsetY;
+// Touch
+let lastTouchDist=0;
+mapCanvas.addEventListener("touchstart",(e)=>{
+  if(e.touches.length===1){
+    dragging=true;
+    dragStart={x:e.touches[0].clientX-mapOffsetX,y:e.touches[0].clientY-mapOffsetY};
+  } else if (e.touches.length===2){
+    dragging=false;
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    lastTouchDist=Math.hypot(dx,dy);
+  }
+});
+mapCanvas.addEventListener("touchmove",(e)=>{
+  e.preventDefault();
+  if(e.touches.length===1 && dragging){
+    mapOffsetX=e.touches[0].clientX - dragStart.x;
+    mapOffsetY=e.touches[0].clientY - dragStart.y;
+    drawMap();
+  } else if (e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    const dist=Math.hypot(dx,dy);
+    const scale=dist/lastTouchDist; lastTouchDist=dist;
+    mapZoom=Math.min(Math.max(mapZoom*scale,0.4),10);
+    drawMap();
+  }
+});
+mapCanvas.addEventListener("touchend",()=>{ dragging=false; lastTouchDist=0; });
 
-  // Hintergrund
-  c.fillStyle="#0b1220"; c.fillRect(0,0,W,H);
+function drawMap() {
+  const c = ctx, W = mapCanvas.width, H = mapCanvas.height;
+
+  // Farben dynamisch aus Theme
+  const style = getComputedStyle(document.documentElement);
+  const bg = style.getPropertyValue("--map-bg").trim();
+  const gridLight = style.getPropertyValue("--map-grid-light").trim();
+  const gridDark = style.getPropertyValue("--map-grid-dark").trim();
+  const oceanLine = style.getPropertyValue("--map-ocean").trim();
+
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = bg;
+  c.fillRect(0, 0, W, H);
+
+  const TOTAL = 120;           // 2x2 Ozeane, je 60x60 Inseln
+  const base = 8;              // Basisgröße pro Insel
+  const cell = base * mapZoom; // skaliert mit Zoom
+  const x0 = 40 + mapOffsetX;
+  const y0 = 40 + mapOffsetY;
 
   // Allianzfarben
-  const palette={}; const magenta=getComputedStyle(document.documentElement).getPropertyValue("--magenta").trim();
+  const palette={}; const magenta=style.getPropertyValue("--magenta").trim();
   function hslToHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));const to=x=>Math.round(x*255).toString(16).padStart(2,"0");return `#${to(f(0))}${to(f(8))}${to(f(4))}`;}
   function colOf(ak){ if(!ak) return "#9aa3c7"; if(palette[ak]) return palette[ak]; let h=0; for(let i=0;i<ak.length;i++) h=(h*31+ak.charCodeAt(i))>>>0; return palette[ak]=hslToHex(h%360,60,55); }
 
@@ -610,32 +700,40 @@ function drawMap(){
     let fill="#9aa3c7"; if(name) fill = ak ? colOf(ak) : magenta;
 
     c.fillStyle=fill; c.fillRect(x,y,cell,cell);
+
+    // Hoher Zoom: Kürzel einblenden
+    if (mapZoom > 3.5) {
+      c.fillStyle = "rgba(0,0,0,0.6)";
+      c.font = `${Math.max(6, cell/2)}px sans-serif`;
+      if (ak) c.fillText(ak, x+1, y+cell/1.7);
+    }
   });
 
   // Insel-Gitter (hellgrau)
   if (mapZoom>0.3){
-    c.strokeStyle="#999"; c.lineWidth=0.3;
+    c.strokeStyle=gridLight; c.lineWidth=0.3;
     for(let i=0;i<=TOTAL;i++){
       const yy=y0+i*cell; c.beginPath(); c.moveTo(x0,yy); c.lineTo(x0+TOTAL*cell,yy); c.stroke();
       const xx=x0+i*cell; c.beginPath(); c.moveTo(xx,y0); c.lineTo(xx,y0+TOTAL*cell); c.stroke();
     }
   }
-  // IG-Gitter (dunkelgrau)
-  c.strokeStyle="#666"; c.lineWidth=0.7;
+  // IG-Gitter (dunkelgrau, 4x4)
+  c.strokeStyle=gridDark; c.lineWidth=0.7;
   for(let i=0;i<=TOTAL;i+=4){
     c.beginPath(); c.moveTo(x0,y0+i*cell); c.lineTo(x0+TOTAL*cell,y0+i*cell); c.stroke();
     c.beginPath(); c.moveTo(x0+i*cell,y0); c.lineTo(x0+i*cell,y0+TOTAL*cell); c.stroke();
   }
-  // Ozean-Trenner (rot)
-  c.strokeStyle="rgba(255,0,0,0.8)"; c.lineWidth=1.2;
+  // Ozean-Trenner (rot, 60x60)
+  c.strokeStyle=oceanLine; c.lineWidth=1.2;
   c.beginPath();
   c.moveTo(x0+60*cell,y0); c.lineTo(x0+60*cell,y0+120*cell);
   c.moveTo(x0,y0+60*cell); c.lineTo(x0+120*cell,y0+60*cell);
   c.stroke();
 
-  // IG-Nummern
+  // IG-Nummern (mittel/hoch Zoom)
   if (mapZoom>1.2){
-    c.fillStyle="#e5e7eb"; c.font=`${Math.max(8,cell*1.1)}px sans-serif`;
+    c.fillStyle=style.getPropertyValue("--text").trim();
+    c.font=`${Math.max(8,cell*1.1)}px sans-serif`;
     for(let i=0;i<225;i++){
       const igc=i%15, igr=Math.floor(i/15);
       const cx=x0+igc*4*cell+2*cell, cy=y0+igr*4*cell+2*cell;
@@ -646,34 +744,6 @@ function drawMap(){
 
 /* ===================== Default Tab ===================== */
 document.querySelector('[data-tab="tab-map"]').click();
-/* ===================== Theme Toggle (Login + Dashboard) ===================== */
-function setupThemeButton() {
-  const btn = document.getElementById("btnTheme");
-  if (!btn) return;
-
-  const applyTheme = (light) => {
-    const root = document.documentElement;
-    if (light) {
-      root.classList.add("light");
-      btn.textContent = "☀️ Light";
-    } else {
-      root.classList.remove("light");
-      btn.textContent = "🌙 Dark";
-    }
-  };
-
-  // Initial state
-  const isLight = localStorage.theme === "light";
-  applyTheme(isLight);
-
-  btn.onclick = () => {
-    const newState = !document.documentElement.classList.contains("light");
-    localStorage.theme = newState ? "light" : "dark";
-    applyTheme(newState);
-  };
-}
-
-document.addEventListener("DOMContentLoaded", setupThemeButton);
 </script>
 </body>
 </html>
