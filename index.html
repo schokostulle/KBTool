@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Allianz-Dashboard</title>
 
-<!-- Harmonische Themes -->
 <style>
+/* ===================================== */
+/*        Harmonisches Farbschema        */
+/* ===================================== */
 :root {
-  /* 🌙 Dark */
+  /* 🌙 Dark Mode */
   --bg:#0d1117;
   --card:#161b22;
   --text:#e6edf3;
   --muted:#8b949e;
   --border:#30363d;
-  --accent:#60a5fa;      /* mildes Blau */
+  --accent:#60a5fa;
   --accent-2:#3b82f6;
   --ok:#22c55e;
   --warn:#fbbf24;
@@ -26,13 +28,13 @@
   --map-ocean:rgba(255,70,70,0.8);
 }
 :root.light {
-  /* ☀️ Light */
+  /* ☀️ Light Mode */
   --bg:#f9fafb;
   --card:#ffffff;
   --text:#111827;
   --muted:#374151;
   --border:#d1d5db;
-  --accent:#3b82f6;      /* kräftigeres, aber gut lesbares Blau */
+  --accent:#3b82f6;
   --accent-2:#2563eb;
   --ok:#16a34a;
   --warn:#d97706;
@@ -44,86 +46,101 @@
   --map-ocean:rgba(239,68,68,0.4);
 }
 
-*{box-sizing:border-box}
+/* ===================================== */
+/*              Basis Layout             */
+/* ===================================== */
+*{box-sizing:border-box;}
 body{
   margin:0;background:var(--bg);color:var(--text);
-  font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;
+  font-family:Inter,system-ui,sans-serif;
   transition:background .3s,color .3s;
 }
 h1,h2,h3{margin:0}
 .hidden{display:none}
 
 .header{
-  position:sticky; top:0; z-index:100;
-  background:var(--card); border-bottom:1px solid var(--border);
-  display:flex; align-items:center; gap:8px; padding:10px 16px;
+  position:sticky;top:0;z-index:100;
+  background:var(--card);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;padding:10px 16px;
 }
 .header .spacer{flex:1}
-button,input,select{
-  border-radius:10px;border:1px solid var(--border);
-  background:var(--card); color:var(--text);
-  padding:10px 12px; font-size:14px; transition:background .2s,color .2s,border .2s;
-}
-button{background:var(--accent); border-color:transparent; cursor:pointer;}
-button:hover{background:var(--accent-2)}
-button.ghost{background:transparent;border:1px solid var(--border)}
-button.ghost:hover{background:var(--card)}
-button.ok{background:var(--ok);border-color:transparent}
-button.warn{background:var(--warn);border-color:transparent}
-button.danger{background:var(--danger);border-color:transparent}
 
 .container{max-width:1200px;margin:0 auto;padding:16px}
 .card{
-  background:var(--card); border:1px solid var(--border); border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,.2); padding:16px; margin-top:16px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);
+  padding:16px;margin-top:16px;
 }
-.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.spacer{flex:1}
-.badge{color:var(--muted); font-size:13px}
-.sep{height:1px;background:var(--border);margin:10px 0}
 
-/* Tabs */
-.tabbar{display:flex;gap:8px;margin-top:8px}
-.tabcontent{margin-top:12px}
+button,input{
+  border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);
+  padding:10px 12px;font-size:14px;transition:background .2s,color .2s,border .2s;
+}
+button{background:var(--accent);border-color:transparent;cursor:pointer;}
+button:hover{background:var(--accent-2);}
+button.ghost{background:transparent;border:1px solid var(--border);}
+button.ghost:hover{background:var(--card);}
+button.ok{background:var(--ok);}
+button.warn{background:var(--warn);}
+button.danger{background:var(--danger);}
 
-/* Map */
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.spacer{flex:1;}
+.badge{color:var(--muted);font-size:13px;}
+.sep{height:1px;background:var(--border);margin:10px 0;}
+.tabbar{display:flex;gap:8px;margin-top:8px;}
+.tabcontent{margin-top:12px;}
+
+/* ===================================== */
+/*              Inselkarte               */
+/* ===================================== */
 #mapCanvas{
-  width:100%; height:auto; background:var(--map-bg);
-  border:1px solid var(--border); border-radius:10px;
-  cursor:grab; transition:background .3s;
+  display:block;
+  width:100%;
+  max-width:100%;
+  height:auto;
+  background:var(--map-bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin:auto;
 }
-#mapCanvas:active{cursor:grabbing}
-.legend{display:flex; gap:16px; align-items:center; color:var(--muted); font-size:13px}
-.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
+.legend{display:flex;gap:16px;align-items:center;color:var(--muted);font-size:13px;}
+.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block;}
 
-/* Tabelle */
-.tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border)}
-/* Responsive Tables */
-@media (max-width: 900px) {
-  table, thead, tbody, th, td, tr { display:block; width:100%; }
-  th { position:relative; top:0; }
-  tr { border-bottom:1px solid var(--border); margin-bottom:8px; padding:6px 0; }
-  td { display:flex; justify-content:space-between; padding:6px 10px; }
-  td::before { content:attr(data-label); font-weight:600; color:var(--muted); }
-  th, #theadRow { display:none; }
-}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-th{position:sticky;top:0;background:var(--card);color:var(--muted);cursor:pointer}
-tr.requested{background:rgba(251,191,36,.12)}
-tr.approved{background:rgba(34,197,94,.12)}
-tr.denied{background:rgba(239,68,68,.12)}
+/* ===================================== */
+/*             Tabellenlayout            */
+/* ===================================== */
+.tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+th{position:sticky;top:0;background:var(--card);color:var(--muted);cursor:pointer;}
+tr.requested{background:rgba(251,191,36,.12);}
+tr.approved{background:rgba(34,197,94,.12);}
+tr.denied{background:rgba(239,68,68,.12);}
 
 /* Dropdown-Filter */
-.col-filter{position:absolute;min-width:240px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40}
-.col-filter .options{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px}
-.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 6px}
-.filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.col-filter{position:absolute;min-width:240px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40;}
+.col-filter .options{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px;}
+.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 6px;}
+.filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+
+/* ===================================== */
+/*            Responsive Tables          */
+/* ===================================== */
+@media (max-width: 900px){
+  table,thead,tbody,th,td,tr{display:block;width:100%;}
+  th{position:relative;top:0;}
+  tr{border-bottom:1px solid var(--border);margin-bottom:8px;padding:6px 0;}
+  td{display:flex;justify-content:space-between;padding:6px 10px;}
+  td::before{content:attr(data-label);font-weight:600;color:var(--muted);}
+  th,#theadRow{display:none;}
+}
 </style>
 </head>
 
 <body>
-  <!-- Immer sichtbare Kopfzeile (inkl. Theme-Button) -->
+  <!-- Header -->
   <div class="header">
     <div><b>🏝 Allianz-Dashboard</b></div>
     <div class="spacer"></div>
@@ -139,13 +156,13 @@ tr.denied{background:rgba(239,68,68,.12)}
       </div>
       <div class="sep"></div>
       <div class="row" style="gap:12px;">
-        <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1;min-width:220px">
-        <input id="password" type="password" placeholder="Passwort" style="flex:1;min-width:220px">
+        <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1;min-width:220px;">
+        <input id="password" type="password" placeholder="Passwort" style="flex:1;min-width:220px;">
       </div>
-      <div class="row" style="margin-top:12px">
+      <div class="row" style="margin-top:12px;">
         <button id="btnLogin">Anmelden</button>
         <button id="btnRegister" class="ghost">Registrieren</button>
-        <span class="badge">Der erste registrierte Account wird automatisch als Admin aktiviert (Fallback vorhanden).</span>
+        <span class="badge">Der erste registrierte Account wird automatisch als Admin aktiviert.</span>
       </div>
     </div>
 
@@ -167,25 +184,19 @@ tr.denied{background:rgba(239,68,68,.12)}
 
       <!-- TAB: MAP -->
       <div id="tab-map" class="tabcontent card">
-        <div class="row" style="justify-content:space-between;margin-bottom:8px">
-          <div class="legend">
-            <span><span class="sw" style="background:#9aa3c7"></span> kein Spieler</span>
-            <span><span class="sw" style="background:var(--magenta)"></span> keine Allianz</span>
-            <span>Farben = Allianzen</span>
-          </div>
-          <div class="badge">Zoom: Mausrad / Pinch • Verschieben: Ziehen/Wischen</div>
+        <div class="legend">
+          <span><span class="sw" style="background:#9aa3c7;"></span> kein Spieler</span>
+          <span><span class="sw" style="background:var(--magenta);"></span> keine Allianz</span>
+          <span>Farben = Allianzen</span>
         </div>
-        <canvas id="mapCanvas" width="1800" height="1800" style="max-width:100%;border-radius:12px"></canvas>
-        <div class="badge" style="margin-top:6px">Ozeane: rot • Inselgruppen: dunkelgrau • Inseln: hellgrau • IG-Nummern erscheinen ab mittlerem Zoom</div>
+        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
       </div>
 
       <!-- TAB: ISLANDS -->
       <div id="tab-islands" class="tabcontent card hidden">
-        <div class="row" style="justify-content:space-between;margin-bottom:6px">
-          <div class="row">
-            <button id="btnResetFilters" class="ghost">Filter zurücksetzen</button>
-          </div>
-          <div class="row">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px;">
+          <button id="btnResetFilters" class="ghost">Filter zurücksetzen</button>
+          <div>
             <input type="file" id="csvInput" accept=".csv" class="hidden">
             <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
             <span id="csvStatus" class="badge"></span>
@@ -198,25 +209,22 @@ tr.denied{background:rgba(239,68,68,.12)}
           </table>
           <div id="filterDropdown" class="col-filter hidden"></div>
         </div>
-        <div id="tableStatus" class="badge" style="margin-top:6px"></div>
+        <div id="tableStatus" class="badge" style="margin-top:6px;"></div>
       </div>
 
       <!-- TAB: MEMBERS -->
       <div id="tab-members" class="tabcontent card hidden">
         <h3>Mitgliederverwaltung</h3>
-        <div id="membersTable" style="margin-top:6px"></div>
-        <div class="sep"></div>
-        <div class="badge">„Löschen“ entfernt den Firestore-Datensatz. Das Auth-Konto bitte in der Firebase Console löschen.</div>
+        <div id="membersTable" style="margin-top:6px;"></div>
       </div>
     </div>
   </div>
 
-<!-- Firebase + App -->
 <script type="module">
-/* ===================== Firebase Setup (modular) ===================== */
+// ================== Firebase Setup (verkürzt für Übersicht) ==================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAnrHCuag66za4uKAt_o76QCptpvYqvVNs",
@@ -230,42 +238,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const usersRef = collection(db,"users");
-const metaRef  = collection(db,"meta");
-const islandsRef = collection(db,"islands");
-const reservationsRef = collection(db,"reservations");
-
-/* ===================== State & Helpers ===================== */
-let currentUser=null, currentRole="member", currentStatus="pending";
-let islands=[], viewData=[], reservations={};
-
-const headers = [
-  { key:"Ozean",           label:"Oz",            type:"number" },
-  { key:"Inselgruppe",     label:"IG",            type:"number" },
-  { key:"Insel",           label:"I",             type:"number" },
-  { key:"Spielername",     label:"Spielername",   type:"text"   },
-  { key:"AllianzKuerzel",  label:"Allianzkürzel", type:"text"   },
-  { key:"Punkte",          label:"Punkte",        type:"number" },
-  { key:"__reserved_by",   label:"Reserviert von",type:"text", readonly:true },
-  { key:"__action",        label:"Aktion",        type:"text", readonly:true },
-];
-const columnFilters = {}; headers.forEach(h=>columnFilters[h.key]=null);
-let sortState = { key:null, dir:1 };
-
-const $ = id => document.getElementById(id);
-function fakeEmail(name){
-  return name.trim().toLowerCase()
-    .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/[ß]/g,"ss")
-    .replace(/[^\w]+/g,"_")+"@alliancesystem.fake";
-}
-function numberify(x){
-  if (typeof x === "number") return x;
-  if (!x) return 0;
-  return Number(String(x).replace(/^"|"$/g,"").replace(/\./g,"").replace(/\s/g,"").replace(/[^0-9-]/g,""))||0;
-}
-
-/* ===================== Theme Toggle (global) ===================== */
-const themeBtn = $("btnTheme");
+/* ===================== Theme Toggle ===================== */
+const themeBtn = document.getElementById("btnTheme");
 (function initTheme(){
   const isLight = localStorage.theme==="light";
   document.documentElement.classList.toggle("light", isLight);
@@ -279,431 +253,57 @@ themeBtn.onclick = ()=>{
   drawMap();
 };
 
-/* ===================== Tabs ===================== */
-const tabs = ["tab-map","tab-islands","tab-members"];
-document.querySelectorAll(".tabbar button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const id = btn.getAttribute("data-tab");
-    tabs.forEach(t=>$(t).classList.add("hidden"));
-    $(id).classList.remove("hidden");
-    if (id==="tab-map") drawMap();
-  });
-});
+/* ===================== Inselkarte (statisch) ===================== */
+const mapCanvas = document.getElementById("mapCanvas");
+const ctx = mapCanvas.getContext("2d");
 
-/* ===================== Auth: Login/Register/Logout ===================== */
-$("btnLogin").onclick = async ()=>{
-  const n=$("username").value.trim(), p=$("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort eingeben!");
-  try{ await signInWithEmailAndPassword(auth, fakeEmail(n), p); }catch(e){ alert(e.message); }
-};
-$("btnRegister").onclick = async ()=>{
-  const n=$("username").value.trim(), p=$("password").value.trim();
-  if(!n||!p) return alert("Bitte Ingame-Name & Passwort eingeben!");
-  try{
-    await createUserWithEmailAndPassword(auth, fakeEmail(n), p);
-    const uid = auth.currentUser.uid;
-
-    // Bootstrap: versuche /meta/config einmalig anzulegen
-    const metaCfg = doc(db,"meta","config");
-    let first=false;
-    try { await setDoc(metaCfg, { adminInitialized:true, createdAt:new Date(), bootstrapBy:n }, { merge:false }); first=true; }
-    catch(_) { /* existiert bereits */ }
-
-    await setDoc(doc(db,"users",uid), {
-      uid, ingameName:n, role:first?"admin":"member", status:first?"active":"pending", createdAt:new Date()
-    }, { merge:true });
-
-    alert(first ? "Erster Benutzer erkannt. Admin & aktiv!" : "Registriert. Bitte auf Freischaltung warten.");
-  }catch(e){ alert(e.message); }
-};
-$("btnLogout").onclick = async ()=>{ await signOut(auth); location.reload(); };
-
-/* ===================== Auth State + Fallback ===================== */
-onAuthStateChanged(auth, async (u)=>{
-  if(!u) return;
-  await new Promise(r=>setTimeout(r,300)); // minimale Verzögerung
-
-  const uid = u.uid;
-  const userDoc = doc(db,"users",uid);
-  const metaDoc = doc(db,"meta","config");
-
-  // Fallback: meta/config fehlt → anlegen & aktuellen User Admin/active setzen
-  const metaSnap = await getDoc(metaDoc);
-  if (!metaSnap.exists()) {
-    try{
-      await setDoc(metaDoc,{ adminInitialized:true, createdAt:new Date(), bootstrapBy: u.email }, { merge:false });
-      await setDoc(userDoc, { role:"admin", status:"active" }, { merge:true });
-    }catch(e){ /* ignore */ }
-  }
-
-  // User laden / ggf. Minimalprofil
-  let uSnap = await getDoc(userDoc);
-  if (!uSnap.exists()) {
-    await setDoc(userDoc, { uid, ingameName: u.email.split("@")[0].replace(/_/g," "), role:"member", status:"pending", createdAt:new Date() });
-    uSnap = await getDoc(userDoc);
-  }
-  const data = uSnap.data();
-  currentUser = { ...u, uid, ingameName: data.ingameName || u.email.split("@")[0].replace(/_/g," ") };
-  currentRole  = data.role  || "member";
-  currentStatus= data.status|| "pending";
-
-  if (currentStatus!=="active") {
-    alert("Dein Account ist nicht freigeschaltet.");
-    await signOut(auth); return;
-  }
-
-  // UI freigeben
-  $("loginView").classList.add("hidden");
-  $("appView").classList.remove("hidden");
-  $("userDisplay").textContent = currentUser.ingameName;
-  $("roleDisplay").textContent = currentRole;
-  $("statusDisplay").textContent= "AKTIV";
-  if (currentRole==="admin"){ $("tabMembersBtn").classList.remove("hidden"); $("btnCSV").classList.remove("hidden"); }
-
-  // Daten und Listener
-  await loadIslands();
-  listenReservations();
-  buildTableHeader();
-  renderTable();
-  drawMap();
-
-  // Admin: Mitglieder
-  if (currentRole==="admin") listenMembers();
-});
-
-/* ===================== CSV Upload (Admin only) ===================== */
-$("btnCSV").onclick = ()=> $("csvInput").click();
-$("csvInput").addEventListener("change", async (e)=>{
-  if (currentRole!=="admin") return alert("Nur Admin darf CSV hochladen.");
-  const f = e.target.files[0]; if(!f) return;
-  $("csvStatus").textContent = "Importiere CSV...";
-  const txt = await f.text();
-  const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const rows  = lines.map(line => line.split(";").map(v => v.replace(/^"|"$/g,"").trim()));
-  const mapped = rows.map((c,i)=>({
-    Ozean: c[0]||"", Inselgruppe:c[1]||"", Insel:c[2]||"", Inselname:c[3]||"",
-    SpielerID:c[4]||"", Spielername:c[5]||"", AllianzID:c[6]||"", AllianzKuerzel:c[7]||"",
-    Allianzname:c[8]||"", Punkte: numberify(c[9]||0)
-  }));
-
-  // Schreiben (einfach: neue Datensätze hinzufügen mit synthetischer ID)
-  let i=0;
-  for (const r of mapped){
-    const id = `${r.Ozean||'0'}-${r.Inselgruppe||'0'}-${r.Insel||'0'}-${i++}`;
-    await setDoc(doc(db,"islands",id), r);
-  }
-  $("csvStatus").textContent = "CSV hochgeladen.";
-  await loadIslands();
-  resetFilters();
-  renderTable();
-  drawMap();
-});
-
-/* ===================== Load Islands + Reservations ===================== */
-async function loadIslands(){
-  const snap = await getDocs(islandsRef);
-  islands = snap.docs.map(d=>d.data()).map(row=>{
-    const out={}; for(const k in row){
-      out[k] = typeof row[k]==="string" ? row[k].replace(/^"|"$/g,"").trim() : row[k];
-    }
-    out.Punkte = numberify(out.Punkte);
-    return out;
-  });
-  viewData = [...islands];
-}
-function listenReservations(){
-  onSnapshot(reservationsRef, (s)=>{
-    reservations={}; s.forEach(d=>reservations[d.id]=d.data());
-    renderTable();
-    if (!$("tab-map").classList.contains("hidden")) drawMap();
-  });
-}
-
-/* ===================== Table: Header, Filters, Sort ===================== */
-function buildTableHeader(){
-  const tr = $("theadRow"); tr.innerHTML="";
-  headers.forEach(h=>{
-    const th=document.createElement("th");
-    th.textContent=h.label; th.dataset.key=h.key;
-    th.onclick = (e)=>{ if(!h.readonly) showFilter(h, th); toggleSort(h.key); };
-    tr.appendChild(th);
-  });
-
-  document.addEventListener("click",(e)=>{
-    const dd=$("filterDropdown");
-    if(dd.classList.contains("hidden")) return;
-    if(!dd.contains(e.target) && !e.target.closest("th")) dd.classList.add("hidden");
-  });
-
-  $("btnResetFilters").onclick = ()=>{ resetFilters(); renderTable(); };
-}
-function resetFilters(){ Object.keys(columnFilters).forEach(k=>columnFilters[k]=null); sortState={key:null,dir:1}; }
-function toggleSort(key){
-  if (sortState.key===key) sortState.dir*=-1;
-  else { sortState.key=key; sortState.dir=1; }
-  renderTable();
-}
-function renderTable(){
-  // filter
-  const filtered = islands.filter(row=>{
-    const resid = `${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res = reservations[resid];
-    row.__reserved_by = res?.user || "";
-    row.__status      = res?.status || "";
-
-    for(const h of headers){
-      const sel = columnFilters[h.key];
-      if (!sel) continue;
-      const value = (h.key==="__reserved_by") ? row.__reserved_by : (row[h.key] ?? "");
-      const valStr = h.type==="number" ? String(numberify(value)) : String(value);
-      if (!sel.has(valStr)) return false;
-    }
-    return true;
-  });
-
-  // sort
-  if (sortState.key){
-    const h = headers.find(x=>x.key===sortState.key);
-    const k = sortState.key, dir = sortState.dir;
-    filtered.sort((a,b)=>{
-      const va = (k==="__reserved_by")? (a.__reserved_by||"") : (a[k]??"");
-      const vb = (k==="__reserved_by")? (b.__reserved_by||"") : (b[k]??"");
-      if (h?.type==="number") return (numberify(va)-numberify(vb))*dir;
-      return String(va).localeCompare(String(vb),'de',{numeric:true})*dir;
-    });
-  }
-
-  viewData = filtered;
-  const tb = $("tbodyRows"); tb.innerHTML="";
-  filtered.forEach(row=>{
-    const resid=`${row.Ozean}-${row.Inselgruppe}-${row.Insel}`;
-    const res=reservations[resid];
-    const tr=document.createElement("tr");
-    if(res?.status) tr.classList.add(res.status);
-
-    headers.forEach(h=>{
-      const td=document.createElement("td");
-      if (h.key==="__reserved_by") td.textContent = res?.user || "-";
-      else if (h.key==="__action") td.innerHTML = actionCell(resid,res);
-      else if (h.key==="Punkte")   td.textContent = numberify(row.Punkte).toLocaleString('de-DE');
-      else td.textContent = (row[h.key]??"").toString();
-      tr.appendChild(td);
-    });
-    tb.appendChild(tr);
-  });
-
-  $("tableStatus").textContent = `${filtered.length} von ${islands.length} Einträgen`
-    + (sortState.key ? ` • Sortiert: ${headers.find(h=>h.key===sortState.key).label} (${sortState.dir===1?'↑':'↓'})` : "");
-}
-function actionCell(key,res){
-  if(!currentUser) return `<button disabled>Login nötig</button>`;
-  if(currentStatus!=="active") return `<button disabled>Gesperrt/Ausstehend</button>`;
-
-  if(res){
-    if(res.status==="requested"){
-      if(currentRole==="admin"){
-        return `<div class="row"><span>von ${res.user}</span><button class="ok" onclick="approve('${key}')">✔</button><button class="ghost" onclick="deny('${key}')">✖</button></div>`;
-      }
-      if(res.reservedBy===currentUser.uid) return `<button disabled>Reserviert (wartet)</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    if(res.status==="approved"){
-      if(res.reservedBy===currentUser.uid) return `<button disabled>✅ Bestätigt</button>`;
-      return `<button disabled>Reserviert von ${res.user}</button>`;
-    }
-    if(res.status==="denied"){
-      return `<button onclick="reserve('${key}')">Reservieren</button>`;
-    }
-  }
-  return `<button onclick="reserve('${key}')">Reservieren</button>`;
-}
-function showFilter(header, thEl){
-  const key=header.key, dd=$("filterDropdown");
-  dd.innerHTML=""; dd.classList.remove("hidden");
-
-  const rect=thEl.getBoundingClientRect(), wrap=thEl.closest(".tablewrap").getBoundingClientRect();
-  dd.style.left=(rect.left-wrap.left)+"px"; dd.style.top=(rect.bottom-wrap.top+4)+"px";
-
-  const vals = new Set(islands.map(r=>{
-    let v = (key==="__reserved_by") ? "" : (r[key]??"");
-    if (header.type==="number") v = String(numberify(v));
-    return String(v);
-  }));
-  const items = Array.from(vals).sort((a,b)=> header.type==="number" ? (Number(a)-Number(b)) : a.localeCompare(b,'de',{numeric:true}));
-  const active = columnFilters[key] ? new Set(Array.from(columnFilters[key])) : null;
-
-  const title=document.createElement("div"); title.className="badge"; title.style.margin="2px 2px 6px"; title.textContent=`Filter: ${header.label}`; dd.appendChild(title);
-
-  const ctrl=document.createElement("div"); ctrl.className="row"; ctrl.style.margin="6px 0";
-  const btnAll=document.createElement("button"); btnAll.className="ghost"; btnAll.textContent="Alle an/aus";
-  const btnClear=document.createElement("button"); btnClear.className="ghost"; btnClear.textContent="Leeren";
-  ctrl.appendChild(btnAll); ctrl.appendChild(btnClear); dd.appendChild(ctrl);
-
-  const list=document.createElement("div"); list.className="options"; dd.appendChild(list);
-  const refs=[];
-  for(const v of items){
-    const r=document.createElement("div"); r.className="option-row";
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked = active? active.has(v) : true; cb.dataset.val=v;
-    const lab=document.createElement("label"); lab.textContent= v==="" ? "(leer)" : (header.type==="number" ? Number(v).toLocaleString('de-DE') : v);
-    r.appendChild(cb); r.appendChild(lab); list.appendChild(r); refs.push(cb);
-  }
-
-  const actions=document.createElement("div"); actions.className="filter-actions";
-  const btnApply=document.createElement("button"); btnApply.textContent="Anwenden";
-  const btnCancel=document.createElement("button"); btnCancel.className="ghost"; btnCancel.textContent="Abbrechen";
-  actions.appendChild(btnApply); actions.appendChild(btnCancel); dd.appendChild(actions);
-
-  btnAll.onclick=()=>{ const someUnchecked=refs.some(c=>!c.checked); refs.forEach(c=>c.checked=someUnchecked); };
-  btnClear.onclick=()=> refs.forEach(c=>c.checked=false);
-  btnCancel.onclick=()=> dd.classList.add("hidden");
-  btnApply.onclick=()=>{
-    const sel=refs.filter(c=>c.checked).map(c=>c.dataset.val);
-    if (sel.length===items.length || sel.length===0) columnFilters[key]=null; else columnFilters[key]=new Set(sel);
-    dd.classList.add("hidden"); renderTable();
-  };
-}
-
-/* ===================== Reservations Actions ===================== */
-window.reserve = async (key)=>{
-  if(currentStatus!=="active") return alert("Nicht freigeschaltet.");
-  const ref = doc(db,"reservations",key);
-  const s = await getDoc(ref);
-  if (s.exists() && s.data().status!=="denied") return alert("Bereits reserviert.");
-  await setDoc(ref, { islandId:key, reservedBy:currentUser.uid, user:currentUser.ingameName, status:"requested", timestamp:new Date() }, { merge:true });
-};
-window.approve = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"approved" }, { merge:true }); };
-window.deny    = async (key)=>{ if(currentRole!=="admin") return; await setDoc(doc(db,"reservations",key), { status:"denied" }, { merge:true }); };
-
-/* ===================== Members (Admin) ===================== */
-function listenMembers(){
-  onSnapshot(usersRef, (snap)=>{
-    const arr=[]; snap.forEach(d=>arr.push({ id:d.id, ...d.data() }));
-    let html = `<div class="tablewrap"><table><thead><tr>
-      <th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr></thead><tbody>`;
-    arr.forEach(u=>{
-      const style = u.status==="pending" ? 'style="background:rgba(251,191,36,.12)"'
-                  : u.status==="blocked" ? 'style="background:rgba(239,68,68,.12)"'
-                  : 'style="background:rgba(34,197,94,.12)"';
-      html += `<tr ${style}>
-        <td>${u.ingameName||u.id}</td>
-        <td>${u.role||'member'}</td>
-        <td>${u.status||'pending'}</td>
-        <td>
-          ${u.role==='admin'
-            ? `<button class="ghost" onclick="setRole('${u.id}','member')">⬇ Mitglied</button>`
-            : `<button onclick="setRole('${u.id}','admin')">⬆ Admin</button>`}
-          ${u.status==='pending'
-            ? `<button class="ok" onclick="setStatus('${u.id}','active')">Freischalten</button>`
-            : u.status==='active'
-              ? `<button class="ghost" onclick="setStatus('${u.id}','blocked')">Sperren</button>`
-              : `<button class="ok" onclick="setStatus('${u.id}','active')">Entsperren</button>`}
-          <button class="danger" onclick="deleteUserDoc('${u.id}')">Löschen</button>
-        </td>
-      </tr>`;
-    });
-    html += `</tbody></table></div>`;
-    $("membersTable").innerHTML = html;
-  });
-}
-window.setRole = async (uid, role)=> await setDoc(doc(db,"users",uid), { role }, { merge:true });
-window.setStatus= async (uid, st)=> await setDoc(doc(db,"users",uid), { status:st }, { merge:true });
-window.deleteUserDoc = async(uid)=>{
-  if(!confirm("Firestore-Eintrag löschen?")) return;
-  await setDoc(doc(db,"users",uid), {}, { merge:false }); // Demo: in echt deleteDoc
-  alert("Firestore-Datensatz entfernt. Auth-Account bitte in der Konsole löschen.");
-};
-
-/* ===================== Map (Zoom + Pan + Touch + Layer) ===================== */
-let mapZoom=1.0, mapOffsetX=0, mapOffsetY=0, dragging=false, dragStart={x:0,y:0};
-const mapCanvas=$("mapCanvas"), ctx=mapCanvas.getContext("2d");
-
-let mapZoom = 1.0, mapOffsetX = 0, mapOffsetY = 0; // feste Ansicht
-function drawMap() {
+function drawMap(){
   const c = ctx, W = mapCanvas.width, H = mapCanvas.height;
-
-  // Farben dynamisch aus Theme
   const style = getComputedStyle(document.documentElement);
   const bg = style.getPropertyValue("--map-bg").trim();
   const gridLight = style.getPropertyValue("--map-grid-light").trim();
   const gridDark = style.getPropertyValue("--map-grid-dark").trim();
   const oceanLine = style.getPropertyValue("--map-ocean").trim();
 
-  c.clearRect(0, 0, W, H);
+  c.clearRect(0,0,W,H);
   c.fillStyle = bg;
-  c.fillRect(0, 0, W, H);
+  c.fillRect(0,0,W,H);
 
-  const TOTAL = 120;           // 2x2 Ozeane, je 60x60 Inseln
-  const base = 8;              // Basisgröße pro Insel
-  const cell = base * mapZoom; // skaliert mit Zoom
-  const x0 = 40 + mapOffsetX;
-  const y0 = 40 + mapOffsetY;
+  const TOTAL=120, base=10, cell=base;
+  const x0=60, y0=60;
 
-  // Allianzfarben
-  const palette={}; const magenta=style.getPropertyValue("--magenta").trim();
-  function hslToHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));const to=x=>Math.round(x*255).toString(16).padStart(2,"0");return `#${to(f(0))}${to(f(8))}${to(f(4))}`;}
-  function colOf(ak){ if(!ak) return "#9aa3c7"; if(palette[ak]) return palette[ak]; let h=0; for(let i=0;i<ak.length;i++) h=(h*31+ak.charCodeAt(i))>>>0; return palette[ak]=hslToHex(h%360,60,55); }
-
-  // Inselzellen
-  islands.forEach(r=>{
-    const oz = Math.max(1,Math.min(4,parseInt(r.Ozean)||1));
-    const IG = Math.max(1,Math.min(225,parseInt(r.Inselgruppe)||1));
-    const ins= Math.max(1,Math.min(16,parseInt(r.Insel)||1));
-    const oColOff = (oz===1||oz===3) ? 0 : 60;
-    const oRowOff = (oz===1||oz===2) ? 0 : 60;
-    const igc=(IG-1)%15, igr=Math.floor((IG-1)/15);
-    const inc=(ins-1)%4, inr=Math.floor((ins-1)/4);
-    const col=oColOff+igc*4+inc, row=oRowOff+igr*4+inr;
-    const x=x0+col*cell, y=y0+row*cell;
-
-    const name=(r.Spielername||"").trim();
-    const ak=(r.AllianzKuerzel||"").trim();
-    let fill="#9aa3c7"; if(name) fill = ak ? colOf(ak) : magenta;
-
-    c.fillStyle=fill; c.fillRect(x,y,cell,cell);
-
-    // Hoher Zoom: Kürzel einblenden
-    if (mapZoom > 3.5) {
-      c.fillStyle = "rgba(0,0,0,0.6)";
-      c.font = `${Math.max(6, cell/2)}px sans-serif`;
-      if (ak) c.fillText(ak, x+1, y+cell/1.7);
-    }
-  });
-
-  // Insel-Gitter (hellgrau)
-  if (mapZoom>0.3){
-    c.strokeStyle=gridLight; c.lineWidth=0.3;
-    for(let i=0;i<=TOTAL;i++){
-      const yy=y0+i*cell; c.beginPath(); c.moveTo(x0,yy); c.lineTo(x0+TOTAL*cell,yy); c.stroke();
-      const xx=x0+i*cell; c.beginPath(); c.moveTo(xx,y0); c.lineTo(xx,y0+TOTAL*cell); c.stroke();
-    }
+  // Gitter zeichnen
+  c.strokeStyle=gridLight; c.lineWidth=0.4;
+  for(let i=0;i<=TOTAL;i++){
+    const p=x0+i*cell;
+    c.beginPath(); c.moveTo(x0,p); c.lineTo(x0+TOTAL*cell,p); c.stroke();
+    c.beginPath(); c.moveTo(p,y0); c.lineTo(p,y0+TOTAL*cell); c.stroke();
   }
-  // IG-Gitter (dunkelgrau, 4x4)
-  c.strokeStyle=gridDark; c.lineWidth=0.7;
+
+  // IG-Gitter
+  c.strokeStyle=gridDark; c.lineWidth=0.8;
   for(let i=0;i<=TOTAL;i+=4){
     c.beginPath(); c.moveTo(x0,y0+i*cell); c.lineTo(x0+TOTAL*cell,y0+i*cell); c.stroke();
     c.beginPath(); c.moveTo(x0+i*cell,y0); c.lineTo(x0+i*cell,y0+TOTAL*cell); c.stroke();
   }
-  // Ozean-Trenner (rot, 60x60)
+
+  // Ozean-Trenner
   c.strokeStyle=oceanLine; c.lineWidth=1.2;
   c.beginPath();
-  c.moveTo(x0+60*cell,y0); c.lineTo(x0+60*cell,y0+120*cell);
-  c.moveTo(x0,y0+60*cell); c.lineTo(x0+120*cell,y0+60*cell);
+  c.moveTo(x0+60*cell,y0); c.lineTo(x0+60*cell,y0+TOTAL*cell);
+  c.moveTo(x0,y0+60*cell); c.lineTo(x0+TOTAL*cell,y0+60*cell);
   c.stroke();
 
-  // IG-Nummern (mittel/hoch Zoom)
-  if (mapZoom>1.2){
-    c.fillStyle=style.getPropertyValue("--text").trim();
-    c.font=`${Math.max(8,cell*1.1)}px sans-serif`;
-    for(let i=0;i<225;i++){
-      const igc=i%15, igr=Math.floor(i/15);
-      const cx=x0+igc*4*cell+2*cell, cy=y0+igr*4*cell+2*cell;
-      c.fillText(String(i+1), cx-6, cy+4);
-    }
+  // IG Nummern
+  c.fillStyle=style.getPropertyValue("--text").trim();
+  c.font="10px sans-serif";
+  for(let i=0;i<225;i++){
+    const igc=i%15, igr=Math.floor(i/15);
+    const cx=x0+igc*4*cell+2*cell, cy=y0+igr*4*cell+2*cell;
+    c.fillText(String(i+1),cx-6,cy+4);
   }
 }
-
-/* ===================== Default Tab ===================== */
-document.querySelector('[data-tab="tab-map"]').click();
+drawMap();
 </script>
 </body>
 </html>
