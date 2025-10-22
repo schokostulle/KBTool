@@ -174,7 +174,7 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
             <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
           </div>
         </div>
-        <canvas id="mapCanvas" width="800" height="800"></canvas>
+        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
       </div>
 
       <!-- Diplomatie -->
@@ -252,21 +252,84 @@ onAuthStateChanged(auth, async u=>{
 });
 
 /* Data: islands + CSV */
-const islandsRef=collection(db,"islands");
-async function loadIslands(){
-  const s=await getDocs(islandsRef);
-  islands=s.docs.map(d=>d.data()).map(r=>{const o={...r};for(const k in o){if(typeof o[k]==="string")o[k]=o[k].replace(/^"|"$/g,"").trim();}o.Punkte=numberify(o.Punkte);return o;});
-if (islands && islands.length > 0) renderIslandTable();
+const islandsRef = collection(db, "islands");
+
+// Inseln aus Firestore laden und bereinigen
+async function loadIslands() {
+  const snapshot = await getDocs(islandsRef);
+
+  // Firestore → Array aufbereiten
+  islands = snapshot.docs.map(doc => doc.data()).map(r => {
+    const o = { ...r };
+    // Entferne überflüssige Anführungszeichen in Strings
+    for (const k in o) {
+      if (typeof o[k] === "string") {
+        o[k] = o[k].replace(/^"|"$/g, "").trim();
+      }
+    }
+    // Punkte in Zahlen konvertieren
+    o.Punkte = numberify(o.Punkte);
+    return o;
+  });
+
+  // Wenn Daten vorhanden, Tabelle aktualisieren
+  if (islands && islands.length > 0) {
+    renderIslandTable();
+  }
 }
-$("btnCSV").onclick=()=>$("csvInput").click();
-$("csvInput").addEventListener("change",async e=>{
-  if(currentRole!=="admin")return alert("Nur Admin.");
-  const f=e.target.files[0];if(!f)return;$("csvStatus").textContent="Importiere...";
-  const txt=await f.text();const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const rows=lines.map(l=>l.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
-  const snap=await getDocs(islandsRef);for(const d of snap.docs)await deleteDoc(doc(db,"islands",d.id));
-  let i=0;for(const c of rows){const rec={Ozean:c[0]||"",Inselgruppe:c[1]||"",Insel:c[2]||"",Spielername:c[5]||"",AllianzKuerzel:c[7]||"",Punkte:numberify(c[9]||0)};await setDoc(doc(db,"islands",`${i++}`),rec);}
-  $("csvStatus").textContent="Fertig.";await loadIslands();renderIslandTable();renderPlayers();drawMap();
+
+// CSV-Upload durch Admin
+$("btnCSV").onclick = () => $("csvInput").click();
+
+$("csvInput").addEventListener("change", async e => {
+  if (currentRole !== "admin") {
+    alert("Nur Admins dürfen CSV-Dateien hochladen.");
+    return;
+  }
+
+  const file = e.target.files[0];
+  if (!file) return;
+
+  $("csvStatus").textContent = "Importiere...";
+
+  try {
+    // CSV lesen und Zeilen aufbereiten
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const rows = lines.map(l => l.split(";").map(v => v.replace(/^"|"$/g, "").trim()));
+
+    // Alte Inseln löschen
+    const existing = await getDocs(islandsRef);
+    for (const d of existing.docs) {
+      await deleteDoc(doc(db, "islands", d.id));
+    }
+
+    // Neue Inseln in Firestore speichern
+    let i = 0;
+    for (const c of rows) {
+      const rec = {
+        Ozean: c[0] || "",
+        Inselgruppe: c[1] || "",
+        Insel: c[2] || "",
+        Spielername: c[5] || "",
+        AllianzKuerzel: c[7] || "",
+        Punkte: numberify(c[9] || 0),
+      };
+      await setDoc(doc(db, "islands", `${i++}`), rec);
+    }
+
+    $("csvStatus").textContent = "Fertig.";
+
+    // Inseln neu laden und Anzeige aktualisieren
+    await loadIslands();
+    renderIslandTable();
+    renderPlayers();
+    drawMap();
+
+  } catch (err) {
+    console.error("Fehler beim CSV-Import:", err);
+    $("csvStatus").textContent = "Fehler beim Import.";
+  }
 });
 
 /* Reservations */
