@@ -8,44 +8,40 @@
 <!-- Harmonische Themes -->
 <style>
 :root {
-  /* 🌙 Dark Mode */
-  --bg: #0d1117;
-  --card: #161b22;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --border: #30363d;
-  --accent: #3b82f6;
-  --accent-2: #2563eb;
-  --ok: #22c55e;
-  --warn: #fbbf24;
-  --danger: #ef4444;
-  --magenta: #e879f9;
-
-  /* Map-Farben dark */
-  --map-bg: #0b1220;
-  --map-grid-light: #6b7280;  /* Insel */
-  --map-grid-dark: #3f3f46;   /* IG */
-  --map-ocean: rgba(255,70,70,0.8);
+  /* 🌙 Dark */
+  --bg:#0d1117;
+  --card:#161b22;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --border:#30363d;
+  --accent:#60a5fa;      /* mildes Blau */
+  --accent-2:#3b82f6;
+  --ok:#22c55e;
+  --warn:#fbbf24;
+  --danger:#ef4444;
+  --magenta:#e879f9;
+  --map-bg:#0b1220;
+  --map-grid-light:#6b7280;
+  --map-grid-dark:#3f3f46;
+  --map-ocean:rgba(255,70,70,0.8);
 }
 :root.light {
-  /* ☀️ Light Mode */
-  --bg: #f5f6f8;
-  --card: #ffffff;
-  --text: #1e293b;
-  --muted: #475569;
-  --border: #cbd5e1;
-  --accent: #2563eb;
-  --accent-2: #1d4ed8;
-  --ok: #16a34a;
-  --warn: #d97706;
-  --danger: #dc2626;
-  --magenta: #db2777;
-
-  /* Map-Farben light */
-  --map-bg: #f1f5f9;
-  --map-grid-light: #94a3b8;  /* Insel */
-  --map-grid-dark: #64748b;   /* IG */
-  --map-ocean: rgba(239,68,68,0.6);
+  /* ☀️ Light */
+  --bg:#f9fafb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#374151;
+  --border:#d1d5db;
+  --accent:#3b82f6;      /* kräftigeres, aber gut lesbares Blau */
+  --accent-2:#2563eb;
+  --ok:#16a34a;
+  --warn:#d97706;
+  --danger:#dc2626;
+  --magenta:#db2777;
+  --map-bg:#f3f4f6;
+  --map-grid-light:#d1d5db;
+  --map-grid-dark:#9ca3af;
+  --map-ocean:rgba(239,68,68,0.4);
 }
 
 *{box-sizing:border-box}
@@ -102,6 +98,15 @@ button.danger{background:var(--danger);border-color:transparent}
 
 /* Tabelle */
 .tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border)}
+/* Responsive Tables */
+@media (max-width: 900px) {
+  table, thead, tbody, th, td, tr { display:block; width:100%; }
+  th { position:relative; top:0; }
+  tr { border-bottom:1px solid var(--border); margin-bottom:8px; padding:6px 0; }
+  td { display:flex; justify-content:space-between; padding:6px 10px; }
+  td::before { content:attr(data-label); font-weight:600; color:var(--muted); }
+  th, #theadRow { display:none; }
+}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
 th{position:sticky;top:0;background:var(--card);color:var(--muted);cursor:pointer}
@@ -170,7 +175,7 @@ tr.denied{background:rgba(239,68,68,.12)}
           </div>
           <div class="badge">Zoom: Mausrad / Pinch • Verschieben: Ziehen/Wischen</div>
         </div>
-        <canvas id="mapCanvas" width="1600" height="1600"></canvas>
+        <canvas id="mapCanvas" width="1800" height="1800" style="max-width:100%;border-radius:12px"></canvas>
         <div class="badge" style="margin-top:6px">Ozeane: rot • Inselgruppen: dunkelgrau • Inseln: hellgrau • IG-Nummern erscheinen ab mittlerem Zoom</div>
       </div>
 
@@ -612,52 +617,7 @@ window.deleteUserDoc = async(uid)=>{
 let mapZoom=1.0, mapOffsetX=0, mapOffsetY=0, dragging=false, dragStart={x:0,y:0};
 const mapCanvas=$("mapCanvas"), ctx=mapCanvas.getContext("2d");
 
-// Maus
-mapCanvas.addEventListener("wheel", e=>{
-  e.preventDefault();
-  const z=(e.deltaY<0)?1.1:0.9;
-  mapZoom=Math.min(Math.max(mapZoom*z,0.4),10);
-  drawMap();
-});
-mapCanvas.addEventListener("mousedown",(e)=>{ dragging=true; dragStart={x:e.clientX-mapOffsetX,y:e.clientY-mapOffsetY}; });
-window.addEventListener("mouseup",()=> dragging=false);
-mapCanvas.addEventListener("mousemove",(e)=>{
-  if(!dragging)return;
-  mapOffsetX=e.clientX - dragStart.x;
-  mapOffsetY=e.clientY - dragStart.y;
-  drawMap();
-});
-
-// Touch
-let lastTouchDist=0;
-mapCanvas.addEventListener("touchstart",(e)=>{
-  if(e.touches.length===1){
-    dragging=true;
-    dragStart={x:e.touches[0].clientX-mapOffsetX,y:e.touches[0].clientY-mapOffsetY};
-  } else if (e.touches.length===2){
-    dragging=false;
-    const dx=e.touches[0].clientX-e.touches[1].clientX;
-    const dy=e.touches[0].clientY-e.touches[1].clientY;
-    lastTouchDist=Math.hypot(dx,dy);
-  }
-});
-mapCanvas.addEventListener("touchmove",(e)=>{
-  e.preventDefault();
-  if(e.touches.length===1 && dragging){
-    mapOffsetX=e.touches[0].clientX - dragStart.x;
-    mapOffsetY=e.touches[0].clientY - dragStart.y;
-    drawMap();
-  } else if (e.touches.length===2){
-    const dx=e.touches[0].clientX-e.touches[1].clientX;
-    const dy=e.touches[0].clientY-e.touches[1].clientY;
-    const dist=Math.hypot(dx,dy);
-    const scale=dist/lastTouchDist; lastTouchDist=dist;
-    mapZoom=Math.min(Math.max(mapZoom*scale,0.4),10);
-    drawMap();
-  }
-});
-mapCanvas.addEventListener("touchend",()=>{ dragging=false; lastTouchDist=0; });
-
+let mapZoom = 1.0, mapOffsetX = 0, mapOffsetY = 0; // feste Ansicht
 function drawMap() {
   const c = ctx, W = mapCanvas.width, H = mapCanvas.height;
 
