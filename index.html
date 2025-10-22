@@ -265,7 +265,7 @@ $("csvInput").addEventListener("change",async e=>{
   const rows=lines.map(l=>l.split(";").map(v=>v.replace(/^"|"$/g,"").trim()));
   const snap=await getDocs(islandsRef);for(const d of snap.docs)await deleteDoc(doc(db,"islands",d.id));
   let i=0;for(const c of rows){const rec={Ozean:c[0]||"",Inselgruppe:c[1]||"",Insel:c[2]||"",Spielername:c[5]||"",AllianzKuerzel:c[7]||"",Punkte:numberify(c[9]||0)};await setDoc(doc(db,"islands",`${i++}`),rec);}
-  $("csvStatus").textContent="Fertig.";await loadIslands();buildIslandHeader();renderIslandTable();renderPlayers();drawMap();
+  $("csvStatus").textContent="Fertig.";await loadIslands();renderIslandTable();renderPlayers();drawMap();
 });
 
 /* Reservations */
