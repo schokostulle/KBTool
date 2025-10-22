@@ -148,7 +148,7 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
             <span class="badge">Kästchen: Spieler / Kürzel / Punkte</span>
           </div>
         </div>
-        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
+        <canvas id="mapCanvas" width="7200" height="7200"></canvas>
       </div>
 
       <!-- Diplomatie -->
@@ -221,8 +221,8 @@ onAuthStateChanged(auth, async u=>{
   $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
   $("userDisplay").textContent=data.name; $("roleDisplay").textContent=currentRole; $("statusDisplay").textContent="AKTIV";
   if(currentRole==="admin"){$("btnCSV").classList.remove("hidden");$("tabDiplBtn").classList.remove("hidden");}
-  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations();
-  buildIslandHeader(); renderIslandTable(); renderPlayers(); drawMap();
+  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations(); 
+renderIslandTable(); renderPlayers(); drawMap();
 });
 
 /* Data: islands + CSV */
