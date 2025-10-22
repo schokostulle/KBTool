@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Allianz-Dashboard</title>
+
 <!-- Tabulator.js -->
 <link href="https://unpkg.com/tabulator-tables@5.6.2/dist/css/tabulator.min.css" rel="stylesheet">
 <style>
@@ -78,71 +79,20 @@ tr.requested{background:rgba(251,191,36,.12)}tr.approved{background:rgba(34,197,
         </div>
       </div>
 
-/* Inselübersicht (Tabulator.js, modern) */
-import "https://unpkg.com/tabulator-tables@5.6.2/dist/js/tabulator.min.js";
-
-let islandTable = null;
-
-function renderIslandTable() {
-  if (islandTable) {
-    islandTable.replaceData(islands.map(extendRows));
-    return;
-  }
-
-  islandTable = new Tabulator("#islandTable", {
-    data: islands.map(extendRows),
-    layout: "fitColumns",
-    pagination: "local",
-    paginationSize: 25,
-    height: "70vh",
-    movableColumns: true,
-    resizableRows: true,
-    placeholder: "Keine Daten",
-    columns: [
-      { title: "Oz", field: "Ozean", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "IG", field: "Inselgruppe", sorter: "number", headerFilter: "input", width: 80 },
-      { title: "I", field: "Insel", sorter: "number", headerFilter: "input", width: 70 },
-      { title: "Spieler", field: "Spielername", sorter: "string", headerFilter: "input" },
-      { title: "Allianz", field: "AllianzKuerzel", sorter: "string", headerFilter: "input" },
-      { title: "Punkte", field: "Punkte", sorter: "number", headerFilter: "input",
-        formatter: cell => cell.getValue().toLocaleString("de-DE") },
-      { title: "Reserviert von", field: "__reserved_by", sorter: "string" },
-      { title: "Aktion", field: "__action", formatter: "html", width: 150 }
-    ],
-    rowFormatter: row => {
-      const d = row.getData();
-      if (d.__status === "requested") row.getElement().style.background = "rgba(251,191,36,0.1)";
-      if (d.__status === "approved") row.getElement().style.background = "rgba(34,197,94,0.1)";
-      if (d.__status === "denied") row.getElement().style.background = "rgba(239,68,68,0.1)";
-    },
-  });
-}
-
-function extendRows(r) {
-  const id = `${r.Ozean}-${r.Inselgruppe}-${r.Insel}`;
-  const res = reservations[id];
-  return {
-    ...r,
-    __reserved_by: res?.user || "",
-    __status: res?.status || "",
-    __resid: id,
-    __action: actionCell(id, res)
-  };
-}
-
-function actionCell(id, res) {
-  if (!currentUser) return "<button disabled>Login nötig</button>";
-  if (currentStatus !== "active") return "<button disabled>Ausstehend</button>";
-  if (res) {
-    if (res.status === "requested" && currentRole === "admin")
-      return `<button class="ok" onclick="approve('${id}')">✔</button>
-              <button class="ghost" onclick="deny('${id}')">✖</button>`;
-    if (res.status === "requested") return "<button disabled>Wartet</button>";
-    if (res.status === "approved") return "<button disabled>✅</button>";
-    if (res.status === "denied") return `<button onclick="reserve('${id}')">Reservieren</button>`;
-  }
-  return `<button onclick="reserve('${id}')">Reservieren</button>`;
-}
+      <!-- Inselübersicht (modern mit Tabulator) -->
+<div id="tab-islands" class="tabcontent card">
+  <div class="row" style="justify-content:space-between">
+    <div class="row">
+      <span class="badge" id="tableStatus"></span>
+    </div>
+    <div>
+      <input type="file" id="csvInput" accept=".csv" class="hidden">
+      <button id="btnCSV" class="hidden">CSV hochladen (Admin)</button>
+      <span id="csvStatus" class="badge"></span>
+    </div>
+  </div>
+  <div id="islandTable" style="margin-top:10px; height:70vh;"></div>
+</div>
 
       <!-- Spielerübersicht -->
       <div id="tab-players" class="tabcontent card hidden">
@@ -271,8 +221,7 @@ onAuthStateChanged(auth, async u=>{
   $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
   $("userDisplay").textContent=data.name; $("roleDisplay").textContent=currentRole; $("statusDisplay").textContent="AKTIV";
   if(currentRole==="admin"){$("btnCSV").classList.remove("hidden");$("tabDiplBtn").classList.remove("hidden");}
-  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations(); 
-renderIslandTable(); renderPlayers(); drawMap();
+  await Promise.all([loadIslands(), loadDiplomacy()]); listenReservations(); renderIslandTable(); renderPlayers(); drawMap();
 });
 
 /* Data: islands + CSV */
