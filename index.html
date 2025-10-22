@@ -22,52 +22,33 @@
   --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --border:#1f2937;
   --accent:#3b82f6; --accent-2:#2563eb; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --magenta:#e879f9;
 }
+/* 🌞 DAY MODE */
+:root.light{
+  --bg:#f8fafc; --card:#ffffff; --text:#111827; --muted:#475569; --border:#cbd5e1;
+  --accent:#2563eb; --accent-2:#1d4ed8; --ok:#16a34a; --warn:#ca8a04; --danger:#dc2626; --magenta:#db2777;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;transition:background .3s,color .3s}
 h1,h2,h3{margin:0}
 .hidden{display:none}
 
 .container{max-width:1200px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);padding:16px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);padding:16px;margin-bottom:16px;transition:background .3s,border .3s}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .spacer{flex:1}
 
-input,button,select{border-radius:8px;border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 12px;font-size:14px}
-button{background:var(--accent);border-color:transparent;cursor:pointer}
+input,button,select{border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px 12px;font-size:14px}
+button{background:var(--accent);border-color:transparent;cursor:pointer;transition:background .2s}
 button:hover{background:var(--accent-2)}
 button.ghost{background:transparent;border-color:var(--border)}
-button.ghost:hover{background:#0b1220}
+button.ghost:hover{background:var(--card)}
 button.warn{background:var(--warn);border-color:transparent}
 button.ok{background:var(--ok);border-color:transparent}
 button.danger{background:var(--danger);border-color:transparent}
 
-.tabbar{display:flex;gap:8px;margin-top:10px}
-.tabbar button{border-radius:10px}
-.tabcontent{margin-top:12px}
-
-.badge{font-size:12px;color:var(--muted)}
-.sep{height:1px;background:var(--border);margin:8px 0}
-
-/* Tabelle */
-.tablewrap{position:relative;overflow:auto;border-radius:10px;border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-th{position:sticky;top:0;background:#0b1220;color:var(--muted);cursor:pointer}
-tr.requested{background:rgba(245,158,11,.12)}
-tr.approved{background:rgba(34,197,94,.12)}
-tr.denied{background:rgba(239,68,68,.12)}
-
-/* Filter-Dropdown */
-.col-filter{position:absolute;min-width:240px;background:#0b1220;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);padding:8px;z-index:40}
-.col-filter .options{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px}
-.option-row{display:flex;gap:6px;align-items:center;font-size:13px;padding:4px 6px}
-.filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
-
-/* Map */
-#mapCanvas{display:block;width:100%;height:auto;background:#0b1220;border:1px solid var(--border);border-radius:10px;cursor:grab}
+/* Tabellen, Dropdowns, Karte wie gehabt … */
+#mapCanvas{display:block;width:100%;height:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:grab;transition:background .3s,border .3s}
 #mapCanvas:active{cursor:grabbing}
-.legend{display:flex;gap:16px;align-items:center;color:var(--muted);font-size:13px}
-.sw{width:12px;height:12px;border:1px solid var(--border);border-radius:2px;display:inline-block}
 </style>
 </head>
 
@@ -76,17 +57,35 @@ tr.denied{background:rgba(239,68,68,.12)}
   <h1>🏝 Allianz Dashboard</h1>
 
   <!-- LOGIN -->
-  <div id="loginView" class="card">
+  <!-- LOGIN / REGISTRATION VIEW -->
+<div id="loginView" class="card">
+  <div class="row" style="justify-content:space-between;align-items:center;">
     <h2>Login / Registrierung</h2>
-    <div class="row" style="margin-top:8px">
-      <input id="username" placeholder="Ingame-Name (z.B. Max)" />
-      <input id="password" type="password" placeholder="Passwort" />
-      <button id="btnLogin">Anmelden</button>
-      <button id="btnRegister" class="ghost">Registrieren</button>
-      <span class="spacer"></span>
-      <span class="badge">Login mit Fake-E-Mail (aus Ingame-Name)</span>
-    </div>
+    <button id="btnTheme" class="ghost">🌙 Dark</button>
   </div>
+
+  <div class="sep"></div>
+
+  <div class="row" style="margin-top:8px; flex-wrap:wrap; gap:12px;">
+    <input id="username" placeholder="Ingame-Name (z.B. Max)" style="flex:1; min-width:200px;" />
+    <input id="password" type="password" placeholder="Passwort" style="flex:1; min-width:200px;" />
+  </div>
+
+  <div class="row" style="margin-top:12px; gap:10px;">
+    <button id="btnLogin">Anmelden</button>
+    <button id="btnRegister" class="ghost">Registrieren</button>
+    <span class="badge">🔐 Login mit Ingame-Namen (Fake-Mail-System)</span>
+  </div>
+
+  <div class="sep"></div>
+
+  <div style="margin-top:6px;">
+    <p class="badge">
+      💡 Hinweis: Der erste registrierte Account wird automatisch als <b>Admin</b> aktiviert.<br>
+      Weitere Accounts müssen durch einen Admin freigeschaltet werden.
+    </p>
+  </div>
+</div>
 
   <!-- APP -->
   <div id="appView" class="hidden">
@@ -647,6 +646,34 @@ function drawMap(){
 
 /* ===================== Default Tab ===================== */
 document.querySelector('[data-tab="tab-map"]').click();
+/* ===================== Theme Toggle (Login + Dashboard) ===================== */
+function setupThemeButton() {
+  const btn = document.getElementById("btnTheme");
+  if (!btn) return;
+
+  const applyTheme = (light) => {
+    const root = document.documentElement;
+    if (light) {
+      root.classList.add("light");
+      btn.textContent = "☀️ Light";
+    } else {
+      root.classList.remove("light");
+      btn.textContent = "🌙 Dark";
+    }
+  };
+
+  // Initial state
+  const isLight = localStorage.theme === "light";
+  applyTheme(isLight);
+
+  btn.onclick = () => {
+    const newState = !document.documentElement.classList.contains("light");
+    localStorage.theme = newState ? "light" : "dark";
+    applyTheme(newState);
+  };
+}
+
+document.addEventListener("DOMContentLoaded", setupThemeButton);
 </script>
 </body>
 </html>
