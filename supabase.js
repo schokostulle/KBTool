@@ -10,38 +10,60 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===============================
-// 🔑 AUTHENTIFIZIERUNG
-// ===============================
+// =========================
+// 🐸 Registrierung (supabase.js)
+// =========================
 
-// Registrierung mit Fake-Mail & Anlage in users
 export async function register(username, password) {
-  const email = `${username}@bullfrog.fake`;
+  const email = `${username}@bullfrog.game`; // gültige Fake-Mail
 
-  // 1️⃣ Benutzer in Supabase Auth anlegen
+  // 1️⃣ Auth-Benutzer erstellen
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
   });
-
   if (error) throw error;
+
   const user = data.user;
   if (!user) throw new Error("Registrierung fehlgeschlagen.");
 
-  // 2️⃣ Eintrag in Tabelle 'users' anlegen
+  // 2️⃣ Session aktivieren, damit auth.uid() in Policies verfügbar ist
+  if (data.session) {
+    await supabase.auth.setSession(data.session);
+  }
+
+  // 3️⃣ Prüfen, ob schon ein Benutzer existiert
+  const { data: existingUsers, error: countError } = await supabase
+    .from("users")
+    .select("id", { count: "exact" });
+
+  if (countError) throw countError;
+
+  // 4️⃣ Wenn kein User existiert → erster = Admin
+  const isFirstUser = !existingUsers || existingUsers.length === 0;
+
+  const role = isFirstUser ? "admin" : "member";
+  const status = isFirstUser ? "active" : "pending";
+
+  // 5️⃣ Eintrag in users-Tabelle anlegen
   const { error: insertError } = await supabase.from("users").insert([
     {
       id: user.id,
       name: username,
-      role: "member",
-      status: "pending",
+      role,
+      status,
       theme: "dark",
     },
   ]);
 
   if (insertError) throw insertError;
 
-  alert("Registrierung erfolgreich! Ein Admin muss dich noch freischalten.");
+  // 6️⃣ Rückmeldung
+  if (isFirstUser) {
+    alert("Erster Benutzer registriert! Du bist jetzt Admin.");
+  } else {
+    alert("Registrierung erfolgreich! Ein Admin muss dich noch freischalten.");
+  }
 }
 
 // Login mit Prüfungen
