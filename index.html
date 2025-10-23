@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Tools - Login</title>
   <script type="module" src="supabase.js"></script>
+
   <style>
     :root {
+      /* Darkmode Farben */
       --bg-dark: #1a1d1a;
       --card-dark: #2b2e2b;
       --text-dark: #f4f4f4;
-      --accent: #3a5c39;
-      --accent-hover: #4b724a;
+
+      /* Lightmode Farben */
       --bg-light: #f0f0e6;
       --card-light: #ffffff;
       --text-light: #202020;
+
+      /* Akzent */
+      --accent: #3a5c39;
+      --accent-hover: #4b724a;
     }
+
     body {
       margin: 0;
       font-family: "Inter", sans-serif;
@@ -25,17 +32,24 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      transition: background 0.3s, color 0.3s;
+      transition: background-color 0.3s, color 0.3s;
     }
+
     .card {
       background: var(--card-dark);
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
       width: 320px;
       text-align: center;
+      transition: background-color 0.3s, color 0.3s;
     }
-    h1 { margin-bottom: 1.5rem; color: var(--accent); }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      color: var(--accent);
+    }
+
     input {
       width: 90%;
       padding: 0.6rem;
@@ -44,7 +58,10 @@
       border: none;
       outline: none;
       font-size: 1rem;
+      background-color: #2e322e;
+      color: #f4f4f4;
     }
+
     button {
       width: 95%;
       padding: 0.8rem;
@@ -55,9 +72,13 @@
       color: white;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background-color 0.3s;
     }
-    button:hover { background-color: var(--accent-hover); }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
     #themeToggle {
       position: absolute;
       top: 10px;
@@ -68,47 +89,46 @@
       padding: 6px 10px;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s;
     }
-    .light {
+
+    /* 🌞 Lightmode */
+    body.light {
       background-color: var(--bg-light);
       color: var(--text-light);
     }
-    .light .card { background-color: var(--card-light); color: var(--text-light); }
-    .light #themeToggle { color: var(--text-light); border-color: var(--accent); }
-    /* 🌞 Lightmode */
-body.light {
-  background-color: var(--bg-light);
-  color: var(--text-light);
-}
 
-body.light .card {
-  background-color: var(--card-light);
-  color: var(--text-light);
-}
+    body.light .card {
+      background-color: var(--card-light);
+      color: var(--text-light);
+    }
 
-body.light input {
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #ccc;
-}
+    body.light input {
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
 
-body.light button {
-  background-color: var(--accent);
-  color: #fff;
-}
+    body.light button {
+      background-color: var(--accent);
+      color: #fff;
+    }
 
-body.light #themeToggle {
-  color: var(--text-light);
-  border-color: var(--accent);
-}
+    body.light #themeToggle {
+      color: var(--text-light);
+      border-color: var(--accent);
+    }
   </style>
 </head>
+
 <body>
-  <button id="themeToggle">☀️</button>
+  <button id="themeToggle" title="Theme wechseln">☀️</button>
+
   <div class="card">
     <h1>🐸 Bullfrog Tools</h1>
-    <input id="name" placeholder="Ingame-Name">
-    <input id="pass" placeholder="Passwort" type="password">
+    <input id="name" placeholder="Ingame-Name" />
+    <input id="pass" type="password" placeholder="Passwort" />
     <button id="loginBtn">Anmelden</button>
     <button id="registerBtn">Registrieren</button>
     <p id="msg"></p>
@@ -120,7 +140,30 @@ body.light #themeToggle {
     const msg = document.getElementById("msg");
     const name = document.getElementById("name");
     const pass = document.getElementById("pass");
+    const themeToggle = document.getElementById("themeToggle");
 
+    // ===== Theme laden =====
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    applyTheme(savedTheme);
+
+    function applyTheme(mode) {
+      if (mode === "light") {
+        document.body.classList.add("light");
+        themeToggle.textContent = "🌙";
+      } else {
+        document.body.classList.remove("light");
+        themeToggle.textContent = "☀️";
+      }
+      localStorage.setItem("theme", mode);
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const isLight = document.body.classList.toggle("light");
+      const mode = isLight ? "light" : "dark";
+      applyTheme(mode);
+    });
+
+    // ===== Login =====
     document.getElementById("loginBtn").onclick = async () => {
       try {
         msg.textContent = "Anmeldung...";
@@ -130,6 +173,7 @@ body.light #themeToggle {
       }
     };
 
+    // ===== Registrierung =====
     document.getElementById("registerBtn").onclick = async () => {
       try {
         msg.textContent = "Registriere...";
@@ -138,19 +182,6 @@ body.light #themeToggle {
         msg.textContent = e.message;
       }
     };
-
-import { register, login, applyTheme, initUserTheme } from "./supabase.js";
-
-initUserTheme(); // lädt gespeicherte Einstellung oder Darkmode
-
-const themeToggle = document.getElementById("themeToggle");
-
-// Funktion, um Theme umzuschalten
-themeToggle.onclick = () => {
-  const isLight = document.body.classList.toggle("light");
-  const mode = isLight ? "light" : "dark";
-  localStorage.setItem("theme", mode);
-};
   </script>
 </body>
 </html>
