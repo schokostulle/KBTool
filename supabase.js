@@ -16,7 +16,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Registrierung mit Fake-Mail & Anlage in users
 export async function register(username, password) {
-  const email = `${username}@bullfrog.local`;
+  const email = `${username}@bullfrog.fake`;
 
   // 1️⃣ Benutzer in Supabase Auth anlegen
   const { data, error } = await supabase.auth.signUp({
