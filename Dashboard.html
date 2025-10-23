@@ -1,132 +1,268 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Tools - Dashboard</title>
   <script type="module" src="supabase.js"></script>
   <style>
+    :root {
+      --bg-dark: #1a1d1a;
+      --card-dark: #2b2e2b;
+      --text-dark: #f4f4f4;
+      --bg-light: #f0f0e6;
+      --card-light: #ffffff;
+      --text-light: #202020;
+      --accent: #3a5c39;
+      --accent-hover: #4b724a;
+    }
+
     body {
       margin: 0;
       font-family: "Inter", sans-serif;
-      background: #1a1d1a;
-      color: #f4f4f4;
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
       display: flex;
       height: 100vh;
       overflow: hidden;
+      transition: background-color 0.3s, color 0.3s;
     }
+
+    /* Sidebar (Desktop) */
     nav {
-      width: 220px;
-      background: #2b2e2b;
+      width: 240px;
+      background-color: var(--card-dark);
       display: flex;
       flex-direction: column;
       padding: 1rem;
+      transition: background-color 0.3s;
     }
+
     nav h2 {
-      color: #3a5c39;
-      margin-bottom: 1rem;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
     }
+
     nav button {
       background: none;
       border: none;
-      color: #ddd;
+      color: var(--text-dark);
       text-align: left;
-      padding: 0.5rem;
-      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      margin-bottom: 0.4rem;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
     }
-    nav button:hover, nav button.active {
-      background: #3a5c39;
+
+    nav button:hover,
+    nav button.active {
+      background-color: var(--accent);
       color: white;
     }
+
     main {
       flex-grow: 1;
-      padding: 1rem;
+      padding: 1.5rem;
       overflow-y: auto;
     }
+
     .event {
-      background: #2b2e2b;
+      background-color: var(--card-dark);
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 0.8rem;
+      transition: background-color 0.3s;
     }
+
+    #themeToggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--text-dark);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.3s;
+    }
+
+    /* Lightmode */
+    body.light {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    body.light nav {
+      background-color: var(--card-light);
+    }
+
+    body.light nav button {
+      color: var(--text-light);
+    }
+
+    body.light nav button:hover {
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    body.light main .event {
+      background-color: var(--card-light);
+      color: var(--text-light);
+      border: 1px solid #ddd;
+    }
+
+    /* Mobile Navigation */
     #mobileNav {
       display: none;
     }
+
     @media (max-width: 768px) {
-      nav { display: none; }
+      nav {
+        display: none;
+      }
+
       #mobileNav {
         display: flex;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: #2b2e2b;
+        background: var(--card-dark);
         justify-content: space-around;
         padding: 0.5rem 0;
+        border-top: 1px solid var(--accent);
       }
+
       #mobileNav button {
         background: none;
         border: none;
-        color: #ccc;
-        font-size: 0.9rem;
+        color: var(--text-dark);
+        font-size: 1.2rem;
       }
-      body { flex-direction: column; }
-      main { height: calc(100vh - 50px); }
+
+      body.light #mobileNav {
+        background: var(--card-light);
+        border-color: var(--accent);
+      }
+
+      body.light #mobileNav button {
+        color: var(--text-light);
+      }
+
+      body {
+        flex-direction: column;
+      }
+
+      main {
+        height: calc(100vh - 60px);
+      }
     }
   </style>
 </head>
+
 <body>
+  <button id="themeToggle" title="Theme wechseln">☀️</button>
+
   <nav>
     <h2>🐸 Bullfrog</h2>
-    <button class="active">Ereignisse</button>
-    <button>Kampfberichte</button>
-    <button>Inseln</button>
-    <button>Karte</button>
-    <button>Angriff / Verteidigung</button>
-    <hr>
-    <button id="logoutBtn">Abmelden</button>
+    <button class="active" id="btnEvents">Ereignisse</button>
+    <button id="btnReports">Kampfberichte</button>
+    <button id="btnIslands">Inseln</button>
+    <button id="btnMap">Karte</button>
+    <button id="btnDefense">Angriff / Verteidigung</button>
+    <hr />
+    <button id="btnLogout">Abmelden</button>
   </nav>
+
   <main>
     <h1>Ereignisse</h1>
     <div id="events"></div>
   </main>
 
   <div id="mobileNav">
-    <button>🏠</button>
-    <button>⚔️</button>
-    <button>🏝️</button>
-    <button>🗺️</button>
-    <button>⏱️</button>
+    <button title="Ereignisse">🏠</button>
+    <button title="Berichte">⚔️</button>
+    <button title="Inseln">🏝️</button>
+    <button title="Karte">🗺️</button>
+    <button title="Zeiten">⏱️</button>
   </div>
 
   <script type="module">
-    import { getCurrentUser, getUserProfile, loadEvents, logout } from "./supabase.js";
+    import {
+      getCurrentUser,
+      getUserProfile,
+      loadEvents,
+      logout
+    } from "./supabase.js";
 
-    const eventsDiv = document.getElementById("events");
-    const logoutBtn = document.getElementById("logoutBtn");
+    // Theme-Funktion
+    const themeToggle = document.getElementById("themeToggle");
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    applyTheme(savedTheme);
 
-    logoutBtn.onclick = logout;
+    function applyTheme(mode) {
+      if (mode === "light") {
+        document.body.classList.add("light");
+        themeToggle.textContent = "🌙";
+      } else {
+        document.body.classList.remove("light");
+        themeToggle.textContent = "☀️";
+      }
+      localStorage.setItem("theme", mode);
+    }
 
+    themeToggle.addEventListener("click", () => {
+      const isLight = document.body.classList.toggle("light");
+      const mode = isLight ? "light" : "dark";
+      applyTheme(mode);
+    });
+
+    // Logout
+    document.getElementById("btnLogout").onclick = async () => {
+      await logout();
+    };
+
+    // Initialisierung
     async function init() {
       const user = await getCurrentUser();
       if (!user) {
         location.href = "index.html";
         return;
       }
+
       const profile = await getUserProfile(user.id);
-      if (profile.status !== "active") {
+      if (!profile || profile.status !== "active") {
         alert("Dein Konto ist noch nicht freigeschaltet.");
         await logout();
         return;
       }
+
+      // Ereignisse laden
       const events = await loadEvents();
-      eventsDiv.innerHTML = events.map(e => `
+      renderEvents(events);
+    }
+
+    function renderEvents(events) {
+      const container = document.getElementById("events");
+      if (!events || events.length === 0) {
+        container.innerHTML = "<p>Keine Ereignisse vorhanden.</p>";
+        return;
+      }
+      container.innerHTML = events
+        .map(
+          (e) => `
         <div class="event">
           <strong>${e.title}</strong><br>
-          <small>${new Date(e.timestamp).toLocaleString()} - ${e.author || 'System'}</small>
+          <small>${new Date(e.timestamp).toLocaleString()} — ${
+            e.author || "System"
+          }</small>
           <p>${e.message}</p>
-        </div>`).join("") || "<p>Keine Ereignisse vorhanden.</p>";
+        </div>`
+        )
+        .join("");
     }
 
     init();
