@@ -4,8 +4,8 @@
 // ==============================
 
 // Deine Supabase-Projekt-Daten hier einfügen:
-const SUPABASE_URL = "https://DEINE-PROJECT-URL.supabase.co";
-const SUPABASE_KEY = "DEIN-ANON-KEY";
+const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
