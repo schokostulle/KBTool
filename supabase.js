@@ -46,7 +46,7 @@ export async function register(username, password) {
 
 // Login mit Prüfungen
 export async function login(username, password) {
-  const email = `${username}@bullfrog.local`;
+  const email = `${username}@bullfrog.fake`;
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
