@@ -113,19 +113,18 @@
       }
     };
 
-    // Theme toggle
-    const themeToggle = document.getElementById("themeToggle");
-    function applyTheme(mode) {
-      if (mode === "light") document.body.classList.add("light");
-      else document.body.classList.remove("light");
-      localStorage.setItem("theme", mode);
-    }
-    themeToggle.onclick = () => {
-      const newTheme = document.body.classList.contains("light") ? "dark" : "light";
-      applyTheme(newTheme);
-    };
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    applyTheme(savedTheme);
+import { register, login, applyTheme, initUserTheme } from "./supabase.js";
+
+initUserTheme(); // lädt gespeicherte Einstellung oder Darkmode
+
+const themeToggle = document.getElementById("themeToggle");
+
+// Funktion, um Theme umzuschalten
+themeToggle.onclick = () => {
+  const isLight = document.body.classList.toggle("light");
+  const mode = isLight ? "light" : "dark";
+  localStorage.setItem("theme", mode);
+};
   </script>
 </body>
 </html>
