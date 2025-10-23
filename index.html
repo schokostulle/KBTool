@@ -1,88 +1,131 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Bullfrog Tools – Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bullfrog Tools - Login</title>
+  <script type="module" src="supabase.js"></script>
   <style>
-    :root{
-      --bg:#101316;--card:#151a1f;--text:#e8efe9;--muted:#97a09a;--border:#27313a;
-      --accent:#3b5f4a;--accent-2:#2e4d38;--ok:#2ea44f;--warn:#c28b2a;--danger:#c23a3a;
+    :root {
+      --bg-dark: #1a1d1a;
+      --card-dark: #2b2e2b;
+      --text-dark: #f4f4f4;
+      --accent: #3a5c39;
+      --accent-hover: #4b724a;
+      --bg-light: #f0f0e6;
+      --card-light: #ffffff;
+      --text-light: #202020;
     }
-    [data-theme="light"]{
-      --bg:#f5f6f3;--card:#ffffff;--text:#202522;--muted:#57605a;--border:#d6ddd6;
-      --accent:#2e4d38;--accent-2:#23402e;--ok:#1f8a3e;--warn:#a8701f;--danger:#b32d2d;
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
     }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--card)}
-    .brand{font-weight:700;letter-spacing:.3px}
-    .container{min-height:calc(100vh - 58px); display:grid; place-items:center; padding:20px}
-    .card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .row{display:flex;gap:10px;align-items:center}
-    .field{display:flex;flex-direction:column;gap:6px;margin:8px 0}
-    label{font-size:13px;color:var(--muted)}
-    input{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:15px}
-    button{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
-    button:hover{background:var(--accent-2)}
-    .ghost{background:transparent;color:var(--text)}
-    .muted{color:var(--muted);font-size:13px}
+    .card {
+      background: var(--card-dark);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      width: 320px;
+      text-align: center;
+    }
+    h1 { margin-bottom: 1.5rem; color: var(--accent); }
+    input {
+      width: 90%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+    button {
+      width: 95%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--accent);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover { background-color: var(--accent-hover); }
+    #themeToggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: 1px solid var(--accent);
+      color: var(--text-dark);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .light {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+    .light .card { background-color: var(--card-light); color: var(--text-light); }
+    .light #themeToggle { color: var(--text-light); border-color: var(--accent); }
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="brand">🐸 Bullfrog Tools</div>
-    <div class="row">
-      <button id="themeToggle" class="ghost">🌙</button>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="card">
-      <h2 style="margin:0 0 6px">Anmelden</h2>
-      <p class="muted" style="margin:0 0 12px">Mit Ingame-Namen und Passwort anmelden oder registrieren.</p>
-
-      <div class="field">
-        <label for="username">Ingame-Name</label>
-        <input id="username" autocomplete="username" placeholder="z. B. Aegir"/>
-      </div>
-      <div class="field">
-        <label for="password">Passwort</label>
-        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••"/>
-      </div>
-
-      <div class="row" style="justify-content:space-between;margin-top:12px">
-        <button id="loginBtn">Anmelden</button>
-        <button id="registerBtn" class="ghost">Registrieren</button>
-      </div>
-      <p id="loginMsg" class="muted" style="margin-top:12px"></p>
-    </section>
-  </main>
+  <button id="themeToggle">☀️</button>
+  <div class="card">
+    <h1>🐸 Bullfrog Tools</h1>
+    <input id="name" placeholder="Ingame-Name">
+    <input id="pass" placeholder="Passwort" type="password">
+    <button id="loginBtn">Anmelden</button>
+    <button id="registerBtn">Registrieren</button>
+    <p id="msg"></p>
+  </div>
 
   <script type="module">
-    import { initTheme, toggleTheme, login, register, onIndexReady } from "./firebase.js";
-    // Theme init
-    initTheme(document.documentElement);
-    document.getElementById("themeToggle").onclick = ()=> toggleTheme(document.documentElement);
+    import { register, login } from "./supabase.js";
 
-    // Auth handlers
-    const u = document.getElementById("username");
-    const p = document.getElementById("password");
-    const msg = document.getElementById("loginMsg");
+    const msg = document.getElementById("msg");
+    const name = document.getElementById("name");
+    const pass = document.getElementById("pass");
 
-    document.getElementById("loginBtn").onclick = async ()=>{
-      msg.textContent = "";
-      try { await login(u.value.trim(), p.value.trim()); }
-      catch(e){ msg.textContent = e.message || String(e); }
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        msg.textContent = "Anmeldung...";
+        await login(name.value.trim(), pass.value.trim());
+      } catch (e) {
+        msg.textContent = e.message;
+      }
     };
 
-    document.getElementById("registerBtn").onclick = async ()=>{
-      msg.textContent = "";
-      try { await register(u.value.trim(), p.value.trim()); }
-      catch(e){ msg.textContent = e.message || String(e); }
+    document.getElementById("registerBtn").onclick = async () => {
+      try {
+        msg.textContent = "Registriere...";
+        await register(name.value.trim(), pass.value.trim());
+      } catch (e) {
+        msg.textContent = e.message;
+      }
     };
 
-    // Redirect when already logged in
-    onIndexReady();
+    // Theme toggle
+    const themeToggle = document.getElementById("themeToggle");
+    function applyTheme(mode) {
+      if (mode === "light") document.body.classList.add("light");
+      else document.body.classList.remove("light");
+      localStorage.setItem("theme", mode);
+    }
+    themeToggle.onclick = () => {
+      const newTheme = document.body.classList.contains("light") ? "dark" : "light";
+      applyTheme(newTheme);
+    };
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    applyTheme(savedTheme);
   </script>
 </body>
 </html>
