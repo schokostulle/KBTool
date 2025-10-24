@@ -89,11 +89,10 @@
     font-weight: bold;
   }
 
-  /* Theme-Schalter oben rechts */
-  #themeToggle {
+  /* Theme-Schalter & Logout oben rechts */
+  #themeToggle, #logoutBtn {
     position: fixed;
     top: 15px;
-    right: 15px;
     background: var(--panel-bg);
     border: 1px solid var(--accent);
     border-radius: 50%;
@@ -109,10 +108,13 @@
     z-index: 50;
   }
 
-  #themeToggle:hover {
+  #themeToggle:hover, #logoutBtn:hover {
     background: var(--accent);
     color: var(--bg);
   }
+
+  #themeToggle { right: 65px; }
+  #logoutBtn { right: 15px; }
 
   /* Dashboard Inhalt */
   main {
@@ -142,6 +144,10 @@
 
   @media (max-width: 768px) {
     nav { display: none; }
+
+    #themeToggle { right: 65px; top: 10px; }
+    #logoutBtn { right: 15px; top: 10px; }
+
     .bottom-nav {
       display: flex;
       justify-content: space-around;
@@ -154,6 +160,7 @@
       border-top: 1px solid #3b3322;
       height: 60px;
     }
+
     .bottom-nav button {
       background: none;
       border: none;
@@ -161,6 +168,7 @@
       font-size: 0.9em;
       cursor: pointer;
     }
+
     main {
       padding-bottom: 70px;
     }
@@ -169,8 +177,9 @@
 </head>
 <body>
 
-  <!-- Theme-Schalter -->
+  <!-- Theme & Logout Buttons -->
   <div id="themeToggle" title="Modus wechseln">☀️</div>
+  <div id="logoutBtn" title="Abmelden">🚪</div>
 
   <!-- Navigation (Desktop) -->
   <nav>
@@ -254,11 +263,13 @@
     };
 
     // === LOGOUT ===
+    const logoutBtn=document.getElementById("logoutBtn");
     window.logout=async()=>{
       await supabase.auth.signOut();
       localStorage.removeItem("session");
       window.location.href="index.html";
     };
+    logoutBtn.onclick=logout;
   </script>
 </body>
 </html>
