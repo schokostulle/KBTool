@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bullfrog Tools – Dashboard</title>
+
 <style>
 :root {
   --bg: #19150e;
@@ -11,6 +12,8 @@
   --text: #d8c7a0;
   --accent: #b9923d;
 }
+
+/* === Grundlayout === */
 body {
   margin: 0;
   background: var(--bg);
@@ -22,7 +25,7 @@ body {
   overflow: hidden;
 }
 
-/* Seitenmenü (Desktop) */
+/* === Seitenmenü (Desktop/Laptop) === */
 nav {
   width: 230px;
   background: var(--panel);
@@ -30,14 +33,12 @@ nav {
   flex-direction: column;
   align-items: stretch;
   border-right: 1px solid #3b3322;
-  padding: 0;
-  position: relative;
 }
 
 nav h2 {
   text-align: center;
   color: var(--accent);
-  margin: 20px 0 15px 0;
+  margin: 20px 0 15px;
   font-size: 20px;
   letter-spacing: 0.5px;
   border-bottom: 1px solid #3b3322;
@@ -63,20 +64,13 @@ nav button.active {
   color: var(--bg);
 }
 
-nav .menuTop {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Hauptbereich */
+/* === Hauptbereich === */
 main {
   flex: 1;
   padding: 25px;
   overflow-y: auto;
 }
-h1 {
-  color: var(--accent);
-}
+h1 { color: var(--accent); }
 .event {
   background: var(--panel);
   padding: 15px;
@@ -84,39 +78,21 @@ h1 {
   margin-bottom: 10px;
 }
 
-/* Tabellen */
+/* === Tabellen (Platzhalter für künftige Tools) === */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
-th,
-td {
+th, td {
   padding: 8px;
   border-bottom: 1px solid #3b3322;
   text-align: left;
 }
-th {
-  color: var(--accent);
-}
+th { color: var(--accent); }
 
-/* Buttons für Aktionen */
-.action-btn {
-  background: none;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  border-radius: 4px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-.action-btn:hover {
-  background: var(--accent);
-  color: var(--bg);
-}
-
-/* Top-Icons */
-#themeToggle,
-#logoutBtn {
+/* === Top-Buttons (Theme + Logout) === */
+#themeToggle, #logoutBtn {
   position: fixed;
   top: 15px;
   width: 42px;
@@ -133,19 +109,14 @@ th {
   z-index: 999;
   box-shadow: 0 0 5px #0006;
 }
-#themeToggle:hover,
-#logoutBtn:hover {
+#themeToggle:hover, #logoutBtn:hover {
   background: var(--accent);
   color: var(--bg);
 }
-#themeToggle {
-  right: 65px;
-}
-#logoutBtn {
-  right: 15px;
-}
+#themeToggle { right: 65px; }
+#logoutBtn { right: 15px; }
 
-/* Lightmode */
+/* === Lightmode === */
 body.light {
   --bg: #e4dfcf;
   --panel: #f2eee4;
@@ -153,10 +124,11 @@ body.light {
   --accent: #a1761c;
 }
 
-/* Mobiles Bottom-Menü */
+/* === Mobiles Menü (unten) === */
 @media (max-width: 768px) {
+  body { flex-direction: column; }
   nav {
-    flex-direction: row !important; /* 🔧 erzwingt horizontale Anordnung */
+    flex-direction: row !important;
     justify-content: space-around;
     align-items: center;
     width: 100%;
@@ -168,9 +140,7 @@ body.light {
     border-right: none;
     z-index: 99;
   }
-  nav h2 {
-    display: none;
-  }
+  nav h2 { display: none; }
   nav button {
     text-align: center;
     flex: 1;
@@ -179,50 +149,94 @@ body.light {
     border-bottom: none;
     border-right: 1px solid #3b3322;
   }
-  nav button:last-child {
-    border-right: none;
-  }
-  main {
-    padding-bottom: 70px;
-  }
+  nav button:last-child { border-right: none; }
+  main { padding-bottom: 70px; }
 }
 </style>
 </head>
 
 <body>
-<!-- Schalter -->
+<!-- === Schalter === -->
 <div id="themeToggle">☀️</div>
 <div id="logoutBtn" title="Zurück ins Lager">🏕️</div>
 
-<!-- Seitenmenü -->
+<!-- === Navigationsmenü === -->
 <nav>
   <div class="menuTop">
     <h2>Bullfrog Tools</h2>
     <button onclick="showSection('events')" class="active">📜 Ereignisse</button>
-    <button onclick="showSection('members')" class="adminOnly">🧍 Mitglieder</button>
+    <button onclick="showSection('warreports')">⚔️ Kriegsberichte</button>
+    <button onclick="showSection('fleet')">🚢 Flottenstärke</button>
+    <button onclick="showSection('reserve')">🏝️ Inselreservierung</button>
+    <button onclick="showSection('battle')">🕐 Angriff & Verteidigung</button>
+    <button onclick="showSection('map')">🗺️ Karte</button>
+    <button onclick="showSection('kbreports')">📖 KB-Datenbank</button>
+    <button onclick="showSection('members')" class="adminOnly">🧍 Mitgliederliste</button>
+    <button onclick="showSection('diplomacy')" class="adminOnly">🤝 Diplomatie</button>
+    <button onclick="showSection('csv')" class="adminOnly">📂 CSV</button>
   </div>
 </nav>
 
-<!-- Hauptinhalt -->
+<!-- === Hauptinhalt === -->
 <main>
   <section id="events">
-    <h1>Ereignisse</h1>
+    <h1>Ereignisse & Informationen</h1>
     <div class="event">Willkommen, <span id="usernameDisplay"></span>!</div>
   </section>
 
+  <section id="warreports" style="display:none;">
+    <h1>Kriegsberichte</h1>
+    <p>Hier werden Kampfberichte angezeigt oder eingetragen.</p>
+  </section>
+
+  <section id="fleet" style="display:none;">
+    <h1>Flottenstärke</h1>
+    <p>Analyse der militärischen Stärke deiner Allianz.</p>
+  </section>
+
+  <section id="reserve" style="display:none;">
+    <h1>Inselreservierung</h1>
+    <p>Reserviere Inseln, um Angriffsziele zu koordinieren.</p>
+  </section>
+
+  <section id="battle" style="display:none;">
+    <h1>Angriff & Verteidigung</h1>
+    <p>Berechnung von Zeiten, Entfernungen und Taktiken.</p>
+  </section>
+
+  <section id="map" style="display:none;">
+    <h1>Karte</h1>
+    <p>Visualisierung der Inselwelt mit Allianzfarben.</p>
+  </section>
+
+  <section id="kbreports" style="display:none;">
+    <h1>KB-Datenbank</h1>
+    <p>Speicherung und Auswertung vergangener Kämpfe.</p>
+  </section>
+
+  <!-- Admin only -->
   <section id="members" style="display:none;">
-    <h1>Mitgliederverwaltung</h1>
+    <h1>Mitgliederliste</h1>
     <table id="memberTable"></table>
+  </section>
+
+  <section id="diplomacy" style="display:none;">
+    <h1>Diplomatie</h1>
+    <p>Verwaltung befreundeter oder feindlicher Allianzen.</p>
+  </section>
+
+  <section id="csv" style="display:none;">
+    <h1>CSV-Daten</h1>
+    <p>Import und Verwaltung der Spielbasisdaten (nur Admin).</p>
   </section>
 </main>
 
 <script type="module">
 import { supabase } from "./supabase.js";
 
-/* === Sessionprüfung === */
+/* === Auth prüfen === */
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) window.location.href = "index.html";
-
 const username = localStorage.getItem("username") || "";
 const role = localStorage.getItem("role") || "member";
 document.getElementById("usernameDisplay").textContent = username;
@@ -244,12 +258,11 @@ themeBtn.onclick = () =>
   setTheme(document.body.classList.contains("light") ? "dark" : "light");
 
 /* === Logout === */
-window.logout = async () => {
+document.getElementById("logoutBtn").onclick = async () => {
   await supabase.auth.signOut();
   localStorage.clear();
   window.location.href = "index.html";
 };
-document.getElementById("logoutBtn").onclick = logout;
 
 /* === Navigation === */
 window.showSection = (id) => {
@@ -269,13 +282,9 @@ if (role !== "admin") {
   loadMembers();
 }
 
-/* === Mitgliederverwaltung === */
+/* === Mitgliederliste (Admin) === */
 async function loadMembers() {
-  const { data: users, error } = await supabase
-    .from("users")
-    .select("*")
-    .order("created_at", { ascending: true });
-
+  const { data: users, error } = await supabase.from("users").select("*");
   const t = document.getElementById("memberTable");
   if (error) {
     t.innerHTML = "<tr><td>Fehler: " + error.message + "</td></tr>";
@@ -289,9 +298,7 @@ async function loadMembers() {
       <td>${u.role}</td>
       <td>${u.status}</td>
       <td>
-        ${u.status === "pending"
-          ? `<button class='action-btn' onclick="activate('${u.id}')">✅</button>`
-          : ""}
+        ${u.status === "pending" ? `<button class='action-btn' onclick="activate('${u.id}')">✅</button>` : ""}
         <button class='action-btn' onclick="blockUser('${u.id}')">⛔</button>
         <button class='action-btn' onclick="deleteUser('${u.id}')">🗑️</button>
       </td>`;
@@ -299,18 +306,9 @@ async function loadMembers() {
   });
 }
 
-window.activate = async (id) => {
-  await supabase.from("users").update({ status: "active" }).eq("id", id);
-  loadMembers();
-};
-window.blockUser = async (id) => {
-  await supabase.from("users").update({ status: "blocked" }).eq("id", id);
-  loadMembers();
-};
-window.deleteUser = async (id) => {
-  await supabase.from("users").delete().eq("id", id);
-  loadMembers();
-};
+window.activate = async (id) => { await supabase.from("users").update({ status: "active" }).eq("id", id); loadMembers(); };
+window.blockUser = async (id) => { await supabase.from("users").update({ status: "blocked" }).eq("id", id); loadMembers(); };
+window.deleteUser = async (id) => { await supabase.from("users").delete().eq("id", id); loadMembers(); };
 </script>
 </body>
 </html>
