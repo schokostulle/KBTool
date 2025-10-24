@@ -107,6 +107,22 @@ document.getElementById("loginBtn").onclick=async()=>{
  if(!userRow||userRow.status!=="active"){await supabase.auth.signOut();return msg("Account noch nicht freigeschaltet.");}
  localStorage.setItem("role",userRow.role);localStorage.setItem("username",userRow.username);
  window.location.href="dashboard.html";
+
+// === Theme Toggle ===
+const themeBtn = document.getElementById("themeToggle");
+const setTheme = (m)=>{
+  if(m==="light"){
+    document.body.classList.add("light");
+    themeBtn.textContent="🌙";
+  }else{
+    document.body.classList.remove("light");
+    themeBtn.textContent="☀️";
+  }
+  localStorage.setItem("theme",m);
+};
+setTheme(localStorage.getItem("theme")||"dark");
+themeBtn.onclick=()=>setTheme(document.body.classList.contains("light")?"dark":"light");
+
 };
 </script>
 </body>
