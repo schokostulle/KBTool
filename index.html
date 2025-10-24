@@ -1,255 +1,92 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Bullfrog Tools – Anmeldung</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bullfrog Tools – Login</title>
 <style>
-:root {
-  --bg: #19150e;
-  --panel: #231f14;
-  --text: #d8c7a0;
-  --accent: #b9923d;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: "Trebuchet MS", sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
-/* === Card Layout === */
-.card {
-  background: var(--panel);
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 8px #0006;
-  width: 320px;
-  text-align: center;
-}
-
-h1 {
-  color: var(--accent);
-  margin-bottom: 10px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 6px 0;
-  border: 1px solid #3b3322;
-  border-radius: 6px;
-  background: #1c1811;
-  color: var(--text);
-  font-size: 14px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s ease;
-}
-
-button:hover { background: #d1a24f; }
-
-small {
-  display: block;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--text);
-  cursor: pointer;
-}
-
-#msg {
-  margin-top: 10px;
-  font-size: 13px;
-  color: var(--accent);
-}
-
-/* === Theme + Lightmode === */
-#themeToggle {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 0 5px #0006;
-}
-
-#themeToggle:hover {
-  background: var(--accent);
-  color: var(--bg);
-}
-
-body.light {
-  --bg: #e4dfcf;
-  --panel: #f2eee4;
-  --text: #2a2414;
-  --accent: #a1761c;
-}
-
-body.light input {
-  background: #fff8e6;
-  color: #2a2414;
-}
+body{font-family:Trebuchet MS;background:#19150e;color:#d8c7a0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+.card{background:#231f14;padding:25px;border-radius:10px;width:300px;text-align:center;box-shadow:0 0 6px #0006}
+input,button{width:100%;padding:10px;margin:6px 0;border:none;border-radius:6px}
+input{background:#1c1811;color:#d8c7a0}
+button{background:#b9923d;color:#19150e;font-weight:bold;cursor:pointer}
+button:hover{background:#d1a24f}
+small{display:block;margin-top:8px;cursor:pointer}
+#msg{margin-top:10px;color:#b9923d;font-size:13px}
 </style>
 </head>
-
 <body>
-<div id="themeToggle">☀️</div>
 
-<div class="card" id="loginCard">
-  <h1>Bullfrog Tools</h1>
-  <input id="loginUser" placeholder="Ingame-Name" />
-  <input id="loginPass" type="password" placeholder="Passwort" />
+<div class="card" id="login">
+  <h2>Bullfrog Tools</h2>
+  <input id="loginUser" placeholder="Ingame-Name">
+  <input id="loginPass" type="password" placeholder="Passwort">
   <button id="btnLogin">Anmelden</button>
-  <small onclick="toggleMode('register')">Noch kein Konto? Registrieren</small>
+  <small onclick="toggle('register')">Registrieren</small>
   <div id="msg"></div>
 </div>
 
-<div class="card" id="registerCard" style="display:none;">
-  <h1>Registrieren</h1>
-  <input id="regUser" placeholder="Ingame-Name" />
-  <input id="regPass" type="password" placeholder="Passwort" />
-  <input id="regPass2" type="password" placeholder="Passwort wiederholen" />
+<div class="card" id="register" style="display:none">
+  <h2>Registrieren</h2>
+  <input id="regUser" placeholder="Ingame-Name">
+  <input id="regPass" type="password" placeholder="Passwort">
+  <input id="regPass2" type="password" placeholder="Passwort wiederholen">
   <button id="btnRegister">Registrieren</button>
-  <small onclick="toggleMode('login')">Zurück zur Anmeldung</small>
+  <small onclick="toggle('login')">Zurück</small>
   <div id="msg"></div>
 </div>
 
 <script type="module">
 import { supabase } from "./supabase.js";
 
-/* === Theme === */
-const themeBtn = document.getElementById("themeToggle");
-const setTheme = (mode) => {
-  if (mode === "light") {
-    document.body.classList.add("light");
-    themeBtn.textContent = "🌙";
-  } else {
-    document.body.classList.remove("light");
-    themeBtn.textContent = "☀️";
-  }
-  localStorage.setItem("theme", mode);
-};
-setTheme(localStorage.getItem("theme") || "dark");
-themeBtn.onclick = () => setTheme(document.body.classList.contains("light") ? "dark" : "light");
+window.toggle=(m)=>{
+  document.getElementById("login").style.display=m==="login"?"block":"none";
+  document.getElementById("register").style.display=m==="register"?"block":"none";
+  document.getElementById("msg").textContent="";
+}
 
-/* === Kartenumschaltung === */
-window.toggleMode = (mode) => {
-  document.getElementById("loginCard").style.display = mode === "login" ? "block" : "none";
-  document.getElementById("registerCard").style.display = mode === "register" ? "block" : "none";
-  document.getElementById("msg").textContent = "";
-};
+/* === LOGIN === */
+document.getElementById("btnLogin").onclick=async()=>{
+  const u=document.getElementById("loginUser").value.trim();
+  const p=document.getElementById("loginPass").value.trim();
+  const msg=document.getElementById("msg");
+  if(!u||!p){msg.textContent="Bitte alle Felder ausfüllen.";return;}
+  const email=`${u}@bullfrog.fake`;
+  const {data,error}=await supabase.auth.signInWithPassword({email,password:p});
+  if(error){msg.textContent="Fehler: "+error.message;return;}
 
-/* === Login === */
-document.getElementById("btnLogin").onclick = async () => {
-  const user = document.getElementById("loginUser").value.trim();
-  const pass = document.getElementById("loginPass").value.trim();
-  const msg = document.getElementById("msg");
+  const {data:userRow}=await supabase.from("users").select("*").eq("id",data.user.id).maybeSingle();
+  if(!userRow){msg.textContent="Kein Benutzerprofil gefunden.";return;}
+  if(userRow.status!=="active"){await supabase.auth.signOut();msg.textContent="Noch nicht freigeschaltet.";return;}
 
-  if (!user || !pass) {
-    msg.textContent = "Bitte alle Felder ausfüllen.";
-    return;
-  }
+  localStorage.setItem("username",userRow.username);
+  localStorage.setItem("role",userRow.role);
+  window.location="dashboard.html";
+}
 
-  const email = `${user}@bullfrog.fake`;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+/* === REGISTRIERUNG === */
+document.getElementById("btnRegister").onclick=async()=>{
+  const u=document.getElementById("regUser").value.trim();
+  const p=document.getElementById("regPass").value.trim();
+  const p2=document.getElementById("regPass2").value.trim();
+  const msg=document.getElementById("msg");
+  if(!u||!p||!p2){msg.textContent="Bitte alle Felder ausfüllen.";return;}
+  if(p!==p2){msg.textContent="Passwörter stimmen nicht überein.";return;}
 
-  if (error) {
-    msg.textContent = "Anmeldung fehlgeschlagen: " + error.message;
-    return;
-  }
+  const email=`${u}@bullfrog.fake`;
+  const {data,error}=await supabase.auth.signUp({email,password:p});
+  if(error){msg.textContent="Fehler: "+error.message;return;}
 
-  let { data: userRow } = await supabase.from("users").select("*").eq("id", data.user.id).maybeSingle();
-
-  if (!userRow) {
-    const { data: allUsers } = await supabase.from("users").select("id");
-    const isFirst = !allUsers || allUsers.length === 0;
-    const insert = {
-      id: data.user.id,
-      username: user,
-      role: isFirst ? "admin" : "member",
-      status: isFirst ? "active" : "pending",
-    };
-    await supabase.from("users").insert(insert);
-    userRow = insert;
-  }
-
-  if (userRow.status !== "active") {
-    await supabase.auth.signOut();
-    msg.textContent = "Dein Account ist noch nicht freigeschaltet.";
-    return;
-  }
-
-  localStorage.setItem("username", userRow.username);
-  localStorage.setItem("role", userRow.role);
-  window.location.href = "dashboard.html";
-};
-
-/* === Registrierung === */
-document.getElementById("btnRegister").onclick = async () => {
-  const user = document.getElementById("regUser").value.trim();
-  const pass = document.getElementById("regPass").value.trim();
-  const pass2 = document.getElementById("regPass2").value.trim();
-  const msg = document.getElementById("msg");
-
-  if (!user || !pass || !pass2) {
-    msg.textContent = "Bitte alle Felder ausfüllen.";
-    return;
-  }
-  if (pass !== pass2) {
-    msg.textContent = "Passwörter stimmen nicht überein.";
-    return;
-  }
-
-  const email = `${user}@bullfrog.fake`;
-
-  const { data, error } = await supabase.auth.signUp({ email, password: pass });
-
-  if (error) {
-    msg.textContent = "Fehler: " + error.message;
-    return;
-  }
-
-  // Eintrag in Tabelle "users"
-  const { data: allUsers } = await supabase.from("users").select("id");
-  const isFirst = !allUsers || allUsers.length === 0;
-
+  const {data:all}=await supabase.from("users").select("id");
+  const isFirst=!all||all.length===0;
   await supabase.from("users").insert({
-    id: data.user.id,
-    username: user,
-    role: isFirst ? "admin" : "member",
-    status: isFirst ? "active" : "pending"
+    id:data.user.id,username:u,
+    role:isFirst?"admin":"member",
+    status:isFirst?"active":"pending"
   });
-
-  msg.textContent = isFirst
-    ? "Admin-Konto erstellt. Du kannst dich anmelden."
-    : "Registrierung erfolgreich. Bitte warte auf Freischaltung.";
-  toggleMode("login");
-};
+  msg.textContent=isFirst?"Admin erstellt – bitte anmelden.":"Registrierung erfolgreich, warte auf Freischaltung.";
+  toggle("login");
+}
 </script>
 </body>
 </html>
