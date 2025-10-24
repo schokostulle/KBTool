@@ -169,79 +169,85 @@
       });
     });
 
-    // ==========================================
-    // 👥 Mitgliederverwaltung (nur für Admin)
-    // ==========================================
-    async function showMembers() {
-      const { data: members, error } = await supabase
-        .from("users")
-        .select("id, name, role, status, created_at")
-        .order("created_at", { ascending: true });
+   // ==========================================
+// 👥 Mitgliederverwaltung (nur Admin)
+// ==========================================
+async function showMembers() {
+  main.innerHTML = "<h2>Mitgliederverwaltung</h2><p>Lade Mitglieder...</p>";
 
-      if (error) {
-        console.error(error);
-        main.innerHTML = "<p>Fehler beim Laden der Mitglieder.</p>";
-        return;
+  const { data: members, error } = await supabase
+    .from("users")
+    .select("id, name, role, status, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    main.innerHTML = "<p>Fehler beim Laden der Mitglieder.</p>";
+    return;
+  }
+
+  let html = `
+    <h2>Mitgliederverwaltung</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rolle</th>
+          <th>Status</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const m of members) {
+    html += `
+      <tr style="background:${
+        m.status === "active" ? "#1e4021" : "#402e1e"
+      };">
+        <td>${m.name}</td>
+        <td>${m.role}</td>
+        <td>${m.status}</td>
+        <td>
+          <button class="action blue" data-action="activate" data-id="${m.id}">Freischalten</button>
+          <button class="action red" data-action="block" data-id="${m.id}">Sperren</button>
+          <button class="action gray" data-action="delete" data-id="${m.id}">Löschen</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  html += "</tbody></table>";
+  main.innerHTML = html;
+
+  // Aktionen
+  main.querySelectorAll("button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const action = btn.getAttribute("data-action");
+      const id = btn.getAttribute("data-id");
+      if (action === "activate") {
+        await updateStatus(id, "active");
+      } else if (action === "block") {
+        await updateStatus(id, "pending");
+      } else if (action === "delete") {
+        await deleteUser(id);
       }
+      await showMembers(); // neu laden
+    });
+  });
+}
 
-      let html = `
-        <h2>Mitgliederverwaltung</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Rolle</th>
-              <th>Status</th>
-              <th>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+async function updateStatus(id, status) {
+  const { error } = await supabase.from("users").update({ status }).eq("id", id);
+  if (error) alert("Fehler: " + error.message);
+}
 
-      for (const m of members) {
-        html += `
-          <tr style="background:${m.status === "active" ? "#1e4021" : "#402e1e"};">
-            <td>${m.name}</td>
-            <td>${m.role}</td>
-            <td>${m.status}</td>
-            <td>
-              <button class="action blue" data-action="activate" data-id="${m.id}">Freischalten</button>
-              <button class="action red" data-action="block" data-id="${m.id}">Sperren</button>
-              <button class="action gray" data-action="delete" data-id="${m.id}">Löschen</button>
-            </td>
-          </tr>
-        `;
-      }
+async function deleteUser(id) {
+  if (!confirm("Benutzer wirklich löschen?")) return;
+  const { error } = await supabase.from("users").delete().eq("id", id);
+  if (error) alert("Fehler: " + error.message);
+}
 
-      html += "</tbody></table>";
-      main.innerHTML = html;
-
-      main.querySelectorAll("button[data-action]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const action = btn.getAttribute("data-action");
-          const id = btn.getAttribute("data-id");
-          if (action === "activate") {
-            await updateStatus(id, "active");
-          } else if (action === "block") {
-            await updateStatus(id, "pending");
-          } else if (action === "delete") {
-            await deleteUser(id);
-          }
-          await showMembers();
-        });
-      });
-    }
-
-    async function updateStatus(id, status) {
-      const { error } = await supabase.from("users").update({ status }).eq("id", id);
-      if (error) alert("Fehler: " + error.message);
-    }
-
-    async function deleteUser(id) {
-      if (!confirm("Benutzer wirklich löschen?")) return;
-      const { error } = await supabase.from("users").delete().eq("id", id);
-      if (error) alert("Fehler: " + error.message);
-    }
   </script>
 </body>
 </html>
