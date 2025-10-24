@@ -4,64 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Bullfrog Tools – Dashboard</title>
-  <link rel="stylesheet" href="theme.css">
 </head>
 
 <body>
+  <button id="logoutBtn">Logout</button>
+
   <nav id="sidebar">
-    <button class="nav-btn active" data-section="events">🏠 Ereignisse</button>
-    <button class="nav-btn" data-section="reports">⚔️ Kriegsberichte</button>
-    <button class="nav-btn" data-section="fleet">🚢 Flottenstärke</button>
-    <button class="nav-btn" data-section="reservations">🏝️ Inselreservierung</button>
-    <button class="nav-btn" data-section="battle">🛡️ Angriff & Verteidigung</button>
-    <button class="nav-btn" data-section="map">🗺️ Karte</button>
-    <button class="nav-btn" data-section="database">📜 KB-Datenbank</button>
+    <button class="nav-btn active" data-section="events">Ereignisse</button>
+    <button class="nav-btn" data-section="reports">Kriegsberichte</button>
+    <button class="nav-btn" data-section="fleet">Flottenstärke</button>
+    <button class="nav-btn" data-section="reservations">Inselreservierung</button>
+    <button class="nav-btn" data-section="battle">Angriff & Verteidigung</button>
+    <button class="nav-btn" data-section="map">Karte</button>
+    <button class="nav-btn" data-section="database">KB-Datenbank</button>
     <hr>
-    <button class="nav-btn admin-only" data-section="members">👥 Mitgliederverwaltung</button>
-    <button class="nav-btn admin-only" data-section="diplomacy">🤝 Diplomatie</button>
-    <button class="nav-btn admin-only" data-section="csv">📂 CSV-Datenbasis</button>
+    <button class="nav-btn admin-only" data-section="members">Mitgliederverwaltung</button>
+    <button class="nav-btn admin-only" data-section="diplomacy">Diplomatie</button>
+    <button class="nav-btn admin-only" data-section="csv">CSV-Datenbasis</button>
   </nav>
 
   <div id="content">
-    <header>
-      <button id="themeToggle" title="Theme umschalten">🌙</button>
-      <button id="logoutBtn" title="Zurück ins Lager">🏕️</button>
-    </header>
-
-    <section id="eventsSection"><h2>📰 Aktuelle Ereignisse</h2></section>
-    <section id="reportsSection" hidden><h2>⚔️ Kriegsberichte</h2></section>
-    <section id="fleetSection" hidden><h2>🚢 Flottenstärke</h2></section>
-    <section id="reservationsSection" hidden><h2>🏝️ Inselreservierung</h2></section>
-    <section id="battleSection" hidden><h2>🛡️ Angriff & Verteidigung</h2></section>
-    <section id="mapSection" hidden><h2>🗺️ Karte</h2></section>
-    <section id="databaseSection" hidden><h2>📜 KB-Datenbank</h2></section>
-    <section id="membersSection" hidden><h2>👥 Mitgliederverwaltung</h2></section>
-    <section id="diplomacySection" hidden><h2>🤝 Diplomatie</h2></section>
-    <section id="csvSection" hidden><h2>📂 CSV-Datenbasis</h2></section>
+    <section id="eventsSection"><h2>Ereignisse</h2></section>
+    <section id="reportsSection" hidden><h2>Kriegsberichte</h2></section>
+    <section id="fleetSection" hidden><h2>Flottenstärke</h2></section>
+    <section id="reservationsSection" hidden><h2>Inselreservierung</h2></section>
+    <section id="battleSection" hidden><h2>Angriff & Verteidigung</h2></section>
+    <section id="mapSection" hidden><h2>Karte</h2></section>
+    <section id="databaseSection" hidden><h2>KB-Datenbank</h2></section>
+    <section id="membersSection" hidden><h2>Mitgliederverwaltung</h2></section>
+    <section id="diplomacySection" hidden><h2>Diplomatie</h2></section>
+    <section id="csvSection" hidden><h2>CSV-Datenbasis</h2></section>
   </div>
 
   <script type="module">
-    import { supabase, logoutUser } from "./supabase.js";
+    import { logoutUser } from "./supabase.js";
 
-    // === Theme ===
-    const themeBtn = document.getElementById("themeToggle");
-    const body = document.body;
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      body.classList.add("dark");
-      themeBtn.textContent = "🌞";
-    }
-    themeBtn.onclick = () => {
-      body.classList.toggle("dark");
-      const isDark = body.classList.contains("dark");
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-      themeBtn.textContent = isDark ? "🌞" : "🌙";
-    };
-
-    // === Logout ===
     document.getElementById("logoutBtn").onclick = () => logoutUser();
 
-    // === Navigation ===
     const sections = {
       events: "eventsSection",
       reports: "reportsSection",
@@ -72,7 +51,7 @@
       database: "databaseSection",
       members: "membersSection",
       diplomacy: "diplomacySection",
-      csv: "csvSection",
+      csv: "csvSection"
     };
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
@@ -86,7 +65,6 @@
       });
     });
 
-    // === Rollenabhängige Anzeige ===
     const role = localStorage.getItem("role");
     if (role !== "admin")
       document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
