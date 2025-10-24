@@ -1,103 +1,239 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Tools – Dashboard</title>
-  <style>
-    body { background:#121212; color:#eee; font-family:Arial; margin:0; display:flex; height:100vh; }
-    nav { width:220px; background:#1e1e1e; padding:15px; display:flex; flex-direction:column; }
-    nav h2 { color:#00aaff; margin-bottom:15px; }
-    nav button { background:#2a2a2a; border:none; color:#eee; padding:10px; margin-bottom:8px; border-radius:5px; cursor:pointer; text-align:left; }
-    nav button:hover { background:#007bff; }
-    main { flex:1; padding:20px; overflow:auto; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th,td { padding:8px; border-bottom:1px solid #333; }
-    th { background:#222; }
-    tr:nth-child(even){background:#181818;}
-    .hidden{display:none;}
-    .pending{background:#40311f;padding:10px;border-radius:5px;color:#ffc107;}
-    button.action{border:none;border-radius:4px;padding:5px 10px;margin-right:5px;color:#fff;cursor:pointer;}
-    .blue{background:#007bff;}
-    .red{background:#b33;}
-    .gray{background:#555;}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bullfrog Tools – Dashboard</title>
+<style>
+  :root {
+    --bg: #19150e;
+    --panel-bg: #231f14;
+    --text: #d8c7a0;
+    --accent: #b9923d;
+    --input-bg: #2e2618;
+  }
+
+  body.light {
+    --bg: #f6f1e3;
+    --panel-bg: #fff9e8;
+    --text: #3e2f1d;
+    --accent: #c4953f;
+    --input-bg: #f0e7d0;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Seitenmenü (Desktop) */
+  nav {
+    width: 240px;
+    background: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 10px;
+    border-right: 1px solid #3b3322;
+  }
+
+  nav h2 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-size: 1.3em;
+  }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1em;
+    padding: 12px 10px;
+    text-align: left;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  nav button:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Theme-Schalter oben rechts */
+  #themeToggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: var(--panel-bg);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: all 0.3s;
+    z-index: 50;
+  }
+
+  #themeToggle:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Dashboard Inhalt */
+  main {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+  }
+
+  h1 {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .event {
+    background: var(--panel-bg);
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 1px solid #3b3322;
+  }
+
+  /* Unteres Menü (Mobile) */
+  .bottom-nav {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    nav { display: none; }
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--panel-bg);
+      border-top: 1px solid #3b3322;
+      height: 60px;
+    }
+    .bottom-nav button {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+    main {
+      padding-bottom: 70px;
+    }
+  }
+</style>
 </head>
 <body>
+
+  <!-- Theme-Schalter -->
+  <div id="themeToggle" title="Modus wechseln">☀️</div>
+
+  <!-- Navigation (Desktop) -->
   <nav>
-    <h2>Bullfrog Tools</h2>
-    <button data-sec="events">Ereignisse</button>
-    <button data-sec="battle">Kampfberichte</button>
-    <button data-sec="reserve">Inseln reservieren</button>
-    <div id="adminMenu" class="hidden">
-      <hr>
-      <button data-sec="members">Mitgliederverwaltung</button>
+    <div>
+      <h2>Bullfrog Tools</h2>
+      <button onclick="showSection('events')">📜 Ereignisse</button>
+      <button onclick="showSection('battles')">⚔️ Kampfberichte</button>
+      <button onclick="showSection('islands')">🏝️ Inseln</button>
+      <button onclick="showSection('map')">🗺️ Karte</button>
+      <button onclick="showSection('attack')">🚢 Angriffsplanung</button>
     </div>
-    <hr>
-    <button id="logoutBtn">Abmelden</button>
+    <div>
+      <button onclick="logout()">🚪 Abmelden</button>
+    </div>
   </nav>
-  <main id="main">
-    <h1>Willkommen bei Bullfrog Tools</h1>
-    <div id="pendingMsg" class="pending hidden">
-      Dein Account ist noch nicht freigeschaltet. Bitte warte auf Freigabe.
-    </div>
+
+  <!-- Inhalt -->
+  <main>
+    <section id="events">
+      <h1>Ereignisse</h1>
+      <div class="event">📢 Willkommen bei Bullfrog Tools! <br>Bleibe informiert über laufende Angriffe, neue Inselberichte und Diplomatieänderungen.</div>
+      <div class="event">🕒 Beispiel-Ereignis: Angriff auf Insel 1:201:16 – 20.10.2025 07:01 Uhr.</div>
+    </section>
+
+    <section id="battles" style="display:none;">
+      <h1>Kampfberichte</h1>
+      <div class="event">Hier können Mitglieder Kampfberichte eintragen (noch in Arbeit).</div>
+    </section>
+
+    <section id="islands" style="display:none;">
+      <h1>Inselübersicht</h1>
+      <div class="event">Tabellarische Inselübersicht wird hier erscheinen.</div>
+    </section>
+
+    <section id="map" style="display:none;">
+      <h1>Inselkarte</h1>
+      <div class="event">Karte folgt in späterem Schritt.</div>
+    </section>
+
+    <section id="attack" style="display:none;">
+      <h1>Angriffs- / Verteidigungsplan</h1>
+      <div class="event">Angriffsplanung und Zeitberechnung werden hier integriert.</div>
+    </section>
   </main>
 
+  <!-- Unteres Menü (Mobile) -->
+  <div class="bottom-nav">
+    <button onclick="showSection('events')">📜</button>
+    <button onclick="showSection('battles')">⚔️</button>
+    <button onclick="showSection('islands')">🏝️</button>
+    <button onclick="showSection('map')">🗺️</button>
+    <button onclick="showSection('attack')">🚢</button>
+  </div>
+
   <script type="module">
-    import { supabase, getSession, logout } from "./supabase.js";
+    import { supabase } from "./supabase.js";
 
-    const user = await getSession();
-    if (!user) {
-      alert("Bitte neu anmelden");
-      window.location.href = "index.html";
-    }
-
-    const { data: rows } = await supabase.from("users").select("*").eq("id", user.id);
-    const me = rows?.[0];
-    const main = document.getElementById("main");
-    const adminMenu = document.getElementById("adminMenu");
-    const pendingMsg = document.getElementById("pendingMsg");
-
-    if (me?.status === "pending") pendingMsg.classList.remove("hidden");
-    if (me?.role === "admin") adminMenu.classList.remove("hidden");
-
-    document.getElementById("logoutBtn").onclick = logout;
-
-    // Navigation
-    document.querySelectorAll("button[data-sec]").forEach((btn) => {
-      btn.onclick = async () => {
-        const sec = btn.getAttribute("data-sec");
-        if (sec === "members") showMembers();
-        else main.innerHTML = `<h2>${sec}</h2><p>Modul wird bald verfügbar sein.</p>`;
-      };
-    });
-
-    // Mitgliederverwaltung
-    async function showMembers() {
-      const { data: members } = await supabase.from("users").select("*").order("created_at");
-      let html = `<h2>Mitgliederverwaltung</h2><table><tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktionen</th></tr>`;
-      for (const m of members) {
-        html += `<tr style="background:${m.status === "active" ? "#1f4025" : "#40311f"}">
-          <td>${m.name}</td><td>${m.role}</td><td>${m.status}</td>
-          <td>
-            <button class="action blue" data-act="activate" data-id="${m.id}">Freischalten</button>
-            <button class="action red" data-act="block" data-id="${m.id}">Sperren</button>
-            <button class="action gray" data-act="delete" data-id="${m.id}">Löschen</button>
-          </td></tr>`;
+    // === THEME HANDLING ===
+    const themeBtn=document.getElementById("themeToggle");
+    const setTheme=(mode)=>{
+      if(mode==="light"){
+        document.body.classList.add("light");
+        themeBtn.textContent="🌙";
+      }else{
+        document.body.classList.remove("light");
+        themeBtn.textContent="☀️";
       }
-      html += "</table>";
-      main.innerHTML = html;
+      localStorage.setItem("theme",mode);
+    };
+    const savedTheme=localStorage.getItem("theme")||"dark";
+    setTheme(savedTheme);
+    themeBtn.onclick=()=>setTheme(document.body.classList.contains("light")?"dark":"light");
 
-      main.querySelectorAll("button[data-act]").forEach((b) => {
-        b.onclick = async () => {
-          const id = b.dataset.id, act = b.dataset.act;
-          if (act === "activate") await supabase.from("users").update({ status: "active" }).eq("id", id);
-          if (act === "block") await supabase.from("users").update({ status: "pending" }).eq("id", id);
-          if (act === "delete") await supabase.from("users").delete().eq("id", id);
-          showMembers();
-        };
-      });
-    }
+    // === SECTION WECHSEL ===
+    window.showSection=(id)=>{
+      document.querySelectorAll("main section").forEach(sec=>sec.style.display="none");
+      document.getElementById(id).style.display="block";
+    };
+
+    // === LOGOUT ===
+    window.logout=async()=>{
+      await supabase.auth.signOut();
+      localStorage.removeItem("session");
+      window.location.href="index.html";
+    };
   </script>
 </body>
 </html>
