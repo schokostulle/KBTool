@@ -4,78 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Bullfrog Tools – Anmeldung</title>
-  <link rel="stylesheet" href="theme.css" />
 </head>
 
 <body>
-  <header>
-    <h1>Bullfrog Tools</h1>
-    <button id="themeToggle" title="Theme umschalten">🌙</button>
-  </header>
+  <h1>Bullfrog Tools</h1>
 
   <main id="authContainer">
-    <!-- Login-Formular -->
+    <!-- Login -->
     <form id="loginForm">
       <h2>Anmeldung</h2>
       <label>Benutzername</label>
       <input type="text" id="loginUsername" required />
-
       <label>Passwort</label>
       <input type="password" id="loginPassword" required />
-
       <button type="submit">Einloggen</button>
-
-      <p>Noch kein Konto?
-        <a href="#" id="toRegister">Jetzt registrieren</a>
-      </p>
+      <p>Noch kein Konto? <a href="#" id="toRegister">Registrieren</a></p>
     </form>
 
-    <!-- Registrierungsformular -->
+    <!-- Registrierung -->
     <form id="registerForm" hidden>
       <h2>Registrierung</h2>
       <label>Benutzername</label>
       <input type="text" id="regUsername" required />
-
       <label>Passwort</label>
       <input type="password" id="regPassword" required />
-
       <label>Passwort wiederholen</label>
       <input type="password" id="regPasswordRepeat" required />
-
       <button type="submit">Registrieren</button>
-
-      <p>Schon ein Konto?
-        <a href="#" id="toLogin">Hier einloggen</a>
-      </p>
+      <p>Bereits ein Konto? <a href="#" id="toLogin">Anmelden</a></p>
     </form>
 
-    <!-- Status- oder Hinweisbereich -->
     <div id="messageBox"></div>
   </main>
 
   <script type="module">
     import { registerUser, loginUser } from "./supabase.js";
 
-    const themeBtn = document.getElementById("themeToggle");
-    const body = document.body;
-    const savedTheme = localStorage.getItem("theme");
-
-    if (savedTheme === "dark") {
-      body.classList.add("dark");
-      themeBtn.textContent = "🌞";
-    }
-
-    themeBtn.onclick = () => {
-      body.classList.toggle("dark");
-      const isDark = body.classList.contains("dark");
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-      themeBtn.textContent = isDark ? "🌞" : "🌙";
-    };
-
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
     const messageBox = document.getElementById("messageBox");
 
+    // Formularwechsel
     document.getElementById("toRegister").onclick = (e) => {
       e.preventDefault();
       loginForm.hidden = true;
@@ -95,15 +64,15 @@
       const pw2 = regPasswordRepeat.value;
 
       if (pw !== pw2) {
-        showMessage("Passwörter stimmen nicht überein", "error");
+        showMessage("Passwörter stimmen nicht überein");
         return;
       }
 
       try {
         const result = await registerUser(username, pw);
-        showMessage(result.message, "info");
+        showMessage(result.message);
       } catch (err) {
-        showMessage("Fehler bei der Registrierung: " + err.message, "error");
+        showMessage("Fehler bei der Registrierung: " + err.message);
       }
     });
 
@@ -115,22 +84,17 @@
 
       try {
         const result = await loginUser(username, pw);
-        showMessage(result.message, "info");
-
-        // Wenn Login erfolgreich und Benutzer freigeschaltet:
+        showMessage(result.message);
         if (result.success) {
-          setTimeout(() => {
-            window.location.href = "dashboard.html";
-          }, 1500);
+          setTimeout(() => (window.location.href = "dashboard.html"), 1500);
         }
       } catch (err) {
-        showMessage("Fehler bei der Anmeldung: " + err.message, "error");
+        showMessage("Fehler bei der Anmeldung: " + err.message);
       }
     });
 
-    function showMessage(text, type = "info") {
+    function showMessage(text) {
       messageBox.textContent = text;
-      messageBox.className = type;
       setTimeout(() => (messageBox.textContent = ""), 7000);
     }
   </script>
