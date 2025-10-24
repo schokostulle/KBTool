@@ -183,17 +183,6 @@
     document.getElementById("toRegister").onclick=()=>{loginBox.style.display="none";registerBox.style.display="block";msg.textContent="";};
     document.getElementById("toLogin").onclick=()=>{registerBox.style.display="none";loginBox.style.display="block";msg.textContent="";};
 
-    // LOGIN
-    btnLogin.onclick=async()=>{
-      const name=loginName.value.trim(), pass=loginPass.value.trim();
-      if(!name||!pass) return msg.textContent="Bitte alle Felder ausfüllen.";
-      const email=`${name.toLowerCase()}@bullfrog.fake`;
-      const {error}=await supabase.auth.signInWithPassword({email,password:pass});
-      if(error) return msg.textContent="Fehler: "+error.message;
-      msg.textContent="Willkommen zurück, Kommandant...";
-      setTimeout(()=>window.location.href="dashboard.html",800);
-    };
-
    // --- Registrierung ---
 async function register() {
   const username = document.getElementById("regName").value.trim();
