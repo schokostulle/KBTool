@@ -125,6 +125,25 @@ export async function checkSession() {
 }
 
 // -------------------------------------------------
+// 🔎 Rolle & Status direkt aus dem JWT lesen
+// -------------------------------------------------
+export async function getUserClaims() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session) return null;
+
+  // Token dekodieren (Base64 → JSON)
+  const token = data.session.access_token.split(".")[1];
+  const payload = JSON.parse(atob(token));
+
+  return {
+    id: data.session.user.id,
+    email: data.session.user.email,
+    role: payload.user_role || "member",
+    status: payload.user_status || "pending",
+  };
+}
+
+// -------------------------------------------------
 // 🧩 Beispielhafte Event-Handler für Buttons
 // -------------------------------------------------
 document.getElementById("btnRegister")?.addEventListener("click", async () => {
