@@ -1,92 +1,51 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Bullfrog Tools – Dashboard</title>
   <link rel="stylesheet" href="theme.css">
 </head>
-<body>
-  <!-- Buttons oben rechts -->
-  <button id="themeToggle" title="Theme umschalten">🌙</button>
-  <button id="logoutBtn" title="Zurück ins Lager">🏕️</button>
 
-  <!-- Navigation -->
-  <nav>
-    <h3 style="text-align:center;color:var(--accent-gold);margin:10px 0;">Bullfrog Tools</h3>
-    <button onclick="show('briefing')" class="active">🪶 Briefing</button>
-    <button onclick="show('battle')">⚔️ Kriegsberichte</button>
-    <button onclick="show('fleet')">🚢 Flottenstärke</button>
-    <button onclick="show('reserve')">📍 Inselreservierung</button>
-    <button onclick="show('attackdef')">🕒 Angriff & Verteidigung</button>
-    <button onclick="show('map')">🗺️ Karte</button>
-    <button onclick="show('kbdata')">📜 KB Datenbank</button>
-    <button class="adminOnly" onclick="show('members')">🧍 Mitglieder</button>
-    <button class="adminOnly" onclick="show('diplo')">🤝 Diplomatie</button>
-    <button class="adminOnly" onclick="show('csv')">📂 CSV</button>
+<body>
+  <nav id="sidebar">
+    <button class="nav-btn active" data-section="events">🏠 Ereignisse</button>
+    <button class="nav-btn" data-section="reports">⚔️ Kriegsberichte</button>
+    <button class="nav-btn" data-section="fleet">🚢 Flottenstärke</button>
+    <button class="nav-btn" data-section="reservations">🏝️ Inselreservierung</button>
+    <button class="nav-btn" data-section="battle">🛡️ Angriff & Verteidigung</button>
+    <button class="nav-btn" data-section="map">🗺️ Karte</button>
+    <button class="nav-btn" data-section="database">📜 KB-Datenbank</button>
+    <hr>
+    <button class="nav-btn admin-only" data-section="members">👥 Mitgliederverwaltung</button>
+    <button class="nav-btn admin-only" data-section="diplomacy">🤝 Diplomatie</button>
+    <button class="nav-btn admin-only" data-section="csv">📂 CSV-Datenbasis</button>
   </nav>
 
-  <!-- Hauptinhalt -->
-  <main>
-    <!-- Startseite -->
-    <section id="briefing" class="active">
-      <h1>Willkommen <span id="userDisplay"></span></h1>
-      <p>Hier erscheinen aktuelle Ereignisse, Hinweise und Nachrichten deiner Allianz.</p>
-    </section>
+  <div id="content">
+    <header>
+      <button id="themeToggle" title="Theme umschalten">🌙</button>
+      <button id="logoutBtn" title="Zurück ins Lager">🏕️</button>
+    </header>
 
-    <section id="battle"><h1>Kriegsberichte</h1></section>
-    <section id="fleet"><h1>Flottenstärke</h1></section>
-    <section id="reserve"><h1>Inselreservierung</h1></section>
-    <section id="attackdef"><h1>Angriff & Verteidigung</h1></section>
-    <section id="map"><h1>Karte</h1></section>
-    <section id="kbdata"><h1>KB Datenbank</h1></section>
-
-    <!-- Adminbereiche -->
-    <section id="members">
-      <h1>Mitgliederverwaltung</h1>
-      <table id="memberTable"></table>
-    </section>
-
-    <section id="diplo"><h1>Diplomatie</h1></section>
-    <section id="csv"><h1>CSV Verwaltung</h1></section>
-  </main>
-
-  <!-- InfoBox -->
-  <div id="infoBox"></div>
+    <section id="eventsSection"><h2>📰 Aktuelle Ereignisse</h2></section>
+    <section id="reportsSection" hidden><h2>⚔️ Kriegsberichte</h2></section>
+    <section id="fleetSection" hidden><h2>🚢 Flottenstärke</h2></section>
+    <section id="reservationsSection" hidden><h2>🏝️ Inselreservierung</h2></section>
+    <section id="battleSection" hidden><h2>🛡️ Angriff & Verteidigung</h2></section>
+    <section id="mapSection" hidden><h2>🗺️ Karte</h2></section>
+    <section id="databaseSection" hidden><h2>📜 KB-Datenbank</h2></section>
+    <section id="membersSection" hidden><h2>👥 Mitgliederverwaltung</h2></section>
+    <section id="diplomacySection" hidden><h2>🤝 Diplomatie</h2></section>
+    <section id="csvSection" hidden><h2>📂 CSV-Datenbasis</h2></section>
+  </div>
 
   <script type="module">
-    import { supabase } from "./supabase.js";
+    import { supabase, logoutUser } from "./supabase.js";
 
-    /* === Authentifizierung prüfen === */
-    const { data:{ user } } = await supabase.auth.getUser();
-    if (!user) window.location = "index.html";
-
-    const currentId = user.id;
-    const username = localStorage.getItem("username") || "Unbekannt";
-    const role = localStorage.getItem("role") || "member";
-    document.getElementById("userDisplay").textContent = username;
-
-    /* === Logout === */
-    document.getElementById("logoutBtn").onclick = async () => {
-      await supabase.auth.signOut();
-      localStorage.clear();
-      window.location = "index.html";
-    };
-
-    /* === Navigation === */
-    window.show = id => {
-      document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-
-      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-      [...document.querySelectorAll("nav button")]
-        .find(b => (b.getAttribute("onclick") || "").includes(id))
-        ?.classList.add("active");
-    };
-
-    /* === Theme Toggle === */
-    const body = document.body;
+    // === Theme ===
     const themeBtn = document.getElementById("themeToggle");
+    const body = document.body;
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       body.classList.add("dark");
@@ -99,86 +58,38 @@
       themeBtn.textContent = isDark ? "🌞" : "🌙";
     };
 
-    /* === Adminrechte prüfen === */
-    if (role !== "admin") {
-      document.querySelectorAll(".adminOnly").forEach(b => b.style.display = "none");
-    } else {
-      loadMembers();
-    }
+    // === Logout ===
+    document.getElementById("logoutBtn").onclick = () => logoutUser();
 
-    /* === InfoBox === */
-    function showInfo(text, color="#b9923d") {
-      const box = document.getElementById("infoBox");
-      box.style.background = color;
-      box.textContent = text;
-      box.classList.add("show");
-      setTimeout(() => box.classList.remove("show"), 7000);
-    }
+    // === Navigation ===
+    const sections = {
+      events: "eventsSection",
+      reports: "reportsSection",
+      fleet: "fleetSection",
+      reservations: "reservationsSection",
+      battle: "battleSection",
+      map: "mapSection",
+      database: "databaseSection",
+      members: "membersSection",
+      diplomacy: "diplomacySection",
+      csv: "csvSection",
+    };
 
-    /* === Mitgliederverwaltung === */
-    async function loadMembers() {
-      const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: true });
-      if (error) {
-        console.error(error);
-        showInfo("Fehler beim Laden der Mitglieder", "#e74c3c");
-        return;
-      }
-
-      const t = document.getElementById("memberTable");
-      t.innerHTML = "<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
-
-      data.forEach(u => {
-        const tr = document.createElement("tr");
-        let actions = "";
-
-        if (u.status === "pending") {
-          actions += `<button class='small green' onclick="updateStatus('${u.id}','active')">Freigeben</button>`;
-          actions += `<button class='small red' onclick="updateStatus('${u.id}','denied')">Ablehnen</button>`;
-        }
-        if (u.status === "active") {
-          actions += `<button class='small orange' onclick="updateStatus('${u.id}','blocked')">Blocken</button>`;
-        } else if (u.status === "blocked") {
-          actions += `<button class='small green' onclick="updateStatus('${u.id}','active')">Entsperren</button>`;
-        }
-        if (u.id !== currentId) {
-          actions += `<button class='small gray' onclick="deleteUser('${u.id}')">Löschen</button>`;
-          if (u.role === "admin")
-            actions += `<button class='small gold' onclick="changeRole('${u.id}','member')">Zu Member</button>`;
-          else
-            actions += `<button class='small gold' onclick="changeRole('${u.id}','admin')">Zu Admin</button>`;
-        } else {
-          actions += "<em>Eigener Account</em>";
-        }
-
-        tr.innerHTML = `
-          <td>${u.username}</td>
-          <td>${u.role}</td>
-          <td>${u.status}</td>
-          <td>${actions}</td>`;
-        t.appendChild(tr);
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        for (const key in sections)
+          document.getElementById(sections[key]).hidden = true;
+        const sec = sections[btn.dataset.section];
+        if (sec) document.getElementById(sec).hidden = false;
       });
-    }
+    });
 
-    window.updateStatus = async (id, status) => {
-      await supabase.from("users").update({ status }).eq("id", id);
-      const colors = { active: "#4CAF50", denied: "#e74c3c", blocked: "#ff9f43" };
-      const msgs = { active: "Freigeschaltet", denied: "Abgelehnt", blocked: "Blockiert" };
-      showInfo(msgs[status] || "Status geändert", colors[status] || "#b9923d");
-      loadMembers();
-    };
-
-    window.changeRole = async (id, role) => {
-      await supabase.from("users").update({ role }).eq("id", id);
-      showInfo(role === "admin" ? "Befördert zu Admin" : "Zurückgestuft zu Member", "#b9923d");
-      loadMembers();
-    };
-
-    window.deleteUser = async id => {
-      if (!confirm("Benutzer wirklich löschen?")) return;
-      await supabase.from("users").delete().eq("id", id);
-      showInfo("Benutzer gelöscht", "#666");
-      loadMembers();
-    };
+    // === Rollenabhängige Anzeige ===
+    const role = localStorage.getItem("role");
+    if (role !== "admin")
+      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
   </script>
 </body>
 </html>
