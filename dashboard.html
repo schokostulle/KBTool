@@ -37,12 +37,29 @@ table{border-collapse:collapse;width:100%;margin-top:10px}
 th,td{padding:8px;border:1px solid #3b3322;text-align:left}
 th{background:#2c261a;color:#b9923d}
 tr:nth-child(even){background:#1d1912}
+
+/* Buttons */
 button.small{
-  background:#b9923d;color:#19150e;
   border:none;border-radius:4px;
-  padding:4px 8px;margin:0 2px;cursor:pointer
+  padding:4px 8px;margin:0 2px;cursor:pointer;
+  font-weight:bold;color:#19150e;
 }
-button.small:hover{background:#d1a24f}
+.small.green{background:#4CAF50;}
+.small.green:hover{background:#5ed65e;}
+.small.red{background:#e74c3c;}
+.small.red:hover{background:#ff6b5c;}
+.small.gray{background:#666;}
+.small.gray:hover{background:#888;}
+.small.gold{background:#b9923d;color:#19150e;}
+.small.gold:hover{background:#d1a24f;}
+
+/* Hinweisbox */
+#infoBox{
+  position:fixed;bottom:20px;right:20px;
+  background:#b9923d;color:#19150e;
+  padding:10px 16px;border-radius:6px;
+  display:none;box-shadow:0 0 10px #0007;
+}
 </style>
 </head>
 <body>
@@ -69,28 +86,32 @@ button.small:hover{background:#d1a24f}
   </section>
 </main>
 
+<div id="infoBox"></div>
+
 <script type="module">
 import { supabase } from "./supabase.js";
 
+/* === Auth prüfen === */
 const { data:{ user } } = await supabase.auth.getUser();
 if(!user) window.location = "index.html";
 
+const currentId = user.id;
 const username = localStorage.getItem("username") || "Unbekannt";
 const role = localStorage.getItem("role") || "member";
 document.getElementById("userDisplay").textContent = username;
 
-/* --- Logout --- */
+/* === Logout === */
 document.getElementById("logoutBtn").onclick = async () => {
   await supabase.auth.signOut();
   localStorage.clear();
   window.location = "index.html";
 };
 
-/* --- Sichtbarkeit --- */
+/* === Sichtbarkeit === */
 if(role !== "admin") document.querySelectorAll(".adminOnly").forEach(b=>b.style.display="none");
 else loadMembers();
 
-/* --- Navigation --- */
+/* === Navigation === */
 window.show = id => {
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
@@ -98,9 +119,16 @@ window.show = id => {
   [...document.querySelectorAll("nav button")].find(b=>(b.getAttribute("onclick")||"").includes(id)).classList.add("active");
 };
 
-/* --- Mitgliederverwaltung --- */
+/* === Hinweisbox === */
+function showInfo(text){
+  const box=document.getElementById("infoBox");
+  box.textContent=text;box.style.display="block";
+  setTimeout(()=>box.style.display="none",2000);
+}
+
+/* === Mitgliederverwaltung === */
 async function loadMembers(){
-  const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: true });
+  const { data, error } = await supabase.from("users").select("*").order("created_at",{ascending:true});
   if(error){ console.error(error); return; }
   const t=document.getElementById("memberTable");
   t.innerHTML="<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
@@ -109,33 +137,40 @@ async function loadMembers(){
     const tr=document.createElement("tr");
     let actions="";
     if(u.status==="pending"){
-      actions+=`<button class='small' onclick="updateStatus('${u.id}','active')">✅ Freigeben</button>`;
-      actions+=`<button class='small' onclick="updateStatus('${u.id}','denied')">❌ Ablehnen</button>`;
+      actions+=`<button class='small green' onclick="updateStatus('${u.id}','active')">Freigeben</button>`;
+      actions+=`<button class='small red' onclick="updateStatus('${u.id}','denied')">Ablehnen</button>`;
     }
-    actions+=`<button class='small' onclick="deleteUser('${u.id}')">🗑️ Löschen</button>`;
-    if(u.role==="admin")
-      actions+=`<button class='small' onclick="changeRole('${u.id}','member')">⬇️ Zu Member</button>`;
-    else
-      actions+=`<button class='small' onclick="changeRole('${u.id}','admin')">⬆️ Zu Admin</button>`;
+    if(u.id!==currentId){ // Admin kann sich selbst nicht löschen/degradieren
+      actions+=`<button class='small gray' onclick="deleteUser('${u.id}')">Löschen</button>`;
+      if(u.role==="admin")
+        actions+=`<button class='small gold' onclick="changeRole('${u.id}','member')">Zu Member</button>`;
+      else
+        actions+=`<button class='small gold' onclick="changeRole('${u.id}','admin')">Zu Admin</button>`;
+    } else {
+      actions+="<em>Eigener Account</em>";
+    }
     tr.innerHTML=`<td>${u.username}</td><td>${u.role}</td><td>${u.status}</td><td>${actions}</td>`;
     t.appendChild(tr);
   });
 }
 
-/* --- Aktionen --- */
+/* === Aktionen === */
 window.updateStatus = async (id, status) => {
   await supabase.from("users").update({ status }).eq("id", id);
+  showInfo(status==="active"?"Freigeschaltet":"Abgelehnt");
   loadMembers();
 };
 
 window.changeRole = async (id, role) => {
   await supabase.from("users").update({ role }).eq("id", id);
+  showInfo(role==="admin"?"Befördert zu Admin":"Zurückgestuft zu Member");
   loadMembers();
 };
 
 window.deleteUser = async (id) => {
   if(!confirm("Benutzer wirklich löschen?")) return;
   await supabase.from("users").delete().eq("id", id);
+  showInfo("Benutzer gelöscht");
   loadMembers();
 };
 </script>
