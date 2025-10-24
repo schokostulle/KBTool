@@ -33,6 +33,7 @@ nav {
   flex-direction: column;
   align-items: stretch;
   border-right: 1px solid #3b3322;
+  padding: 0;
 }
 
 nav h2 {
@@ -40,7 +41,6 @@ nav h2 {
   color: var(--accent);
   margin: 20px 0 15px;
   font-size: 20px;
-  letter-spacing: 0.5px;
   border-bottom: 1px solid #3b3322;
   padding-bottom: 10px;
 }
@@ -52,7 +52,6 @@ nav button {
   padding: 14px 18px;
   text-align: left;
   cursor: pointer;
-  border-radius: 0;
   font-size: 15px;
   transition: background 0.2s ease, color 0.2s ease;
   border-bottom: 1px solid #3b3322;
@@ -62,6 +61,12 @@ nav button:hover,
 nav button.active {
   background: var(--accent);
   color: var(--bg);
+}
+
+.menuDivider {
+  margin: 10px 0;
+  border: none;
+  border-top: 1px solid #3b3322;
 }
 
 /* === Hauptbereich === */
@@ -78,7 +83,7 @@ h1 { color: var(--accent); }
   margin-bottom: 10px;
 }
 
-/* === Tabellen (Platzhalter für künftige Tools) === */
+/* === Tabellenplatzhalter === */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -91,7 +96,7 @@ th, td {
 }
 th { color: var(--accent); }
 
-/* === Top-Buttons (Theme + Logout) === */
+/* === Top-Buttons === */
 #themeToggle, #logoutBtn {
   position: fixed;
   top: 15px;
@@ -124,33 +129,47 @@ body.light {
   --accent: #a1761c;
 }
 
-/* === Mobiles Menü (unten) === */
+/* === Mobiles Menü (unten, Kachel-Stil) === */
 @media (max-width: 768px) {
   body { flex-direction: column; }
   nav {
-    flex-direction: row !important;
-    justify-content: space-around;
-    align-items: center;
     width: 100%;
-    height: 60px;
+    height: auto;
+    background: var(--panel);
+    border-top: 1px solid #3b3322;
+    border-right: none;
     position: fixed;
     bottom: 0;
     left: 0;
-    border-top: 1px solid #3b3322;
-    border-right: none;
     z-index: 99;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 5px 0;
   }
-  nav h2 { display: none; }
+  nav h2, .menuDivider { display: none; }
   nav button {
-    text-align: center;
-    flex: 1;
-    padding: 8px 0;
-    font-size: 14px;
-    border-bottom: none;
-    border-right: 1px solid #3b3322;
+    flex: 0 0 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    font-size: 22px;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    background: var(--panel);
+    box-shadow: 0 0 3px #0006;
   }
-  nav button:last-child { border-right: none; }
-  main { padding-bottom: 70px; }
+  nav button:hover,
+  nav button.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  main {
+    padding-bottom: 130px;
+  }
 }
 </style>
 </head>
@@ -164,14 +183,17 @@ body.light {
 <nav>
   <div class="menuTop">
     <h2>Bullfrog Tools</h2>
-    <button onclick="showSection('events')" class="active">📜 Ereignisse</button>
-    <button onclick="showSection('warreports')">⚔️ Kriegsberichte</button>
-    <button onclick="showSection('fleet')">🚢 Flottenstärke</button>
-    <button onclick="showSection('reserve')">🏝️ Inselreservierung</button>
-    <button onclick="showSection('battle')">🕐 Angriff & Verteidigung</button>
+    <button onclick="showSection('events')" class="active">🪶 Briefing</button>
+    <button onclick="showSection('warreports')">⚔️ Berichte</button>
+    <button onclick="showSection('fleet')">🚢 Flotten</button>
+    <button onclick="showSection('reserve')">📍 Reservierung</button>
+    <button onclick="showSection('battle')">🎯 Taktik</button>
     <button onclick="showSection('map')">🗺️ Karte</button>
-    <button onclick="showSection('kbreports')">📖 KB-Datenbank</button>
-    <button onclick="showSection('members')" class="adminOnly">🧍 Mitgliederliste</button>
+    <button onclick="showSection('kbreports')">📖 Archiv</button>
+
+    <hr class="menuDivider">
+
+    <button onclick="showSection('members')" class="adminOnly">🧍 Mitglieder</button>
     <button onclick="showSection('diplomacy')" class="adminOnly">🤝 Diplomatie</button>
     <button onclick="showSection('csv')" class="adminOnly">📂 CSV</button>
   </div>
@@ -180,68 +202,68 @@ body.light {
 <!-- === Hauptinhalt === -->
 <main>
   <section id="events">
-    <h1>Ereignisse & Informationen</h1>
+    <h1>🪶 Briefing</h1>
     <div class="event">Willkommen, <span id="usernameDisplay"></span>!</div>
   </section>
 
   <section id="warreports" style="display:none;">
-    <h1>Kriegsberichte</h1>
-    <p>Hier werden Kampfberichte angezeigt oder eingetragen.</p>
+    <h1>⚔️ Kriegsberichte</h1>
+    <p>Hier werden Kampfberichte eingetragen oder ausgewertet.</p>
   </section>
 
   <section id="fleet" style="display:none;">
-    <h1>Flottenstärke</h1>
+    <h1>🚢 Flottenstärke</h1>
     <p>Analyse der militärischen Stärke deiner Allianz.</p>
   </section>
 
   <section id="reserve" style="display:none;">
-    <h1>Inselreservierung</h1>
-    <p>Reserviere Inseln, um Angriffsziele zu koordinieren.</p>
+    <h1>📍 Inselreservierung</h1>
+    <p>Reserviere Inseln zur Koordination deiner Angriffe.</p>
   </section>
 
   <section id="battle" style="display:none;">
-    <h1>Angriff & Verteidigung</h1>
-    <p>Berechnung von Zeiten, Entfernungen und Taktiken.</p>
+    <h1>🎯 Angriff & Verteidigung</h1>
+    <p>Berechnung von Reisezeiten, Entfernungen und Taktiken.</p>
   </section>
 
   <section id="map" style="display:none;">
-    <h1>Karte</h1>
-    <p>Visualisierung der Inselwelt mit Allianzfarben.</p>
+    <h1>🗺️ Karte</h1>
+    <p>Strategische Inselkarte deiner Welt.</p>
   </section>
 
   <section id="kbreports" style="display:none;">
-    <h1>KB-Datenbank</h1>
-    <p>Speicherung und Auswertung vergangener Kämpfe.</p>
+    <h1>📖 KB-Archiv</h1>
+    <p>Speicherung und Analyse vergangener Schlachten.</p>
   </section>
 
-  <!-- Admin only -->
   <section id="members" style="display:none;">
-    <h1>Mitgliederliste</h1>
+    <h1>🧍 Mitgliederliste</h1>
     <table id="memberTable"></table>
   </section>
 
   <section id="diplomacy" style="display:none;">
-    <h1>Diplomatie</h1>
-    <p>Verwaltung befreundeter oder feindlicher Allianzen.</p>
+    <h1>🤝 Diplomatie</h1>
+    <p>Freunde und Feinde verwalten.</p>
   </section>
 
   <section id="csv" style="display:none;">
-    <h1>CSV-Daten</h1>
-    <p>Import und Verwaltung der Spielbasisdaten (nur Admin).</p>
+    <h1>📂 CSV Datenbasis</h1>
+    <p>Import und Verwaltung der Spielbasisdaten (nur Admins).</p>
   </section>
 </main>
 
 <script type="module">
 import { supabase } from "./supabase.js";
 
-/* === Auth prüfen === */
+/* === Auth === */
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) window.location.href = "index.html";
-const username = localStorage.getItem("username") || "";
+
+const username = localStorage.getItem("username") || "Unbekannt";
 const role = localStorage.getItem("role") || "member";
 document.getElementById("usernameDisplay").textContent = username;
 
-/* === Theme === */
+/* === Theme-Schalter === */
 const themeBtn = document.getElementById("themeToggle");
 const setTheme = (m) => {
   if (m === "light") {
@@ -254,8 +276,7 @@ const setTheme = (m) => {
   localStorage.setItem("theme", m);
 };
 setTheme(localStorage.getItem("theme") || "dark");
-themeBtn.onclick = () =>
-  setTheme(document.body.classList.contains("light") ? "dark" : "light");
+themeBtn.onclick = () => setTheme(document.body.classList.contains("light") ? "dark" : "light");
 
 /* === Logout === */
 document.getElementById("logoutBtn").onclick = async () => {
@@ -282,7 +303,7 @@ if (role !== "admin") {
   loadMembers();
 }
 
-/* === Mitgliederliste (Admin) === */
+/* === Mitgliederliste === */
 async function loadMembers() {
   const { data: users, error } = await supabase.from("users").select("*");
   const t = document.getElementById("memberTable");
@@ -298,9 +319,9 @@ async function loadMembers() {
       <td>${u.role}</td>
       <td>${u.status}</td>
       <td>
-        ${u.status === "pending" ? `<button class='action-btn' onclick="activate('${u.id}')">✅</button>` : ""}
-        <button class='action-btn' onclick="blockUser('${u.id}')">⛔</button>
-        <button class='action-btn' onclick="deleteUser('${u.id}')">🗑️</button>
+        ${u.status === "pending" ? `<button onclick="activate('${u.id}')">✅</button>` : ""}
+        <button onclick="blockUser('${u.id}')">⛔</button>
+        <button onclick="deleteUser('${u.id}')">🗑️</button>
       </td>`;
     t.appendChild(tr);
   });
