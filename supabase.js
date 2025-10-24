@@ -1,164 +1,117 @@
-// ============================================================
-//  Bullfrog Tools – Supabase-Verbindung & User-Management
-// ============================================================
+// ==============================================
+// Bullfrog Tools – ursprüngliche Supabase-Version
+// ==============================================
 
-// 🔧 Supabase SDK importieren
+// Supabase SDK importieren
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ============================================================
-//  1️⃣ Projekt-Konfiguration
-// ============================================================
-// 👉 Trage hier deine Projektdaten aus Supabase ein:
+// Supabase-Projekt konfigurieren
 const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo";
 
-// 🔗 Verbindung einmalig erstellen
+// Verbindung herstellen
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ============================================================
-//  2️⃣ Authentifizierungs-Funktionen
-// ============================================================
+// ====================================================
+// Registrierung
+// ====================================================
+export async function Register(username, password) {
+  try {
+    const email = `${username}@bullfrog.fake`;
 
-/**
- * Registrierung eines neuen Users
- * - Der erste Benutzer wird automatisch Admin
- * - Alle weiteren müssen durch Admin freigeschaltet werden
- */
-export async function registerUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
+    // Nutzer bei Auth registrieren
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    });
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw new Error(error.message);
+    if (error) throw error;
 
-  // Prüfen, ob dies der erste User ist
-  const { data: users } = await supabase.from("users").select("id");
-  const isFirst = !users || users.length === 0;
+    // Prüfen, ob dies der erste Benutzer ist
+    const { data: existingUsers, error: userError } = await supabase
+      .from("users")
+      .select("id");
 
-  // Profil anlegen
-  const { error: insertErr } = await supabase.from("users").insert({
-    id: data.user.id,
-    username,
-    role: isFirst ? "admin" : "member",
-    status: isFirst ? "active" : "pending",
-  });
-  if (insertErr) throw new Error(insertErr.message);
+    if (userError) throw userError;
 
-  return { role: isFirst ? "admin" : "member", id: data.user.id };
+    const isFirst = !existingUsers || existingUsers.length === 0;
+
+    // Nutzer in Tabelle "users" eintragen
+    const { error: insertError } = await supabase.from("users").insert([
+      {
+        id: data.user.id,
+        username: username,
+        role: isFirst ? "admin" : "member",
+        status: isFirst ? "active" : "pending",
+      },
+    ]);
+
+    if (insertError) throw insertError;
+
+    return {
+      success: true,
+      role: isFirst ? "admin" : "member",
+      message: isFirst
+        ? "Admin-Konto erstellt. Willkommen!"
+        : "Registrierung erfolgreich. Bitte auf Freischaltung warten.",
+    };
+  } catch (err) {
+    console.error("Fehler bei Registrierung:", err.message);
+    return { success: false, message: err.message };
+  }
 }
 
-/**
- * Anmeldung eines Users mit Username (nicht E-Mail)
- */
-export async function loginUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error("Anmeldung fehlgeschlagen");
-  return data.user;
+// ====================================================
+// Anmeldung
+// ====================================================
+export async function Login(username, password) {
+  try {
+    const email = `${username}@bullfrog.fake`;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) throw error;
+
+    const { data: userRow, error: userErr } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (userErr) throw userErr;
+
+    if (!userRow) {
+      throw new Error("Benutzerprofil fehlt. Bitte Admin kontaktieren.");
+    }
+
+    if (userRow.status === "pending") {
+      await supabase.auth.signOut();
+      throw new Error("Dein Account ist noch nicht freigeschaltet.");
+    }
+
+    if (userRow.status === "blocked") {
+      await supabase.auth.signOut();
+      throw new Error("Dein Account wurde gesperrt. Bitte Admin kontaktieren.");
+    }
+
+    // Lokale Speicherung
+    localStorage.setItem("username", userRow.username);
+    localStorage.setItem("role", userRow.role);
+
+    return { success: true, role: userRow.role };
+  } catch (err) {
+    console.error("Fehler bei Anmeldung:", err.message);
+    return { success: false, message: err.message };
+  }
 }
 
-/**
- * Logout / Session beenden
- */
-export async function logoutUser() {
-  await supabase.auth.signOut();
-  localStorage.clear();
-}
-
-// ============================================================
-//  3️⃣ User-Datenbank-Funktionen
-// ============================================================
-
-/**
- * Benutzerprofil anhand der Auth-ID abrufen
- */
-export async function getUserProfile(userId) {
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-/**
- * Liste aller Benutzer (nur für Admins)
- */
-export async function listUsers() {
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .order("created_at", { ascending: true });
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-/**
- * Benutzer-Status ändern (pending / active / blocked / denied)
- */
-export async function updateUserStatus(id, status) {
-  const { error } = await supabase.from("users").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * Benutzer-Rolle ändern (admin / member)
- */
-export async function changeUserRole(id, role) {
-  const { error } = await supabase.from("users").update({ role }).eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * Benutzer aus der Datenbank löschen
- */
-export async function deleteUser(id) {
-  const { error } = await supabase.from("users").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-// ============================================================
-//  4️⃣ Zusatzfunktionen (Vorbereitung für spätere Tools)
-// ============================================================
-
-/**
- * CSV-Daten hochladen oder ersetzen
- */
-export async function uploadCSV(rows) {
-  // Beispielhafte Struktur
-  const { error } = await supabase.from("islands").upsert(rows);
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * CSV-Daten abrufen
- */
-export async function getCSV() {
-  const { data, error } = await supabase.from("islands").select("*");
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-/**
- * Diplomatie-Status speichern (z. B. Freund/Feind/Neutral)
- */
-export async function setDiplomacy(alliance, status) {
-  const { error } = await supabase
-    .from("diplomacy")
-    .upsert({ alliance, status }, { onConflict: ["alliance"] });
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * Diplomatie-Liste abrufen
- */
-export async function getDiplomacy() {
-  const { data, error } = await supabase.from("diplomacy").select("*");
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-// ============================================================
-//  Ende der Datei
-// ============================================================
+// ====================================================
+// Abmelden (Logout)
+// ====================================================
+export async function Logout() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (
