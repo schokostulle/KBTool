@@ -194,25 +194,78 @@
       setTimeout(()=>window.location.href="dashboard.html",800);
     };
 
-    // REGISTRIERUNG
-    btnRegister.onclick=async()=>{
-      const name=regName.value.trim(), pass=regPass.value.trim(), pass2=regPassRepeat.value.trim();
-      if(!name||!pass||!pass2) return msg.textContent="Bitte alle Felder ausfüllen.";
-      if(pass!==pass2) return msg.textContent="Passwörter stimmen nicht überein.";
-      if(pass.length<6) return msg.textContent="Mind. 6 Zeichen.";
-      const email=`${name.toLowerCase()}@bullfrog.fake`;
-      const {data,error}=await supabase.auth.signUp({email,password:pass});
-      if(error) return msg.textContent="Fehler: "+error.message;
-      const id=data.user.id;
-      const {data:existing}=await supabase.from("users").select("id");
-      const role=!existing||existing.length===0?"admin":"member";
-      const status=role==="admin"?"active":"pending";
-      const {error:insertErr}=await supabase.from("users").insert([{id,name,role,status,created_at:new Date()}]);
-      if(insertErr) msg.textContent="DB Fehler: "+insertErr.message;
-      else{
-        msg.textContent="Rekrutierung abgeschlossen. Auf Freigabe warten...";
-        setTimeout(()=>{registerBox.style.display="none";loginBox.style.display="block";},1500);
-      }
+   // --- Registrierung ---
+async function register() {
+  const username = document.getElementById("regName").value.trim();
+  const password = document.getElementById("regPass").value;
+  const password2 = document.getElementById("regPass2").value;
+  const msg = document.getElementById("message");
+
+  if (!username || !password || !password2) {
+    msg.textContent = "Bitte alle Felder ausfüllen.";
+    return;
+  }
+  if (password !== password2) {
+    msg.textContent = "Passwörter stimmen nicht überein.";
+    return;
+  }
+
+  const email = `${username}@bullfrog.fake`;
+
+  // Prüfe, ob es schon einen Admin gibt
+  const { data: existing } = await supabase.from("users").select("id");
+  const isFirst = !existing || existing.length === 0;
+
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) {
+    msg.textContent = error.message;
+    return;
+  }
+
+  await supabase.from("users").insert({
+    id: data.user.id,
+    username,
+    role: isFirst ? "admin" : "member",
+    status: isFirst ? "active" : "pending"
+  });
+
+  msg.textContent = isFirst
+    ? "Admin-Konto erstellt! Du kannst dich sofort anmelden."
+    : "Registriert. Warte auf Freischaltung durch den Admin.";
+}
+
+// --- Login ---
+async function login() {
+  const username = document.getElementById("loginName").value.trim();
+  const password = document.getElementById("loginPass").value;
+  const msg = document.getElementById("message");
+  const email = `${username}@bullfrog.fake`;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  if (error) {
+    msg.textContent = "Anmeldung fehlgeschlagen.";
+    return;
+  }
+
+  const { data: userRow } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
+
+  if (!userRow || userRow.status !== "active") {
+    await supabase.auth.signOut();
+    msg.textContent = "Dein Account ist noch nicht freigeschaltet.";
+    return;
+  }
+
+  localStorage.setItem("role", userRow.role);
+  localStorage.setItem("username", userRow.username);
+  window.location.href = "dashboard.html";
+}
     };
   </script>
 </body>
