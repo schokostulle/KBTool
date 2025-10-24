@@ -25,15 +25,14 @@ body {
   overflow: hidden;
 }
 
-/* === Seitenmenü (Desktop/Laptop) === */
+/* === Menü (einspaltig für alle Geräte) === */
 nav {
-  width: 230px;
+  width: 240px;
   background: var(--panel);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   border-right: 1px solid #3b3322;
-  padding: 0;
 }
 
 nav h2 {
@@ -96,7 +95,7 @@ th, td {
 }
 th { color: var(--accent); }
 
-/* === Top-Buttons === */
+/* === Theme & Logout Buttons === */
 #themeToggle, #logoutBtn {
   position: fixed;
   top: 15px;
@@ -127,49 +126,6 @@ body.light {
   --panel: #f2eee4;
   --text: #2a2414;
   --accent: #a1761c;
-}
-
-/* === Mobiles Menü (unten, Kachel-Stil) === */
-@media (max-width: 768px) {
-  body { flex-direction: column; }
-  nav {
-    width: 100%;
-    height: auto;
-    background: var(--panel);
-    border-top: 1px solid #3b3322;
-    border-right: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 99;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    padding: 5px 0;
-  }
-  nav h2, .menuDivider { display: none; }
-  nav button {
-    flex: 0 0 30%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    font-size: 22px;
-    padding: 10px;
-    margin: 5px;
-    border-radius: 10px;
-    background: var(--panel);
-    box-shadow: 0 0 3px #0006;
-  }
-  nav button:hover,
-  nav button.active {
-    background: var(--accent);
-    color: var(--bg);
-  }
-  main {
-    padding-bottom: 130px;
-  }
 }
 </style>
 </head>
@@ -263,7 +219,7 @@ const username = localStorage.getItem("username") || "Unbekannt";
 const role = localStorage.getItem("role") || "member";
 document.getElementById("usernameDisplay").textContent = username;
 
-/* === Theme-Schalter === */
+/* === Theme === */
 const themeBtn = document.getElementById("themeToggle");
 const setTheme = (m) => {
   if (m === "light") {
