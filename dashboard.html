@@ -2,136 +2,274 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Bullfrog Tools – Dashboard</title>
 <style>
   :root {
-    --bg:#19150e;--panel:#231f14;--text:#d8c7a0;--accent:#b9923d;
+    --bg: #19150e;
+    --panel-bg: #231f14;
+    --text: #d8c7a0;
+    --accent: #b9923d;
+    --input-bg: #2e2618;
   }
-  body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:"Trebuchet MS",sans-serif;display:flex;height:100vh;overflow:hidden;
+
+  body.light {
+    --bg: #f6f1e3;
+    --panel-bg: #fff9e8;
+    --text: #3e2f1d;
+    --accent: #c4953f;
+    --input-bg: #f0e7d0;
   }
-  nav{
-    width:230px;background:var(--panel);display:flex;flex-direction:column;
-    justify-content:space-between;border-right:1px solid #3b3322;
+
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
   }
-  nav h2{text-align:center;color:var(--accent);}
-  nav button{
-    background:none;border:none;color:var(--text);
-    padding:12px 14px;text-align:left;cursor:pointer;border-radius:6px;
+
+  /* Seitenmenü (Desktop) */
+  nav {
+    width: 240px;
+    background: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid #3b3322;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.5);
   }
-  nav button:hover,nav button.active{background:var(--accent);color:var(--bg);}
-  main{flex:1;padding:25px;overflow-y:auto;}
-  h1{color:var(--accent);}
-  .event{background:var(--panel);padding:15px;border-radius:8px;margin-bottom:10px;}
-  #themeToggle,#logoutBtn{
-    position:fixed;top:15px;width:42px;height:42px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--panel);border:1px solid var(--accent);color:var(--accent);
-    cursor:pointer;z-index:50;
+
+  .nav-top {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 20px 10px;
   }
-  #themeToggle{right:65px;}#logoutBtn{right:15px;}
-  #logoutBtn:hover,#themeToggle:hover{background:var(--accent);color:var(--bg);}
-  table{width:100%;border-collapse:collapse;margin-top:10px;}
-  th,td{padding:8px;border-bottom:1px solid #3b3322;text-align:left;}
-  th{color:var(--accent);}
-  @media(max-width:768px){nav{display:none;}}
+
+  .nav-bottom {
+    padding: 10px;
+    border-top: 1px solid #3b3322;
+  }
+
+  nav h2 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    border-bottom: 1px solid #3b3322;
+    padding-bottom: 10px;
+  }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1em;
+    padding: 12px 14px;
+    text-align: left;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, transform 0.05s;
+    width: 100%;
+  }
+
+  nav button:hover {
+    background: var(--accent);
+    color: var(--bg);
+    transform: scale(1.02);
+  }
+
+  nav button.active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: bold;
+  }
+
+  /* Theme-Schalter & Logout oben rechts */
+  #themeToggle, #logoutBtn {
+    position: fixed;
+    top: 15px;
+    background: var(--panel-bg);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: all 0.3s;
+    z-index: 50;
+  }
+
+  #themeToggle:hover, #logoutBtn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  #themeToggle { right: 65px; }
+  #logoutBtn { right: 15px; }
+
+  /* Dashboard Inhalt */
+  main {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+  }
+
+  h1 {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .event {
+    background: var(--panel-bg);
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 1px solid #3b3322;
+  }
+
+  /* Unteres Menü (Mobile) */
+  .bottom-nav {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    nav { display: none; }
+
+    #themeToggle { right: 65px; top: 10px; }
+    #logoutBtn { right: 15px; top: 10px; }
+
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--panel-bg);
+      border-top: 1px solid #3b3322;
+      height: 60px;
+    }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+
+    main {
+      padding-bottom: 70px;
+    }
+  }
 </style>
 </head>
 <body>
-  <div id="themeToggle">☀️</div>
-  <div id="logoutBtn">🏕️</div>
 
+  <!-- Theme & Logout Buttons -->
+  <div id="themeToggle" title="Modus wechseln">☀️</div>
+  <div id="logoutBtn" title="Abmelden">🚪</div>
+
+  <!-- Navigation (Desktop) -->
   <nav>
-    <div>
+    <div class="nav-top">
       <h2>Bullfrog Tools</h2>
       <button onclick="showSection('events')" class="active">📜 Ereignisse</button>
-      <button onclick="showSection('members')">🧍 Mitglieder</button>
+      <button onclick="showSection('battles')">⚔️ Kampfberichte</button>
+      <button onclick="showSection('islands')">🏝️ Inseln</button>
+      <button onclick="showSection('map')">🗺️ Karte</button>
+      <button onclick="showSection('attack')">🚢 Angriffsplanung</button>
     </div>
-    <button onclick="logout()">🏕️ Abmelden</button>
+    <div class="nav-bottom">
+      <button onclick="logout()">🚪 Abmelden</button>
+    </div>
   </nav>
 
+  <!-- Inhalt -->
   <main>
     <section id="events">
       <h1>Ereignisse</h1>
-      <div class="event">Willkommen, <span id="usernameDisplay"></span>!</div>
+      <div class="event">📢 Willkommen bei Bullfrog Tools! <br>Bleibe informiert über laufende Angriffe, neue Inselberichte und Diplomatieänderungen.</div>
+      <div class="event">🕒 Beispiel-Ereignis: Angriff auf Insel 1:201:16 – 20.10.2025 07:01 Uhr.</div>
     </section>
 
-    <section id="members" style="display:none;">
-      <h1>Mitgliederverwaltung</h1>
-      <table id="memberTable"></table>
+    <section id="battles" style="display:none;">
+      <h1>Kampfberichte</h1>
+      <div class="event">Hier können Mitglieder Kampfberichte eintragen (noch in Arbeit).</div>
+    </section>
+
+    <section id="islands" style="display:none;">
+      <h1>Inselübersicht</h1>
+      <div class="event">Tabellarische Inselübersicht wird hier erscheinen.</div>
+    </section>
+
+    <section id="map" style="display:none;">
+      <h1>Inselkarte</h1>
+      <div class="event">Karte folgt in späterem Schritt.</div>
+    </section>
+
+    <section id="attack" style="display:none;">
+      <h1>Angriffs- / Verteidigungsplan</h1>
+      <div class="event">Angriffsplanung und Zeitberechnung werden hier integriert.</div>
     </section>
   </main>
+
+  <!-- Unteres Menü (Mobile) -->
+  <div class="bottom-nav">
+    <button onclick="showSection('events')">📜</button>
+    <button onclick="showSection('battles')">⚔️</button>
+    <button onclick="showSection('islands')">🏝️</button>
+    <button onclick="showSection('map')">🗺️</button>
+    <button onclick="showSection('attack')">🚢</button>
+  </div>
 
   <script type="module">
     import { supabase } from "./supabase.js";
 
-    // Session prüfen
-    const { data:{ user } } = await supabase.auth.getUser();
-    if(!user) window.location.href="index.html";
-
-    const username=localStorage.getItem("username")||"";
-    const role=localStorage.getItem("role")||"member";
-    document.getElementById("usernameDisplay").textContent=username;
-
-    // Theme Schalter
+    // === THEME HANDLING ===
     const themeBtn=document.getElementById("themeToggle");
-    const setTheme=(m)=>{
-      if(m==="light"){document.body.classList.add("light");themeBtn.textContent="🌙";}
-      else{document.body.classList.remove("light");themeBtn.textContent="☀️";}
-      localStorage.setItem("theme",m);
+    const setTheme=(mode)=>{
+      if(mode==="light"){
+        document.body.classList.add("light");
+        themeBtn.textContent="🌙";
+      }else{
+        document.body.classList.remove("light");
+        themeBtn.textContent="☀️";
+      }
+      localStorage.setItem("theme",mode);
     };
-    const saved=localStorage.getItem("theme")||"dark";
-    setTheme(saved);
+    const savedTheme=localStorage.getItem("theme")||"dark";
+    setTheme(savedTheme);
     themeBtn.onclick=()=>setTheme(document.body.classList.contains("light")?"dark":"light");
 
-    // Logout
-    window.logout=async()=>{
-      await supabase.auth.signOut();
-      localStorage.clear();
-      window.location.href="index.html";
-    };
-    document.getElementById("logoutBtn").onclick=logout;
-
-    // Navigation
+    // === SECTION WECHSEL ===
     window.showSection=(id)=>{
-      document.querySelectorAll("main section").forEach(s=>s.style.display="none");
+      document.querySelectorAll("main section").forEach(sec=>sec.style.display="none");
       document.getElementById(id).style.display="block";
-      document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll("nav button").forEach(btn=>btn.classList.remove("active"));
       const activeBtn=[...document.querySelectorAll("nav button")].find(b=>b.getAttribute("onclick").includes(id));
       if(activeBtn) activeBtn.classList.add("active");
     };
 
-    // Nur Admins sehen Mitgliederverwaltung
-    if(role!=="admin"){
-      document.querySelector('button[onclick*="members"]').style.display="none";
-    } else {
-      loadMembers();
-    }
-
-    async function loadMembers(){
-      const {data:users}=await supabase.from("users").select("*");
-      const t=document.getElementById("memberTable");
-      t.innerHTML="<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
-      users.forEach(u=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td>${u.username}</td>
-          <td>${u.role}</td>
-          <td>${u.status}</td>
-          <td>
-            ${u.status==="pending" ? `<button onclick="activate('${u.id}')">✅ Freischalten</button>` : ""}
-            <button onclick="blockUser('${u.id}')">⛔ Sperren</button>
-            <button onclick="deleteUser('${u.id}')">🗑️ Löschen</button>
-          </td>`;
-        t.appendChild(tr);
-      });
-    }
-
-    window.activate=async(id)=>{await supabase.from("users").update({status:"active"}).eq("id",id);loadMembers();};
-    window.blockUser=async(id)=>{await supabase.from("users").update({status:"blocked"}).eq("id",id);loadMembers();};
-    window.deleteUser=async(id)=>{await supabase.from("users").delete().eq("id",id);loadMembers();};
+    // === LOGOUT ===
+    const logoutBtn=document.getElementById("logoutBtn");
+    window.logout=async()=>{
+      await supabase.auth.signOut();
+      localStorage.removeItem("session");
+      window.location.href="index.html";
+    };
+    logoutBtn.onclick=logout;
   </script>
 </body>
 </html>
