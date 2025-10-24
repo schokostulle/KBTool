@@ -25,25 +25,71 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
  * - Alle weiteren müssen durch Admin freigeschaltet werden
  */
 export async function registerUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
+  try {
+    // Prüfen ob Name vergeben ist
+    const { data: existing, error: checkErr } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", username)
+      .maybeSingle();
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw new Error(error.message);
+    if (checkErr) throw checkErr;
+    if (existing) {
+      return { success: false, message: "Dieser Benutzername ist bereits vergeben." };
+    }
 
-  // Prüfen, ob dies der erste User ist
-  const { data: users } = await supabase.from("users").select("id");
-  const isFirst = !users || users.length === 0;
+    // Prüfen ob es schon Admins gibt
+    const { count, error: countErr } = await supabase
+      .from("users")
+      .select("id", { count: "exact", head: true });
 
-  // Profil anlegen
-  const { error: insertErr } = await supabase.from("users").insert({
-    id: data.user.id,
-    username,
-    role: isFirst ? "admin" : "member",
-    status: isFirst ? "active" : "pending",
-  });
-  if (insertErr) throw new Error(insertErr.message);
+    if (countErr) throw countErr;
+    const isFirstUser = count === 0;
 
-  return { role: isFirst ? "admin" : "member", id: data.user.id };
+    // Fake-Mail generieren (da Auth Mail braucht)
+    const email = `${username}@bullfrog.fake`;
+
+    // Supabase Auth erstellen
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) throw authError;
+
+    // Eintrag in Tabelle "users"
+    const role = isFirstUser ? "admin" : "member";
+    const status = isFirstUser ? "active" : "pending";
+
+    const { error: insertErr } = await supabase.from("users").insert([
+      {
+        id: authData.user.id,
+        username,
+        role,
+        status,
+      },
+    ]);
+
+    if (insertErr) throw insertErr;
+
+    // Rückmeldung
+    if (isFirstUser) {
+      return {
+        success: true,
+        message:
+          "Registrierung erfolgreich. Du bist der erste Benutzer und wurdest als Admin angelegt.",
+      };
+    } else {
+      return {
+        success: true,
+        message:
+          "Registrierung erfolgreich. Ein Admin muss dich noch freischalten, bevor du dich einloggen kannst.",
+      };
+    }
+  } catch (err) {
+    console.error("Registrierungsfehler:", err.message);
+    return { success: false, message: "Fehler bei der Registrierung: " + err.message };
+  }
 }
 
 /**
