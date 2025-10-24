@@ -3,59 +3,195 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Tools – Anmeldung</title>
+  <title>Bullfrog Tools – Login</title>
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
       background-color: #121212;
       color: #e0e0e0;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      gap: 20px;
     }
+
+    .container {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 0 10px #000;
+    }
+
+    h1 {
+      text-align: center;
+      color: #00aaff;
+      margin-bottom: 20px;
+    }
+
     input {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-      border: 1px solid #555;
-      background-color: #222;
-      color: #fff;
-    }
-    button {
-      padding: 8px 15px;
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
       border: none;
       border-radius: 5px;
-      background-color: #007bff;
+      background: #2a2a2a;
+      color: #fff;
+    }
+
+    input:focus {
+      outline: 2px solid #00aaff;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
       color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
+      font-size: 1em;
+      margin-top: 10px;
     }
+
     button:hover {
-      background-color: #0056b3;
+      background: #0099ff;
     }
-    h2 { margin-bottom: 5px; }
+
+    .switch {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .switch a {
+      color: #00aaff;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
-  <div>
-    <h2>Registrierung</h2>
-    <input id="regUser" placeholder="Ingame-Name" />
-    <input id="regPass" type="password" placeholder="Passwort" />
-    <button id="btnRegister">Registrieren</button>
+  <div class="container">
+    <h1>Bullfrog Tools</h1>
+
+    <!-- Login -->
+    <div id="loginForm">
+      <input type="text" id="loginName" placeholder="Name eingeben" />
+      <input type="password" id="loginPassword" placeholder="Passwort" />
+      <button id="btnLogin">Anmelden</button>
+      <div class="switch">
+        Noch kein Account? <a id="toRegister">Registrieren</a>
+      </div>
+    </div>
+
+    <!-- Registrierung -->
+    <div id="registerForm" style="display:none;">
+      <input type="text" id="regName" placeholder="Name wählen" />
+      <input type="password" id="regPassword" placeholder="Passwort festlegen" />
+      <button id="btnRegister">Registrieren</button>
+      <div class="switch">
+        Bereits registriert? <a id="toLogin">Anmelden</a>
+      </div>
+    </div>
+
+    <div class="message" id="message"></div>
   </div>
 
-  <div>
-    <h2>Login</h2>
-    <input id="logUser" placeholder="Ingame-Name" />
-    <input id="logPass" type="password" placeholder="Passwort" />
-    <button id="btnLogin">Login</button>
-  </div>
+  <!-- Script -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
 
-  <button id="btnLogout">Logout</button>
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const msg = document.getElementById("message");
 
-  <!-- Verknüpfung zum Supabase-Frontend-Code -->
-  <script type="module" src="./supabase.js"></script>
+    // Umschalten zwischen Login / Registrierung
+    document.getElementById("toRegister").addEventListener("click", () => {
+      loginForm.style.display = "none";
+      registerForm.style.display = "block";
+      msg.textContent = "";
+    });
+
+    document.getElementById("toLogin").addEventListener("click", () => {
+      registerForm.style.display = "none";
+      loginForm.style.display = "block";
+      msg.textContent = "";
+    });
+
+    // LOGIN ----------------------------------------------------
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const name = document.getElementById("loginName").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!name || !password) {
+        msg.textContent = "Bitte Name und Passwort eingeben.";
+        return;
+      }
+
+      const email = `${name.toLowerCase()}@bullfrog.fake`;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        msg.textContent = "Login fehlgeschlagen: " + error.message;
+      } else {
+        msg.textContent = "Login erfolgreich. Weiterleitung...";
+        setTimeout(() => (window.location.href = "dashboard.html"), 1000);
+      }
+    });
+
+    // REGISTRIERUNG --------------------------------------------
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const name = document.getElementById("regName").value.trim();
+      const password = document.getElementById("regPassword").value.trim();
+
+      if (!name || !password) {
+        msg.textContent = "Bitte Name und Passwort eingeben.";
+        return;
+      }
+
+      const email = `${name.toLowerCase()}@bullfrog.fake`;
+
+      // Benutzer anlegen (Supabase Auth)
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { user_role: "member", user_status: "pending" },
+        },
+      });
+
+      if (error) {
+        msg.textContent = "Registrierung fehlgeschlagen: " + error.message;
+        return;
+      }
+
+      // In public.users Tabelle eintragen
+      const { error: insertErr } = await supabase.from("users").insert({
+        id: data.user.id,
+        name,
+        role: "member",
+        status: "pending",
+        created_at: new Date(),
+      });
+
+      if (insertErr) {
+        msg.textContent = "Fehler beim Speichern: " + insertErr.message;
+      } else {
+        msg.textContent = "Registrierung erfolgreich! Bitte auf Freischaltung warten.";
+        setTimeout(() => {
+          registerForm.style.display = "none";
+          loginForm.style.display = "block";
+        }, 1500);
+      }
+    });
+  </script>
 </body>
 </html>
