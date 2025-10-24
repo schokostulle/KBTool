@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bullfrog Tools – Dashboard</title>
 
 <style>
@@ -25,20 +25,20 @@ body {
   overflow: hidden;
 }
 
-/* === Menü (einspaltig für alle Geräte) === */
+/* === Menü (links, Spalte für alle Geräte) === */
 nav {
   width: 240px;
   background: var(--panel);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   border-right: 1px solid #3b3322;
+  padding-top: 20px;
 }
 
 nav h2 {
   text-align: center;
   color: var(--accent);
-  margin: 20px 0 15px;
+  margin: 0 0 20px 0;
   font-size: 20px;
   border-bottom: 1px solid #3b3322;
   padding-bottom: 10px;
@@ -62,12 +62,6 @@ nav button.active {
   color: var(--bg);
 }
 
-.menuDivider {
-  margin: 10px 0;
-  border: none;
-  border-top: 1px solid #3b3322;
-}
-
 /* === Hauptbereich === */
 main {
   flex: 1;
@@ -82,7 +76,7 @@ h1 { color: var(--accent); }
   margin-bottom: 10px;
 }
 
-/* === Tabellenplatzhalter === */
+/* === Tabellen === */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -131,31 +125,27 @@ body.light {
 </head>
 
 <body>
-<!-- === Schalter === -->
+<!-- === Buttons === -->
 <div id="themeToggle">☀️</div>
 <div id="logoutBtn" title="Zurück ins Lager">🏕️</div>
 
-<!-- === Navigationsmenü === -->
+<!-- === Menü === -->
 <nav>
-  <div class="menuTop">
-    <h2>Bullfrog Tools</h2>
-    <button onclick="showSection('events')" class="active">🪶 Briefing</button>
-    <button onclick="showSection('warreports')">⚔️ Berichte</button>
-    <button onclick="showSection('fleet')">🚢 Flotten</button>
-    <button onclick="showSection('reserve')">📍 Reservierung</button>
-    <button onclick="showSection('battle')">🎯 Taktik</button>
-    <button onclick="showSection('map')">🗺️ Karte</button>
-    <button onclick="showSection('kbreports')">📖 Archiv</button>
-
-    <hr class="menuDivider">
-
-    <button onclick="showSection('members')" class="adminOnly">🧍 Mitglieder</button>
-    <button onclick="showSection('diplomacy')" class="adminOnly">🤝 Diplomatie</button>
-    <button onclick="showSection('csv')" class="adminOnly">📂 CSV</button>
-  </div>
+  <h2>Bullfrog Tools</h2>
+  <button onclick="showSection('events')" class="active">🪶 Briefing</button>
+  <button onclick="showSection('warreports')">⚔️ Kriegsberichte</button>
+  <button onclick="showSection('fleet')">🚢 Flotten</button>
+  <button onclick="showSection('reserve')">📍 Reservierung</button>
+  <button onclick="showSection('battle')">🎯 Taktik</button>
+  <button onclick="showSection('map')">🗺️ Karte</button>
+  <button onclick="showSection('kbreports')">📖 Archiv</button>
+  <hr />
+  <button class="adminOnly" onclick="showSection('members')">🧍 Mitglieder</button>
+  <button class="adminOnly" onclick="showSection('diplomacy')">🤝 Diplomatie</button>
+  <button class="adminOnly" onclick="showSection('csv')">📂 CSV</button>
 </nav>
 
-<!-- === Hauptinhalt === -->
+<!-- === Inhalt === -->
 <main>
   <section id="events">
     <h1>🪶 Briefing</h1>
@@ -164,54 +154,54 @@ body.light {
 
   <section id="warreports" style="display:none;">
     <h1>⚔️ Kriegsberichte</h1>
-    <p>Hier werden Kampfberichte eingetragen oder ausgewertet.</p>
+    <p>Hier werden Kampfberichte eingetragen oder analysiert.</p>
   </section>
 
   <section id="fleet" style="display:none;">
-    <h1>🚢 Flottenstärke</h1>
+    <h1>🚢 Flotten</h1>
     <p>Analyse der militärischen Stärke deiner Allianz.</p>
   </section>
 
   <section id="reserve" style="display:none;">
-    <h1>📍 Inselreservierung</h1>
-    <p>Reserviere Inseln zur Koordination deiner Angriffe.</p>
+    <h1>📍 Reservierung</h1>
+    <p>Koordination und Verwaltung reservierter Inseln.</p>
   </section>
 
   <section id="battle" style="display:none;">
     <h1>🎯 Angriff & Verteidigung</h1>
-    <p>Berechnung von Reisezeiten, Entfernungen und Taktiken.</p>
+    <p>Berechnung von Ankunftszeiten und Rückkehrwegen.</p>
   </section>
 
   <section id="map" style="display:none;">
     <h1>🗺️ Karte</h1>
-    <p>Strategische Inselkarte deiner Welt.</p>
+    <p>Strategische Weltkarte deiner Umgebung.</p>
   </section>
 
   <section id="kbreports" style="display:none;">
-    <h1>📖 KB-Archiv</h1>
-    <p>Speicherung und Analyse vergangener Schlachten.</p>
+    <h1>📖 Archiv</h1>
+    <p>Analyse und Archivierung vergangener Schlachten.</p>
   </section>
 
   <section id="members" style="display:none;">
-    <h1>🧍 Mitgliederliste</h1>
+    <h1>🧍 Mitglieder</h1>
     <table id="memberTable"></table>
   </section>
 
   <section id="diplomacy" style="display:none;">
     <h1>🤝 Diplomatie</h1>
-    <p>Freunde und Feinde verwalten.</p>
+    <p>Verwaltung befreundeter und feindlicher Allianzen.</p>
   </section>
 
   <section id="csv" style="display:none;">
     <h1>📂 CSV Datenbasis</h1>
-    <p>Import und Verwaltung der Spielbasisdaten (nur Admins).</p>
+    <p>Import und Verwaltung der Spielbasisdaten.</p>
   </section>
 </main>
 
 <script type="module">
 import { supabase } from "./supabase.js";
 
-/* === Auth === */
+/* === Benutzerprüfung === */
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) window.location.href = "index.html";
 
@@ -221,15 +211,15 @@ document.getElementById("usernameDisplay").textContent = username;
 
 /* === Theme === */
 const themeBtn = document.getElementById("themeToggle");
-const setTheme = (m) => {
-  if (m === "light") {
+const setTheme = (mode) => {
+  if (mode === "light") {
     document.body.classList.add("light");
     themeBtn.textContent = "🌙";
   } else {
     document.body.classList.remove("light");
     themeBtn.textContent = "☀️";
   }
-  localStorage.setItem("theme", m);
+  localStorage.setItem("theme", mode);
 };
 setTheme(localStorage.getItem("theme") || "dark");
 themeBtn.onclick = () => setTheme(document.body.classList.contains("light") ? "dark" : "light");
