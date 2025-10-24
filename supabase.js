@@ -90,7 +90,7 @@ export async function login(username, password) {
 
     alert(`Willkommen zurück, ${username}!`);
     // Beispiel: Weiterleitung zum Dashboard
-    // window.location.href = "dashboard.html";
+    window.location.href = "dashboard.html";
   } catch (err) {
     console.error(err);
     alert("Login fehlgeschlagen: " + err.message);
