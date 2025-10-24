@@ -50,10 +50,47 @@ export async function registerUser(username, password) {
  * Anmeldung eines Users mit Username (nicht E-Mail)
  */
 export async function loginUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error("Anmeldung fehlgeschlagen");
-  return data.user;
+  try {
+    // E-Mail erzeugen, falls du Fake-Mail nutzt
+    const email = `${username}@bullfrog.fake`;
+
+    // Anmeldung bei Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) throw error;
+
+    // Benutzerprofil laden
+    const { data: profile, error: profileErr } = await supabase
+      .from("users")
+      .select("*")
+      .eq("username", username)
+      .single();
+
+    if (profileErr) throw profileErr;
+    if (!profile) throw new Error("Benutzerprofil nicht gefunden");
+
+    // Status prüfen
+    if (profile.status !== "active") {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        message:
+          profile.status === "pending"
+            ? "Dein Account wurde erstellt, ist aber noch nicht freigeschaltet. Bitte warte auf die Freigabe durch einen Admin."
+            : "Dein Account ist derzeit gesperrt."
+      };
+    }
+
+    // Erfolg → lokale Daten speichern
+    localStorage.setItem("username", profile.username);
+    localStorage.setItem("role", profile.role);
+    return { success: true, message: `Willkommen ${profile.username}!` };
+  } catch (err) {
+    console.error("Login-Fehler:", err.message);
+    return { success: false, message: "Login fehlgeschlagen: " + err.message };
+  }
 }
 
 /**
