@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bullfrog Tools – Dashboard</title>
 <style>
-:root{
-  --bg:#19150e;--panel:#231f14;--text:#d8c7a0;--accent:#b9923d;
+:root {
+  --bg: #19150e;
+  --panel: #231f14;
+  --text: #d8c7a0;
+  --accent: #b9923d;
 }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:"Trebuchet MS",sans-serif;
-  display:flex;
-  flex-direction:row;
-  height:100vh;
-  overflow:hidden;
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Trebuchet MS", sans-serif;
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Seitenmenü (Desktop) */
@@ -28,6 +31,7 @@ nav {
   align-items: stretch;
   border-right: 1px solid #3b3322;
   padding: 0;
+  position: relative;
 }
 
 nav h2 {
@@ -70,92 +74,122 @@ main {
   padding: 25px;
   overflow-y: auto;
 }
+h1 {
+  color: var(--accent);
+}
+.event {
+  background: var(--panel);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
 
 /* Tabellen */
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
-th,td{
-  padding:8px;
-  border-bottom:1px solid #3b3322;
-  text-align:left;
+th,
+td {
+  padding: 8px;
+  border-bottom: 1px solid #3b3322;
+  text-align: left;
 }
-th{color:var(--accent);}
+th {
+  color: var(--accent);
+}
 
 /* Buttons für Aktionen */
-.action-btn{
-  background:none;
-  border:1px solid var(--accent);
-  color:var(--accent);
-  border-radius:4px;
-  padding:2px 6px;
-  cursor:pointer;
+.action-btn {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
 }
-.action-btn:hover{
-  background:var(--accent);
-  color:var(--bg);
+.action-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
 }
 
 /* Top-Icons */
-#themeToggle,#logoutBtn{
-  position:fixed;
-  top:15px;
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:var(--panel);
-  border:1px solid var(--accent);
-  color:var(--accent);
-  font-size:20px;
-  cursor:pointer;
-  z-index:999;
-  box-shadow:0 0 5px #0006;
+#themeToggle,
+#logoutBtn {
+  position: fixed;
+  top: 15px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 999;
+  box-shadow: 0 0 5px #0006;
 }
-#themeToggle:hover,#logoutBtn:hover{
-  background:var(--accent);
-  color:var(--bg);
+#themeToggle:hover,
+#logoutBtn:hover {
+  background: var(--accent);
+  color: var(--bg);
 }
-#themeToggle{right:65px;}
-#logoutBtn{right:15px;}
+#themeToggle {
+  right: 65px;
+}
+#logoutBtn {
+  right: 15px;
+}
 
 /* Lightmode */
-body.light{
-  --bg:#e4dfcf;--panel:#f2eee4;--text:#2a2414;--accent:#a1761c;
+body.light {
+  --bg: #e4dfcf;
+  --panel: #f2eee4;
+  --text: #2a2414;
+  --accent: #a1761c;
 }
 
 /* Mobiles Bottom-Menü */
-@media(max-width:768px){
-  nav{
-    flex-direction:row !important;
-    justify-content:space-around;
-    align-items:center;
-    width:100%;
-    height:60px;
-    position:fixed;
-    bottom:0;
-    left:0;
-    border-top:1px solid #3b3322;
-    border-right:none;
-    z-index:99;
+@media (max-width: 768px) {
+  nav {
+    flex-direction: row !important; /* 🔧 erzwingt horizontale Anordnung */
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    border-top: 1px solid #3b3322;
+    border-right: none;
+    z-index: 99;
   }
-  nav h2{display:none;}
-  nav button{
-    text-align:center;
-    flex:1;
-    padding:8px 0;
-    font-size:14px;
+  nav h2 {
+    display: none;
   }
-  main{padding-bottom:70px;}
+  nav button {
+    text-align: center;
+    flex: 1;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: none;
+    border-right: 1px solid #3b3322;
+  }
+  nav button:last-child {
+    border-right: none;
+  }
+  main {
+    padding-bottom: 70px;
+  }
 }
 </style>
 </head>
-<body>
 
+<body>
 <!-- Schalter -->
 <div id="themeToggle">☀️</div>
 <div id="logoutBtn" title="Zurück ins Lager">🏕️</div>
@@ -186,61 +220,78 @@ body.light{
 import { supabase } from "./supabase.js";
 
 /* === Sessionprüfung === */
-const { data:{ user } } = await supabase.auth.getUser();
-if(!user) window.location.href="index.html";
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) window.location.href = "index.html";
 
-const username = localStorage.getItem("username")||"";
-const role = localStorage.getItem("role")||"member";
+const username = localStorage.getItem("username") || "";
+const role = localStorage.getItem("role") || "member";
 document.getElementById("usernameDisplay").textContent = username;
 
 /* === Theme === */
-const themeBtn=document.getElementById("themeToggle");
-const setTheme=m=>{
-  if(m==="light"){document.body.classList.add("light");themeBtn.textContent="🌙";}
-  else{document.body.classList.remove("light");themeBtn.textContent="☀️";}
-  localStorage.setItem("theme",m);
+const themeBtn = document.getElementById("themeToggle");
+const setTheme = (m) => {
+  if (m === "light") {
+    document.body.classList.add("light");
+    themeBtn.textContent = "🌙";
+  } else {
+    document.body.classList.remove("light");
+    themeBtn.textContent = "☀️";
+  }
+  localStorage.setItem("theme", m);
 };
-setTheme(localStorage.getItem("theme")||"dark");
-themeBtn.onclick=()=>setTheme(document.body.classList.contains("light")?"dark":"light");
+setTheme(localStorage.getItem("theme") || "dark");
+themeBtn.onclick = () =>
+  setTheme(document.body.classList.contains("light") ? "dark" : "light");
 
 /* === Logout === */
-window.logout=async()=>{
+window.logout = async () => {
   await supabase.auth.signOut();
   localStorage.clear();
-  window.location.href="index.html";
+  window.location.href = "index.html";
 };
-document.getElementById("logoutBtn").onclick=logout;
+document.getElementById("logoutBtn").onclick = logout;
 
 /* === Navigation === */
-window.showSection=id=>{
-  document.querySelectorAll("main section").forEach(s=>s.style.display="none");
-  document.getElementById(id).style.display="block";
-  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-  const activeBtn=[...document.querySelectorAll("nav button")].find(b=>(b.getAttribute("onclick")||"").includes(id));
-  if(activeBtn) activeBtn.classList.add("active");
+window.showSection = (id) => {
+  document.querySelectorAll("main section").forEach((s) => (s.style.display = "none"));
+  document.getElementById(id).style.display = "block";
+  document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+  const activeBtn = [...document.querySelectorAll("nav button")].find((b) =>
+    (b.getAttribute("onclick") || "").includes(id)
+  );
+  if (activeBtn) activeBtn.classList.add("active");
 };
 
 /* === Adminsicht === */
-if(role!=="admin"){
-  document.querySelectorAll(".adminOnly").forEach(b=>b.style.display="none");
-}else{
+if (role !== "admin") {
+  document.querySelectorAll(".adminOnly").forEach((b) => (b.style.display = "none"));
+} else {
   loadMembers();
 }
 
 /* === Mitgliederverwaltung === */
-async function loadMembers(){
-  const {data:users,error}=await supabase.from("users").select("*").order("created_at",{ascending:true});
-  const t=document.getElementById("memberTable");
-  if(error){t.innerHTML="<tr><td>Fehler: "+error.message+"</td></tr>";return;}
-  t.innerHTML="<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
-  users.forEach(u=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
+async function loadMembers() {
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  const t = document.getElementById("memberTable");
+  if (error) {
+    t.innerHTML = "<tr><td>Fehler: " + error.message + "</td></tr>";
+    return;
+  }
+  t.innerHTML = "<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
+  users.forEach((u) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
       <td>${u.username}</td>
       <td>${u.role}</td>
       <td>${u.status}</td>
       <td>
-        ${u.status==="pending"?`<button class='action-btn' onclick="activate('${u.id}')">✅</button>`:""}
+        ${u.status === "pending"
+          ? `<button class='action-btn' onclick="activate('${u.id}')">✅</button>`
+          : ""}
         <button class='action-btn' onclick="blockUser('${u.id}')">⛔</button>
         <button class='action-btn' onclick="deleteUser('${u.id}')">🗑️</button>
       </td>`;
@@ -248,9 +299,18 @@ async function loadMembers(){
   });
 }
 
-window.activate=async id=>{await supabase.from("users").update({status:"active"}).eq("id",id);loadMembers();};
-window.blockUser=async id=>{await supabase.from("users").update({status:"blocked"}).eq("id",id);loadMembers();};
-window.deleteUser=async id=>{await supabase.from("users").delete().eq("id",id);loadMembers();};
+window.activate = async (id) => {
+  await supabase.from("users").update({ status: "active" }).eq("id", id);
+  loadMembers();
+};
+window.blockUser = async (id) => {
+  await supabase.from("users").update({ status: "blocked" }).eq("id", id);
+  loadMembers();
+};
+window.deleteUser = async (id) => {
+  await supabase.from("users").delete().eq("id", id);
+  loadMembers();
+};
 </script>
 </body>
 </html>
