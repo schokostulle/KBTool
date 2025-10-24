@@ -20,45 +20,55 @@ body{
 }
 
 /* Seitenmenü (Desktop) */
-nav{
-  width:230px;
-  background:var(--panel);
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  border-right:1px solid #3b3322;
-  padding:10px 0;
+nav {
+  width: 230px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-right: 1px solid #3b3322;
+  padding: 0;
 }
-nav h2{
-  text-align:center;
-  color:var(--accent);
-  margin:10px 0;
+
+nav h2 {
+  text-align: center;
+  color: var(--accent);
+  margin: 20px 0 15px 0;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #3b3322;
+  padding-bottom: 10px;
 }
-nav button{
-  background:none;
-  border:none;
-  color:var(--text);
-  padding:12px 14px;
-  text-align:left;
-  cursor:pointer;
-  border-radius:6px;
-  font-size:15px;
+
+nav button {
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 14px 18px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+  font-size: 15px;
+  transition: background 0.2s ease, color 0.2s ease;
+  border-bottom: 1px solid #3b3322;
 }
-nav button:hover,nav button.active{
-  background:var(--accent);
-  color:var(--bg);
+
+nav button:hover,
+nav button.active {
+  background: var(--accent);
+  color: var(--bg);
 }
-main{
-  flex:1;
-  padding:25px;
-  overflow-y:auto;
+
+nav .menuTop {
+  display: flex;
+  flex-direction: column;
 }
-h1{color:var(--accent);}
-.event{
-  background:var(--panel);
-  padding:15px;
-  border-radius:8px;
-  margin-bottom:10px;
+
+/* Hauptbereich */
+main {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
 }
 
 /* Tabellen */
