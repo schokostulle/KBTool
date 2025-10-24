@@ -1,100 +1,70 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Bullfrog Tools – Anmeldung</title>
-  <link rel="stylesheet" href="theme.css">
-  <style>
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .card {
-      width: 340px;
-      background: var(--bg-card);
-      padding: 30px 25px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    h2 {
-      color: var(--accent-gold);
-      margin-bottom: 20px;
-    }
-    input {
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    button {
-      margin-top: 15px;
-      width: 100%;
-    }
-    small {
-      display: block;
-      margin-top: 12px;
-      color: var(--accent-gold);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    small:hover {
-      color: var(--accent-gold-hover);
-    }
-    #themeToggle {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 26px;
-      background: none;
-      border: none;
-      color: var(--accent-gold);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    #themeToggle:hover {
-      color: var(--accent-gold-hover);
-    }
-  </style>
+  <link rel="stylesheet" href="theme.css" />
 </head>
+
 <body>
-  <!-- 🌞 / 🌙 Theme-Schalter -->
-  <button id="themeToggle" title="Theme umschalten">🌙</button>
+  <header>
+    <h1>Bullfrog Tools</h1>
+    <button id="themeToggle" title="Theme umschalten">🌙</button>
+  </header>
 
-  <!-- Login -->
-  <div class="card" id="login">
-    <h2>Bullfrog Tools</h2>
-    <input id="loginUser" placeholder="Ingame-Name" autocomplete="username">
-    <input id="loginPass" type="password" placeholder="Passwort" autocomplete="current-password">
-    <button id="btnLogin">Anmelden</button>
-    <small onclick="toggle('register')">Noch kein Account? Jetzt registrieren</small>
-  </div>
+  <main id="authContainer">
+    <!-- Login-Formular -->
+    <form id="loginForm">
+      <h2>Anmeldung</h2>
+      <label>Benutzername</label>
+      <input type="text" id="loginUsername" required />
 
-  <!-- Registrierung -->
-  <div class="card" id="register" style="display:none">
-    <h2>Registrieren</h2>
-    <input id="regUser" placeholder="Ingame-Name">
-    <input id="regPass" type="password" placeholder="Passwort">
-    <input id="regPass2" type="password" placeholder="Passwort wiederholen">
-    <button id="btnRegister">Registrieren</button>
-    <small onclick="toggle('login')">Zurück zur Anmeldung</small>
-  </div>
+      <label>Passwort</label>
+      <input type="password" id="loginPassword" required />
 
-  <!-- InfoBox -->
-  <div id="infoBox"></div>
+      <button type="submit">Einloggen</button>
+
+      <p>Noch kein Konto?
+        <a href="#" id="toRegister">Jetzt registrieren</a>
+      </p>
+    </form>
+
+    <!-- Registrierungsformular -->
+    <form id="registerForm" hidden>
+      <h2>Registrierung</h2>
+      <label>Benutzername</label>
+      <input type="text" id="regUsername" required />
+
+      <label>Passwort</label>
+      <input type="password" id="regPassword" required />
+
+      <label>Passwort wiederholen</label>
+      <input type="password" id="regPasswordRepeat" required />
+
+      <button type="submit">Registrieren</button>
+
+      <p>Schon ein Konto?
+        <a href="#" id="toLogin">Hier einloggen</a>
+      </p>
+    </form>
+
+    <!-- Status- oder Hinweisbereich -->
+    <div id="messageBox"></div>
+  </main>
 
   <script type="module">
-    import { supabase } from "./supabase.js";
+    import { registerUser, loginUser } from "./supabase.js";
 
-    /* === Theme-Toggle === */
-    const body = document.body;
     const themeBtn = document.getElementById("themeToggle");
+    const body = document.body;
     const savedTheme = localStorage.getItem("theme");
+
     if (savedTheme === "dark") {
       body.classList.add("dark");
       themeBtn.textContent = "🌞";
     }
+
     themeBtn.onclick = () => {
       body.classList.toggle("dark");
       const isDark = body.classList.contains("dark");
@@ -102,77 +72,67 @@
       themeBtn.textContent = isDark ? "🌞" : "🌙";
     };
 
-    /* === InfoBox === */
-    function showInfo(text, color="#b9923d") {
-      const box = document.getElementById("infoBox");
-      box.style.background = color;
-      box.textContent = text;
-      box.classList.add("show");
-      setTimeout(() => box.classList.remove("show"), 7000);
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const messageBox = document.getElementById("messageBox");
+
+    document.getElementById("toRegister").onclick = (e) => {
+      e.preventDefault();
+      loginForm.hidden = true;
+      registerForm.hidden = false;
+    };
+    document.getElementById("toLogin").onclick = (e) => {
+      e.preventDefault();
+      registerForm.hidden = true;
+      loginForm.hidden = false;
+    };
+
+    // Registrierung
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = regUsername.value.trim();
+      const pw = regPassword.value;
+      const pw2 = regPasswordRepeat.value;
+
+      if (pw !== pw2) {
+        showMessage("Passwörter stimmen nicht überein", "error");
+        return;
+      }
+
+      try {
+        const result = await registerUser(username, pw);
+        showMessage(result.message, "info");
+      } catch (err) {
+        showMessage("Fehler bei der Registrierung: " + err.message, "error");
+      }
+    });
+
+    // Anmeldung
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = loginUsername.value.trim();
+      const pw = loginPassword.value;
+
+      try {
+        const result = await loginUser(username, pw);
+        showMessage(result.message, "info");
+
+        // Wenn Login erfolgreich und Benutzer freigeschaltet:
+        if (result.success) {
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 1500);
+        }
+      } catch (err) {
+        showMessage("Fehler bei der Anmeldung: " + err.message, "error");
+      }
+    });
+
+    function showMessage(text, type = "info") {
+      messageBox.textContent = text;
+      messageBox.className = type;
+      setTimeout(() => (messageBox.textContent = ""), 7000);
     }
-
-    /* === Wechsel Login/Registrierung === */
-    window.toggle = (mode) => {
-      document.getElementById("login").style.display = mode === "login" ? "block" : "none";
-      document.getElementById("register").style.display = mode === "register" ? "block" : "none";
-    };
-
-    /* === LOGIN === */
-    document.getElementById("btnLogin").onclick = async () => {
-      const u = document.getElementById("loginUser").value.trim();
-      const p = document.getElementById("loginPass").value.trim();
-      if (!u || !p) return showInfo("Bitte alle Felder ausfüllen.", "#e74c3c");
-
-      const email = `${u}@bullfrog.fake`;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: p });
-      if (error) return showInfo("Anmeldung fehlgeschlagen.", "#e74c3c");
-
-      const { data: userRow } = await supabase.from("users").select("*").eq("id", data.user.id).maybeSingle();
-      if (!userRow) return showInfo("Benutzerprofil fehlt. Bitte Admin kontaktieren.", "#e74c3c");
-
-      if (userRow.status === "pending") {
-        await supabase.auth.signOut();
-        return showInfo("Noch nicht freigeschaltet. Bitte warte auf Freigabe.", "#ff9f43");
-      }
-      if (userRow.status === "blocked") {
-        await supabase.auth.signOut();
-        return showInfo("Konto blockiert. Bitte Admin kontaktieren.", "#e74c3c");
-      }
-
-      localStorage.setItem("username", userRow.username);
-      localStorage.setItem("role", userRow.role);
-      showInfo("Erfolgreich angemeldet!", "#4CAF50");
-      setTimeout(() => (window.location = "dashboard.html"), 1000);
-    };
-
-    /* === REGISTRIERUNG === */
-    document.getElementById("btnRegister").onclick = async () => {
-      const u = document.getElementById("regUser").value.trim();
-      const p = document.getElementById("regPass").value.trim();
-      const p2 = document.getElementById("regPass2").value.trim();
-
-      if (!u || !p || !p2) return showInfo("Bitte alle Felder ausfüllen.", "#e74c3c");
-      if (p !== p2) return showInfo("Passwörter stimmen nicht überein.", "#e74c3c");
-
-      const email = `${u}@bullfrog.fake`;
-      const { data, error } = await supabase.auth.signUp({ email, password: p });
-      if (error) return showInfo("Fehler: " + error.message, "#e74c3c");
-
-      const { data: allUsers } = await supabase.from("users").select("id");
-      const isFirst = !allUsers || allUsers.length === 0;
-
-      await supabase.from("users").insert({
-        id: data.user.id,
-        username: u,
-        role: isFirst ? "admin" : "member",
-        status: isFirst ? "active" : "pending",
-      });
-
-      if (isFirst) showInfo("Admin-Konto erstellt. Willkommen!", "#4CAF50");
-      else showInfo("Registrierung erfolgreich. Warte auf Freigabe durch den Admin.", "#ff9f43");
-
-      toggle("login");
-    };
   </script>
 </body>
 </html>
