@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bullfrog Tools – Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+
+    nav {
+      width: 220px;
+      background: #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
+
+    nav h2 {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+
+    nav button {
+      background: #333;
+      border: none;
+      color: #eee;
+      padding: 10px;
+      text-align: left;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    nav button:hover {
+      background: #007bff;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .pending {
+      background-color: #553;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      color: #ffcc00;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <nav id="nav">
+    <h2>Bullfrog Tools</h2>
+    <button data-section="events">Ereignisse</button>
+    <button data-section="battle">Kampfberichte</button>
+    <button data-section="reserve">Inseln reservieren</button>
+    <button data-section="map">Inselkarte</button>
+    <div id="adminPanel" class="hidden">
+      <hr />
+      <button data-section="csv">CSV-Tabelle</button>
+      <button data-section="members">Mitgliederverwaltung</button>
+      <button data-section="diplomacy">Diplomatie</button>
+    </div>
+    <hr />
+    <button id="btnLogout">Abmelden</button>
+  </nav>
+
+  <main id="main">
+    <h1>Willkommen bei Bullfrog Tools</h1>
+    <div id="pendingNotice" class="pending hidden">
+      Dein Account ist noch nicht freigeschaltet. Bitte warte auf Freigabe durch einen Admin.
+    </div>
+  </main>
+
+  <script type="module">
+import { supabase, checkSession, logout } from "./supabase.js";
+
+document.getElementById("btnLogout").addEventListener("click", logout);
+
+const nav = document.getElementById("nav");
+const adminPanel = document.getElementById("adminPanel");
+const pendingNotice = document.getElementById("pendingNotice");
+const main = document.getElementById("main");
+
+// Sitzung prüfen
+const user = await checkSession();
+if (!user) {
+  alert("Keine aktive Sitzung – bitte neu anmelden.");
+  window.location.href = "index.html";
+} else {
+  main.innerHTML = `<h1>Willkommen, ${user.email.split("@")[0]}!</h1>`;
+  if (user.status === "pending") {
+    pendingNotice.classList.remove("hidden");
+  }
+  if (user.role === "admin") {
+    adminPanel.classList.remove("hidden");
+  }
+}
+
+// Navigation zwischen Modulen
+nav.querySelectorAll("button[data-section]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const section = btn.getAttribute("data-section");
+    if (section === "members") {
+      await showMembers();
+    } else {
+      main.innerHTML = `<h2>${section}</h2><p>Hier wird später das ${section}-Modul angezeigt.</p>`;
+    }
+  });
+});
+
+// ======================
+// 👥 Mitgliederverwaltung
+// ======================
+async function showMembers() {
+  const { data: members, error } = await supabase
+    .from("users")
+    .select("id, name, role, status, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    main.innerHTML = "<p>Fehler beim Laden der Mitglieder.</p>";
+    return;
+  }
+
+  let html = `
+    <h2>Mitgliederverwaltung</h2>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#333;">
+          <th style="padding:8px; border-bottom:1px solid #555;">Name</th>
+          <th style="padding:8px; border-bottom:1px solid #555;">Rolle</th>
+          <th style="padding:8px; border-bottom:1px solid #555;">Status</th>
+          <th style="padding:8px; border-bottom:1px solid #555;">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const m of members) {
+    html += `
+      <tr style="background:${m.status === "active" ? "#1e4021" : "#402e1e"};">
+        <td style="padding:8px;">${m.name}</td>
+        <td style="padding:8px;">${m.role}</td>
+        <td style="padding:8px;">${m.status}</td>
+        <td style="padding:8px;">
+          <button data-action="activate" data-id="${m.id}" style="background:#007bff;color:white;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;">Freischalten</button>
+          <button data-action="block" data-id="${m.id}" style="background:#b33;color:white;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;">Sperren</button>
+          <button data-action="delete" data-id="${m.id}" style="background:#666;color:white;padding:5px 10px;border:none;border-radius:4px;cursor:pointer;">Löschen</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  html += "</tbody></table>";
+  main.innerHTML = html;
+
+  // Aktionen
+  main.querySelectorAll("button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const action = btn.getAttribute("data-action");
+      const id = btn.getAttribute("data-id");
+      if (action === "activate") {
+        await updateStatus(id, "active");
+      } else if (action === "block") {
+        await updateStatus(id, "pending");
+      } else if (action === "delete") {
+        await deleteUser(id);
+      }
+      await showMembers();
+    });
+  });
+}
+
+async function updateStatus(id, status) {
+  const { error } = await supabase.from("users").update({ status }).eq("id", id);
+  if (error) alert("Fehler: " + error.message);
+}
+
+async function deleteUser(id) {
+  if (!confirm("Benutzer wirklich löschen?")) return;
+  const { error } = await supabase.from("users").delete().eq("id", id);
+  if (error) alert("Fehler: " + error.message);
+}
+</script>
+</body>
+</html>
