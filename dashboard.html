@@ -96,20 +96,7 @@ const adminPanel = document.getElementById("adminPanel");
 const pendingNotice = document.getElementById("pendingNotice");
 const main = document.getElementById("main");
 
-// Sitzung prüfen
 const user = await checkSession();
-if (!user) {
-  alert("Keine aktive Sitzung – bitte neu anmelden.");
-  window.location.href = "index.html";
-} else {
-  main.innerHTML = `<h1>Willkommen, ${user.email.split("@")[0]}!</h1>`;
-  if (user.status === "pending") {
-    pendingNotice.classList.remove("hidden");
-  }
-  if (user.role === "admin") {
-    adminPanel.classList.remove("hidden");
-  }
-}
 
 // Navigation zwischen Modulen
 nav.querySelectorAll("button[data-section]").forEach((btn) => {
