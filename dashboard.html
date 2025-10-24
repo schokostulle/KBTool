@@ -5,249 +5,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Tools – Dashboard</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Seiten-Navigation */
-    nav {
-      width: 230px;
-      background: #1e1e1e;
-      display: flex;
-      flex-direction: column;
-      padding: 15px;
-      box-sizing: border-box;
-      border-right: 1px solid #333;
-    }
-
-    nav h2 {
-      font-size: 1.3em;
-      margin-bottom: 20px;
-      color: #00aaff;
-    }
-
-    nav button {
-      background: #2a2a2a;
-      border: none;
-      color: #eee;
-      padding: 10px;
-      text-align: left;
-      margin-bottom: 6px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95em;
-    }
-
-    nav button:hover {
-      background: #007bff;
-    }
-
-    main {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    hr {
-      border: none;
-      height: 1px;
-      background: #333;
-      margin: 12px 0;
-    }
-
-    .pending {
-      background-color: #402e1e;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      color: #ffcc00;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border-bottom: 1px solid #333;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th {
-      background: #222;
-    }
-
-    tr:nth-child(even) {
-      background: #181818;
-    }
-
-    button.action {
-      padding: 4px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #fff;
-    }
-
-    .blue { background-color: #007bff; }
-    .red { background-color: #b33; }
-    .gray { background-color: #666; }
+    body { background:#121212; color:#eee; font-family:Arial; margin:0; display:flex; height:100vh; }
+    nav { width:220px; background:#1e1e1e; padding:15px; display:flex; flex-direction:column; }
+    nav h2 { color:#00aaff; margin-bottom:15px; }
+    nav button { background:#2a2a2a; border:none; color:#eee; padding:10px; margin-bottom:8px; border-radius:5px; cursor:pointer; text-align:left; }
+    nav button:hover { background:#007bff; }
+    main { flex:1; padding:20px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { padding:8px; border-bottom:1px solid #333; }
+    th { background:#222; }
+    tr:nth-child(even){background:#181818;}
+    .hidden{display:none;}
+    .pending{background:#40311f;padding:10px;border-radius:5px;color:#ffc107;}
+    button.action{border:none;border-radius:4px;padding:5px 10px;margin-right:5px;color:#fff;cursor:pointer;}
+    .blue{background:#007bff;}
+    .red{background:#b33;}
+    .gray{background:#555;}
   </style>
 </head>
 <body>
-  <nav id="nav">
+  <nav>
     <h2>Bullfrog Tools</h2>
-    <button data-section="events">Ereignisse</button>
-    <button data-section="battle">Kampfberichte</button>
-    <button data-section="reserve">Inseln reservieren</button>
-    <button data-section="map">Inselkarte</button>
-    <div id="adminPanel" class="hidden">
-      <hr />
-      <button data-section="csv">CSV-Tabelle</button>
-      <button data-section="members">Mitgliederverwaltung</button>
-      <button data-section="diplomacy">Diplomatie</button>
+    <button data-sec="events">Ereignisse</button>
+    <button data-sec="battle">Kampfberichte</button>
+    <button data-sec="reserve">Inseln reservieren</button>
+    <div id="adminMenu" class="hidden">
+      <hr>
+      <button data-sec="members">Mitgliederverwaltung</button>
     </div>
-    <hr />
-    <button id="btnLogout">Abmelden</button>
+    <hr>
+    <button id="logoutBtn">Abmelden</button>
   </nav>
-
   <main id="main">
     <h1>Willkommen bei Bullfrog Tools</h1>
-    <div id="pendingNotice" class="pending hidden">
-      Dein Account ist noch nicht freigeschaltet. Bitte warte auf Freigabe durch einen Admin.
+    <div id="pendingMsg" class="pending hidden">
+      Dein Account ist noch nicht freigeschaltet. Bitte warte auf Freigabe.
     </div>
   </main>
 
-  <!-- Script -->
   <script type="module">
-    import { supabase, getUserClaims, logout } from "./supabase.js";
+    import { supabase, getSession, logout } from "./supabase.js";
 
-    const nav = document.getElementById("nav");
-    const adminPanel = document.getElementById("adminPanel");
-    const pendingNotice = document.getElementById("pendingNotice");
-    const main = document.getElementById("main");
-
-    document.getElementById("btnLogout").addEventListener("click", logout);
-
-    // Sitzung prüfen und Benutzerinformationen aus JWT laden
-    const user = await getUserClaims();
-
+    const user = await getSession();
     if (!user) {
-      alert("Keine aktive Sitzung – bitte neu anmelden.");
+      alert("Bitte neu anmelden");
       window.location.href = "index.html";
-    } else {
-      main.innerHTML = `<h1>Willkommen, ${user.email.split("@")[0]}!</h1>`;
-      if (user.status === "pending") {
-        pendingNotice.classList.remove("hidden");
-      }
-      if (user.role === "admin") {
-        adminPanel.classList.remove("hidden");
-      }
     }
 
-    // Navigation zwischen Modulen
-    nav.querySelectorAll("button[data-section]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const section = btn.getAttribute("data-section");
-        if (section === "members") {
-          await showMembers();
-        } else {
-          main.innerHTML = `<h2>${section}</h2><p>Hier wird später das Modul "${section}" angezeigt.</p>`;
-        }
-      });
+    const { data: rows } = await supabase.from("users").select("*").eq("id", user.id);
+    const me = rows?.[0];
+    const main = document.getElementById("main");
+    const adminMenu = document.getElementById("adminMenu");
+    const pendingMsg = document.getElementById("pendingMsg");
+
+    if (me?.status === "pending") pendingMsg.classList.remove("hidden");
+    if (me?.role === "admin") adminMenu.classList.remove("hidden");
+
+    document.getElementById("logoutBtn").onclick = logout;
+
+    // Navigation
+    document.querySelectorAll("button[data-sec]").forEach((btn) => {
+      btn.onclick = async () => {
+        const sec = btn.getAttribute("data-sec");
+        if (sec === "members") showMembers();
+        else main.innerHTML = `<h2>${sec}</h2><p>Modul wird bald verfügbar sein.</p>`;
+      };
     });
 
-   // ==========================================
-// 👥 Mitgliederverwaltung (nur Admin)
-// ==========================================
-async function showMembers() {
-  main.innerHTML = "<h2>Mitgliederverwaltung</h2><p>Lade Mitglieder...</p>";
-
-  const { data: members, error } = await supabase
-    .from("users")
-    .select("id, name, role, status, created_at")
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    main.innerHTML = "<p>Fehler beim Laden der Mitglieder.</p>";
-    return;
-  }
-
-  let html = `
-    <h2>Mitgliederverwaltung</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Rolle</th>
-          <th>Status</th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  for (const m of members) {
-    html += `
-      <tr style="background:${
-        m.status === "active" ? "#1e4021" : "#402e1e"
-      };">
-        <td>${m.name}</td>
-        <td>${m.role}</td>
-        <td>${m.status}</td>
-        <td>
-          <button class="action blue" data-action="activate" data-id="${m.id}">Freischalten</button>
-          <button class="action red" data-action="block" data-id="${m.id}">Sperren</button>
-          <button class="action gray" data-action="delete" data-id="${m.id}">Löschen</button>
-        </td>
-      </tr>
-    `;
-  }
-
-  html += "</tbody></table>";
-  main.innerHTML = html;
-
-  // Aktionen
-  main.querySelectorAll("button[data-action]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const action = btn.getAttribute("data-action");
-      const id = btn.getAttribute("data-id");
-      if (action === "activate") {
-        await updateStatus(id, "active");
-      } else if (action === "block") {
-        await updateStatus(id, "pending");
-      } else if (action === "delete") {
-        await deleteUser(id);
+    // Mitgliederverwaltung
+    async function showMembers() {
+      const { data: members } = await supabase.from("users").select("*").order("created_at");
+      let html = `<h2>Mitgliederverwaltung</h2><table><tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktionen</th></tr>`;
+      for (const m of members) {
+        html += `<tr style="background:${m.status === "active" ? "#1f4025" : "#40311f"}">
+          <td>${m.name}</td><td>${m.role}</td><td>${m.status}</td>
+          <td>
+            <button class="action blue" data-act="activate" data-id="${m.id}">Freischalten</button>
+            <button class="action red" data-act="block" data-id="${m.id}">Sperren</button>
+            <button class="action gray" data-act="delete" data-id="${m.id}">Löschen</button>
+          </td></tr>`;
       }
-      await showMembers(); // neu laden
-    });
-  });
-}
+      html += "</table>";
+      main.innerHTML = html;
 
-async function updateStatus(id, status) {
-  const { error } = await supabase.from("users").update({ status }).eq("id", id);
-  if (error) alert("Fehler: " + error.message);
-}
-
-async function deleteUser(id) {
-  if (!confirm("Benutzer wirklich löschen?")) return;
-  const { error } = await supabase.from("users").delete().eq("id", id);
-  if (error) alert("Fehler: " + error.message);
-}
-
+      main.querySelectorAll("button[data-act]").forEach((b) => {
+        b.onclick = async () => {
+          const id = b.dataset.id, act = b.dataset.act;
+          if (act === "activate") await supabase.from("users").update({ status: "active" }).eq("id", id);
+          if (act === "block") await supabase.from("users").update({ status: "pending" }).eq("id", id);
+          if (act === "delete") await supabase.from("users").delete().eq("id", id);
+          showMembers();
+        };
+      });
+    }
   </script>
 </body>
 </html>
