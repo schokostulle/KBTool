@@ -103,7 +103,7 @@ export async function login(username, password) {
 export async function logout() {
   await supabase.auth.signOut();
   alert("Abgemeldet.");
-  // window.location.href = "index.html";
+  window.location.href = "index.html";
 }
 
 // -------------------------------------------------
