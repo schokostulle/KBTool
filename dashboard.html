@@ -39,8 +39,20 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 20px 10px;
     border-right: 1px solid #3b3322;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.5);
+  }
+
+  .nav-top {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 20px 10px;
+  }
+
+  .nav-bottom {
+    padding: 10px;
+    border-top: 1px solid #3b3322;
   }
 
   nav h2 {
@@ -48,6 +60,8 @@
     color: var(--accent);
     margin-bottom: 15px;
     font-size: 1.3em;
+    border-bottom: 1px solid #3b3322;
+    padding-bottom: 10px;
   }
 
   nav button {
@@ -55,16 +69,24 @@
     border: none;
     color: var(--text);
     font-size: 1em;
-    padding: 12px 10px;
+    padding: 12px 14px;
     text-align: left;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, transform 0.05s;
+    width: 100%;
   }
 
   nav button:hover {
     background: var(--accent);
     color: var(--bg);
+    transform: scale(1.02);
+  }
+
+  nav button.active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: bold;
   }
 
   /* Theme-Schalter oben rechts */
@@ -152,15 +174,15 @@
 
   <!-- Navigation (Desktop) -->
   <nav>
-    <div>
+    <div class="nav-top">
       <h2>Bullfrog Tools</h2>
-      <button onclick="showSection('events')">📜 Ereignisse</button>
+      <button onclick="showSection('events')" class="active">📜 Ereignisse</button>
       <button onclick="showSection('battles')">⚔️ Kampfberichte</button>
       <button onclick="showSection('islands')">🏝️ Inseln</button>
       <button onclick="showSection('map')">🗺️ Karte</button>
       <button onclick="showSection('attack')">🚢 Angriffsplanung</button>
     </div>
-    <div>
+    <div class="nav-bottom">
       <button onclick="logout()">🚪 Abmelden</button>
     </div>
   </nav>
@@ -226,6 +248,9 @@
     window.showSection=(id)=>{
       document.querySelectorAll("main section").forEach(sec=>sec.style.display="none");
       document.getElementById(id).style.display="block";
+      document.querySelectorAll("nav button").forEach(btn=>btn.classList.remove("active"));
+      const activeBtn=[...document.querySelectorAll("nav button")].find(b=>b.getAttribute("onclick").includes(id));
+      if(activeBtn) activeBtn.classList.add("active");
     };
 
     // === LOGOUT ===
