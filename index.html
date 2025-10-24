@@ -3,166 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bullfrog Tools – Anmeldung</title>
+<title>Bullfrog Tools – Login</title>
 <style>
-  :root {
-    --bg: #19150e;
-    --panel-bg: #231f14;
-    --text: #d8c7a0;
-    --accent: #b9923d;
-    --input-bg: #2e2618;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: "Trebuchet MS", sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-  }
-
-  h1 {
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-
-  .card {
-    background: var(--panel-bg);
-    padding: 20px 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0008;
-    text-align: center;
-    width: 300px;
-  }
-
-  input {
-    width: 100%;
-    margin: 8px 0;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    background: var(--input-bg);
-    color: var(--text);
-  }
-
-  button {
-    width: 100%;
-    padding: 10px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    margin-top: 10px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    filter: brightness(1.1);
-  }
-
-  #switchForm {
-    margin-top: 10px;
-    cursor: pointer;
-    color: var(--accent);
-    text-decoration: underline;
-  }
-
-  #message {
-    margin-top: 10px;
-    color: var(--accent);
-  }
+:root{
+  --bg:#19150e;--panel:#231f14;--text:#d8c7a0;--accent:#b9923d;--input:#2e2618;
+}
+body{background:var(--bg);color:var(--text);font-family:"Trebuchet MS",sans-serif;
+display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}
+h1{color:var(--accent);margin-bottom:10px;}
+.card{background:var(--panel);padding:20px 30px;border-radius:10px;box-shadow:0 0 10px #0008;text-align:center;width:300px;}
+input{width:100%;margin:8px 0;padding:10px;border:none;border-radius:6px;background:var(--input);color:var(--text);}
+button{width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-weight:bold;margin-top:10px;cursor:pointer;}
+button:hover{filter:brightness(1.1);}
+.link{margin-top:10px;cursor:pointer;color:var(--accent);text-decoration:underline;}
+#message{margin-top:10px;color:var(--accent);}
 </style>
 </head>
 <body>
-  <h1>Bullfrog Tools</h1>
-  <div class="card" id="loginCard">
-    <h2>Anmelden</h2>
-    <input id="loginName" placeholder="Benutzername">
-    <input id="loginPass" type="password" placeholder="Passwort">
-    <button id="loginBtn">Login</button>
-    <div id="switchForm">Noch keinen Account? Registrieren</div>
-  </div>
+<h1>Bullfrog Tools</h1>
 
-  <div class="card" id="registerCard" style="display:none;">
-    <h2>Registrieren</h2>
-    <input id="regName" placeholder="Benutzername">
-    <input id="regPass" type="password" placeholder="Passwort">
-    <input id="regPass2" type="password" placeholder="Passwort wiederholen">
-    <button id="regBtn">Registrieren</button>
-    <div id="switchForm2">Bereits registriert? Anmelden</div>
-  </div>
+<div class="card" id="loginCard">
+  <h2>Anmelden</h2>
+  <input id="loginName" placeholder="Benutzername">
+  <input id="loginPass" type="password" placeholder="Passwort">
+  <button id="loginBtn">Login</button>
+  <div class="link" id="toRegister">Noch kein Account? Registrieren</div>
+</div>
 
-  <div id="message"></div>
+<div class="card" id="registerCard" style="display:none;">
+  <h2>Registrieren</h2>
+  <input id="regName" placeholder="Benutzername">
+  <input id="regPass" type="password" placeholder="Passwort">
+  <input id="regPass2" type="password" placeholder="Passwort wiederholen">
+  <button id="regBtn">Registrieren</button>
+  <div class="link" id="toLogin">Bereits registriert? Anmelden</div>
+</div>
 
-  <script type="module">
-    import { supabase } from "./supabase.js";
+<div id="message"></div>
 
-    const msg = (t)=>{document.getElementById("message").textContent=t;};
+<script type="module">
+import { supabase } from "./supabase.js";
+const msg=t=>document.getElementById("message").textContent=t;
 
-    // Formularwechsel
-    document.getElementById("switchForm").onclick=()=>{
-      document.getElementById("loginCard").style.display="none";
-      document.getElementById("registerCard").style.display="block";
-      msg("");
-    };
-    document.getElementById("switchForm2").onclick=()=>{
-      document.getElementById("registerCard").style.display="none";
-      document.getElementById("loginCard").style.display="block";
-      msg("");
-    };
+// Formularwechsel
+document.getElementById("toRegister").onclick=()=>{msg("");loginCard.style.display="none";registerCard.style.display="block";};
+document.getElementById("toLogin").onclick=()=>{msg("");registerCard.style.display="none";loginCard.style.display="block";};
 
-    // Registrierung
-    document.getElementById("regBtn").onclick=async()=>{
-      const u=document.getElementById("regName").value.trim();
-      const p=document.getElementById("regPass").value;
-      const p2=document.getElementById("regPass2").value;
-      if(!u||!p) return msg("Bitte alle Felder ausfüllen.");
-      if(p!==p2) return msg("Passwörter stimmen nicht überein.");
+// Registrieren
+document.getElementById("regBtn").onclick=async()=>{
+ const u=regName.value.trim(),p=regPass.value,p2=regPass2.value;
+ if(!u||!p||!p2)return msg("Bitte alle Felder ausfüllen.");
+ if(p!==p2)return msg("Passwörter stimmen nicht überein.");
+ const email=`${u}@bullfrog.fake`;
+ const {data:ex}=await supabase.from("users").select("id").limit(1);
+ const first=!ex||ex.length===0;
+ const {data, error}=await supabase.auth.signUp({email,password:p});
+ if(error)return msg(error.message);
+ await supabase.from("users").insert({id:data.user.id,username:u,role:first?"admin":"member",status:first?"active":"pending"});
+ msg(first?"Admin-Konto erstellt – du kannst dich anmelden.":"Registriert – warte auf Freischaltung durch Admin.");
+ setTimeout(()=>{registerCard.style.display="none";loginCard.style.display="block";},1200);
+};
 
-      const email=`${u}@bullfrog.fake`;
-      const {data:existing}=await supabase.from("users").select("id");
-      const isFirst=!existing||existing.length===0;
-
-      const {data,error}=await supabase.auth.signUp({email,password:p});
-      if(error){msg(error.message);return;}
-
-      await supabase.from("users").insert({
-        id:data.user.id,
-        username:u,
-        role:isFirst?"admin":"member",
-        status:isFirst?"active":"pending"
-      });
-
-      msg(isFirst
-        ?"Admin-Konto erstellt!"
-        :"Registriert. Warte auf Freischaltung durch Admin.");
-    };
-
-    // Login
-    document.getElementById("loginBtn").onclick=async()=>{
-      const u=document.getElementById("loginName").value.trim();
-      const p=document.getElementById("loginPass").value;
-      const email=`${u}@bullfrog.fake`;
-
-      const {data,error}=await supabase.auth.signInWithPassword({email,password:p});
-      if(error){msg("Ungültige Anmeldedaten.");return;}
-
-      const {data:userRow}=await supabase.from("users").select("*").eq("id",data.user.id).single();
-      if(!userRow){msg("Kein Nutzer gefunden.");return;}
-      if(userRow.status!=="active"){
-        await supabase.auth.signOut();
-        return msg("Account ist noch nicht freigeschaltet.");
-      }
-
-      localStorage.setItem("role",userRow.role);
-      localStorage.setItem("username",userRow.username);
-      window.location.href="dashboard.html";
-    };
-  </script>
+// Login
+document.getElementById("loginBtn").onclick=async()=>{
+ const u=loginName.value.trim(),p=loginPass.value; if(!u||!p)return msg("Bitte alle Felder ausfüllen.");
+ const email=`${u}@bullfrog.fake`;
+ const {data, error}=await supabase.auth.signInWithPassword({email,password:p});
+ if(error)return msg("Anmeldung fehlgeschlagen.");
+ const {data:userRow}=await supabase.from("users").select("*").eq("id",data.user.id).single();
+ if(!userRow||userRow.status!=="active"){await supabase.auth.signOut();return msg("Account noch nicht freigeschaltet.");}
+ localStorage.setItem("role",userRow.role);localStorage.setItem("username",userRow.username);
+ window.location.href="dashboard.html";
+};
+</script>
 </body>
 </html>
