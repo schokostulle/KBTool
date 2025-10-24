@@ -270,6 +270,49 @@
       window.location.href="index.html";
     };
     logoutBtn.onclick=logout;
+
+// === Mitgliederverwaltung (nur für Admins) ===
+async function loadMembers() {
+  const table = document.getElementById("memberTable");
+  if (!table) return;
+
+  const { data: users } = await supabase.from("users").select("*");
+  table.innerHTML = "<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
+
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.username}</td>
+      <td>${u.role}</td>
+      <td>${u.status}</td>
+      <td>
+        ${u.status === "pending" ? `<button onclick="activate('${u.id}')">✅ Freischalten</button>` : ""}
+        <button onclick="blockUser('${u.id}')">⛔ Sperren</button>
+        <button onclick="deleteUser('${u.id}')">🗑️ Löschen</button>
+      </td>`;
+    table.appendChild(tr);
+  });
+}
+
+window.activate = async id => {
+  await supabase.from("users").update({ status: "active" }).eq("id", id);
+  loadMembers();
+};
+window.blockUser = async id => {
+  await supabase.from("users").update({ status: "blocked" }).eq("id", id);
+  loadMembers();
+};
+window.deleteUser = async id => {
+  await supabase.from("users").delete().eq("id", id);
+  loadMembers();
+};
+
+// Nur Admins dürfen Mitglieder sehen
+const role = localStorage.getItem("role");
+if (role === "admin") {
+  loadMembers();
+}
+
   </script>
 </body>
 </html>
