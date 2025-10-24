@@ -1,111 +1,125 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Bullfrog Tools – Login</title>
-<link rel="stylesheet" href="theme.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Bullfrog Tools – Anmeldung</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: var(--bg-dark);
+    }
+    .card {
+      background: var(--bg-card);
+      padding: 30px 25px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 340px;
+      text-align: center;
+    }
+    h2 {
+      color: var(--accent-gold);
+      margin-bottom: 15px;
+    }
+    input {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 10px;
+      width: 100%;
+    }
+    small {
+      display: block;
+      margin-top: 12px;
+      color: var(--accent-gold);
+      cursor: pointer;
+    }
+    small:hover {
+      color: var(--accent-gold-hover);
+    }
+  </style>
 </head>
 <body>
+  <div class="card" id="login">
+    <h2>Bullfrog Tools</h2>
+    <input id="loginUser" placeholder="Ingame-Name">
+    <input id="loginPass" type="password" placeholder="Passwort">
+    <button id="btnLogin">Anmelden</button>
+    <small onclick="toggle('register')">Registrieren</small>
+  </div>
 
-<div class="card" id="login">
-  <h2>Bullfrog Tools</h2>
-  <input id="loginUser" placeholder="Ingame-Name">
-  <input id="loginPass" type="password" placeholder="Passwort">
-  <button id="btnLogin">Anmelden</button>
-  <small onclick="toggle('register')">Registrieren</small>
-</div>
+  <div class="card" id="register" style="display:none">
+    <h2>Registrieren</h2>
+    <input id="regUser" placeholder="Ingame-Name">
+    <input id="regPass" type="password" placeholder="Passwort">
+    <input id="regPass2" type="password" placeholder="Passwort wiederholen">
+    <button id="btnRegister">Registrieren</button>
+    <small onclick="toggle('login')">Zurück zur Anmeldung</small>
+  </div>
 
-<div class="card" id="register" style="display:none">
-  <h2>Registrieren</h2>
-  <input id="regUser" placeholder="Ingame-Name">
-  <input id="regPass" type="password" placeholder="Passwort">
-  <input id="regPass2" type="password" placeholder="Passwort wiederholen">
-  <button id="btnRegister">Registrieren</button>
-  <small onclick="toggle('login')">Zurück zur Anmeldung</small>
-</div>
+  <div id="infoBox"></div>
 
-<div id="infoBox"></div>
+  <script type="module">
+    import { supabase } from "./supabase.js";
 
-<script type="module">
-import { supabase } from "./supabase.js";
+    function showInfo(text,color="#b9923d"){
+      const box=document.getElementById("infoBox");
+      box.style.background=color;
+      box.textContent=text;
+      box.classList.add("show");
+      setTimeout(()=>box.classList.remove("show"),7000);
+    }
 
-/* === Hinweisbox === */
-function showInfo(text, color="#b9923d"){
-  const box=document.getElementById("infoBox");
-  box.style.background=color;
-  box.textContent=text;
-  box.classList.add("show");
-  setTimeout(()=>{ box.classList.remove("show"); },7000);
-}
+    window.toggle=(mode)=>{
+      document.getElementById("login").style.display=mode==="login"?"block":"none";
+      document.getElementById("register").style.display=mode==="register"?"block":"none";
+    };
 
-/* Umschalten Login/Registrierung */
-window.toggle = (mode) => {
-  document.getElementById("login").style.display = mode === "login" ? "block" : "none";
-  document.getElementById("register").style.display = mode === "register" ? "block" : "none";
-};
+    document.getElementById("btnLogin").onclick=async()=>{
+      const u=document.getElementById("loginUser").value.trim();
+      const p=document.getElementById("loginPass").value.trim();
+      if(!u||!p) return showInfo("Bitte alle Felder ausfüllen.","#e74c3c");
+      const email=`${u}@bullfrog.fake`;
+      const { data,error }=await supabase.auth.signInWithPassword({ email,password:p });
+      if(error) return showInfo("Anmeldung fehlgeschlagen.","#e74c3c");
 
-/* === LOGIN === */
-document.getElementById("btnLogin").onclick = async () => {
-  const u = document.getElementById("loginUser").value.trim();
-  const p = document.getElementById("loginPass").value.trim();
-  if(!u || !p) return showInfo("Bitte alle Felder ausfüllen.","#e74c3c");
+      const { data:userRow }=await supabase.from("users").select("*").eq("id",data.user.id).maybeSingle();
+      if(!userRow) return showInfo("Benutzerprofil fehlt. Bitte Admin kontaktieren.","#e74c3c");
+      if(userRow.status==="pending"){ await supabase.auth.signOut(); return showInfo("Noch nicht freigeschaltet.","#ff9f43"); }
+      if(userRow.status==="blocked"){ await supabase.auth.signOut(); return showInfo("Konto blockiert.","#e74c3c"); }
 
-  const email = `${u}@bullfrog.fake`;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: p });
-  if(error) return showInfo("Anmeldung fehlgeschlagen.","#e74c3c");
+      localStorage.setItem("username",userRow.username);
+      localStorage.setItem("role",userRow.role);
+      showInfo("Erfolgreich angemeldet!","#4CAF50");
+      setTimeout(()=>window.location="dashboard.html",1000);
+    };
 
-  const { data: userRow } = await supabase.from("users").select("*").eq("id", data.user.id).maybeSingle();
-  if(!userRow) return showInfo("Benutzerprofil fehlt. Bitte Admin kontaktieren.","#e74c3c");
-
-  if(userRow.status === "pending") {
-    await supabase.auth.signOut();
-    return showInfo("Registrierung erfolgreich, aber Admin muss dich noch freischalten.","#ff9f43");
-  }
-  if(userRow.status === "blocked") {
-    await supabase.auth.signOut();
-    return showInfo("Konto wurde blockiert. Bitte Admin kontaktieren.","#e74c3c");
-  }
-  if(userRow.status === "denied") {
-    await supabase.auth.signOut();
-    return showInfo("Registrierung wurde abgelehnt.","#e74c3c");
-  }
-
-  localStorage.setItem("username", userRow.username);
-  localStorage.setItem("role", userRow.role);
-  showInfo("Erfolgreich angemeldet!"," #4CAF50");
-  setTimeout(()=>window.location="dashboard.html",1000);
-};
-
-/* === REGISTRIERUNG === */
-document.getElementById("btnRegister").onclick = async () => {
-  const u = document.getElementById("regUser").value.trim();
-  const p = document.getElementById("regPass").value.trim();
-  const p2 = document.getElementById("regPass2").value.trim();
-  if(!u || !p || !p2) return showInfo("Bitte alle Felder ausfüllen.","#e74c3c");
-  if(p !== p2) return showInfo("Passwörter stimmen nicht überein.","#e74c3c");
-
-  const email = `${u}@bullfrog.fake`;
-  const { data, error } = await supabase.auth.signUp({ email, password: p });
-  if(error) return showInfo("Fehler: "+error.message,"#e74c3c");
-
-  const { data: allUsers } = await supabase.from("users").select("id");
-  const isFirst = !allUsers || allUsers.length === 0;
-
-  await supabase.from("users").insert({
-    id: data.user.id,
-    username: u,
-    role: isFirst ? "admin" : "member",
-    status: isFirst ? "active" : "pending"
-  });
-
-  if(isFirst)
-    showInfo("Admin-Konto erfolgreich erstellt. Du kannst dich jetzt anmelden.","#4CAF50");
-  else
-    showInfo("Registrierung erfolgreich! Admin muss dich noch freischalten.","#ff9f43");
-
-  toggle("login");
-};
-</script>
+    document.getElementById("btnRegister").onclick=async()=>{
+      const u=document.getElementById("regUser").value.trim();
+      const p=document.getElementById("regPass").value.trim();
+      const p2=document.getElementById("regPass2").value.trim();
+      if(!u||!p||!p2) return showInfo("Bitte alle Felder ausfüllen.","#e74c3c");
+      if(p!==p2) return showInfo("Passwörter stimmen nicht überein.","#e74c3c");
+      const email=`${u}@bullfrog.fake`;
+      const { data,error }=await supabase.auth.signUp({ email,password:p });
+      if(error) return showInfo("Fehler: "+error.message,"#e74c3c");
+      const { data:allUsers }=await supabase.from("users").select("id");
+      const isFirst=!allUsers||allUsers.length===0;
+      await supabase.from("users").insert({
+        id:data.user.id,
+        username:u,
+        role:isFirst?"admin":"member",
+        status:isFirst?"active":"pending"
+      });
+      if(isFirst) showInfo("Admin-Konto erstellt.","#4CAF50");
+      else showInfo("Registrierung erfolgreich! Warte auf Freigabe.","#ff9f43");
+      toggle("login");
+    };
+  </script>
 </body>
 </html>
