@@ -1,167 +1,218 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bullfrog Tools – Anmeldung</title>
 <style>
   :root {
     --bg: #19150e;
-    --panel-bg: #231f14;
+    --card-bg: #231f14;
     --text: #d8c7a0;
-    --accent: #b9923d;
     --input-bg: #2e2618;
+    --accent: #b9923d;
+    --error: #8b3a3a;
+  }
+
+  body.light {
+    --bg: #f6f1e3;
+    --card-bg: #fff9e8;
+    --text: #3e2f1d;
+    --input-bg: #f0e7d0;
+    --accent: #c4953f;
   }
 
   body {
+    margin: 0;
+    font-family: "Trebuchet MS", sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-family: "Trebuchet MS", sans-serif;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     height: 100vh;
-    margin: 0;
+    transition: background 0.3s, color 0.3s;
   }
 
-  h1 {
+  /* === Theme-Schalter === */
+  #themeToggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--accent);
-    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: all 0.3s;
+  }
+
+  #themeToggle:hover {
+    background: var(--accent);
+    color: var(--bg);
   }
 
   .card {
-    background: var(--panel-bg);
-    padding: 20px 30px;
+    background: var(--card-bg);
+    border: 1px solid #3b3322;
     border-radius: 10px;
-    box-shadow: 0 0 10px #0008;
+    padding: 35px;
+    width: 350px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+    transition: background 0.3s;
+  }
+
+  h2 {
     text-align: center;
-    width: 300px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
   }
 
   input {
     width: 100%;
-    margin: 8px 0;
     padding: 10px;
+    margin-top: 8px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     background: var(--input-bg);
     color: var(--text);
+    font-size: 0.95em;
+    transition: background 0.3s;
+  }
+
+  input:focus {
+    outline: 1px solid var(--accent);
+    background: rgba(255,255,255,0.05);
   }
 
   button {
     width: 100%;
     padding: 10px;
+    margin-top: 12px;
     background: var(--accent);
     color: var(--bg);
     border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    margin-top: 10px;
+    border-radius: 5px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
   }
 
-  button:hover {
-    filter: brightness(1.1);
-  }
+  button:hover { background: #d3ae56; transform: scale(1.02); }
 
-  #switchForm {
+  .switch {
+    text-align: center;
     margin-top: 10px;
+    font-size: 0.9em;
+  }
+
+  .switch a {
+    color: var(--accent);
+    text-decoration: none;
     cursor: pointer;
-    color: var(--accent);
-    text-decoration: underline;
+    font-weight: 600;
   }
 
-  #message {
-    margin-top: 10px;
-    color: var(--accent);
+  .switch a:hover { text-decoration: underline; }
+
+  .msg {
+    margin-top: 12px;
+    text-align: center;
+    color: var(--text);
+    font-size: 0.9em;
   }
 </style>
 </head>
 <body>
-  <h1>Bullfrog Tools</h1>
-  <div class="card" id="loginCard">
-    <h2>Anmelden</h2>
-    <input id="loginName" placeholder="Benutzername">
-    <input id="loginPass" type="password" placeholder="Passwort">
-    <button id="loginBtn">Login</button>
-    <div id="switchForm">Noch keinen Account? Registrieren</div>
-  </div>
+  <div id="themeToggle" title="Modus wechseln">☀️</div>
 
-  <div class="card" id="registerCard" style="display:none;">
-    <h2>Registrieren</h2>
-    <input id="regName" placeholder="Benutzername">
-    <input id="regPass" type="password" placeholder="Passwort">
-    <input id="regPass2" type="password" placeholder="Passwort wiederholen">
-    <button id="regBtn">Registrieren</button>
-    <div id="switchForm2">Bereits registriert? Anmelden</div>
-  </div>
+  <div class="card">
+    <h2>Bullfrog Tools</h2>
 
-  <div id="message"></div>
+    <!-- Login -->
+    <div id="loginBox">
+      <input id="loginName" placeholder="Name" />
+      <input id="loginPass" type="password" placeholder="Passwort" />
+      <button id="btnLogin">Anmelden</button>
+      <div class="switch">Kein Konto? <a id="toRegister">Registrieren</a></div>
+    </div>
+
+    <!-- Registrierung -->
+    <div id="registerBox" style="display:none;">
+      <input id="regName" placeholder="Name wählen" />
+      <input id="regPass" type="password" placeholder="Passwort" />
+      <input id="regPassRepeat" type="password" placeholder="Passwort wiederholen" />
+      <button id="btnRegister">Registrieren</button>
+      <div class="switch">Bereits registriert? <a id="toLogin">Einloggen</a></div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
 
   <script type="module">
     import { supabase } from "./supabase.js";
+    const msg=document.getElementById("msg");
+    const themeBtn=document.getElementById("themeToggle");
 
-    const msg = (t)=>{document.getElementById("message").textContent=t;};
-
-    // Formularwechsel
-    document.getElementById("switchForm").onclick=()=>{
-      document.getElementById("loginCard").style.display="none";
-      document.getElementById("registerCard").style.display="block";
-      msg("");
-    };
-    document.getElementById("switchForm2").onclick=()=>{
-      document.getElementById("registerCard").style.display="none";
-      document.getElementById("loginCard").style.display="block";
-      msg("");
-    };
-
-    // Registrierung
-    document.getElementById("regBtn").onclick=async()=>{
-      const u=document.getElementById("regName").value.trim();
-      const p=document.getElementById("regPass").value;
-      const p2=document.getElementById("regPass2").value;
-      if(!u||!p) return msg("Bitte alle Felder ausfüllen.");
-      if(p!==p2) return msg("Passwörter stimmen nicht überein.");
-
-      const email=`${u}@bullfrog.fake`;
-      const {data:existing}=await supabase.from("users").select("id");
-      const isFirst=!existing||existing.length===0;
-
-      const {data,error}=await supabase.auth.signUp({email,password:p});
-      if(error){msg(error.message);return;}
-
-      await supabase.from("users").insert({
-        id:data.user.id,
-        username:u,
-        role:isFirst?"admin":"member",
-        status:isFirst?"active":"pending"
-      });
-
-      msg(isFirst
-        ?"Admin-Konto erstellt!"
-        :"Registriert. Warte auf Freischaltung durch Admin.");
-    };
-
-    // Login
-    document.getElementById("loginBtn").onclick=async()=>{
-      const u=document.getElementById("loginName").value.trim();
-      const p=document.getElementById("loginPass").value;
-      const email=`${u}@bullfrog.fake`;
-
-      const {data,error}=await supabase.auth.signInWithPassword({email,password:p});
-      if(error){msg("Ungültige Anmeldedaten.");return;}
-
-      const {data:userRow}=await supabase.from("users").select("*").eq("id",data.user.id).single();
-      if(!userRow){msg("Kein Nutzer gefunden.");return;}
-      if(userRow.status!=="active"){
-        await supabase.auth.signOut();
-        return msg("Account ist noch nicht freigeschaltet.");
+    // === Theme Steuerung ===
+    const setTheme=(mode)=>{
+      if(mode==="light"){
+        document.body.classList.add("light");
+        themeBtn.textContent="🌙";
+      }else{
+        document.body.classList.remove("light");
+        themeBtn.textContent="☀️";
       }
+      localStorage.setItem("theme",mode);
+    };
 
-      localStorage.setItem("role",userRow.role);
-      localStorage.setItem("username",userRow.username);
-      window.location.href="dashboard.html";
+    const savedTheme=localStorage.getItem("theme")||"dark";
+    setTheme(savedTheme);
+
+    themeBtn.onclick=()=>setTheme(document.body.classList.contains("light")?"dark":"light");
+
+    // Umschalten Login <-> Registrierung
+    document.getElementById("toRegister").onclick=()=>{loginBox.style.display="none";registerBox.style.display="block";msg.textContent="";};
+    document.getElementById("toLogin").onclick=()=>{registerBox.style.display="none";loginBox.style.display="block";msg.textContent="";};
+
+    // LOGIN
+    btnLogin.onclick=async()=>{
+      const name=loginName.value.trim(), pass=loginPass.value.trim();
+      if(!name||!pass) return msg.textContent="Bitte alle Felder ausfüllen.";
+      const email=`${name.toLowerCase()}@bullfrog.fake`;
+      const {error}=await supabase.auth.signInWithPassword({email,password:pass});
+      if(error) return msg.textContent="Fehler: "+error.message;
+      msg.textContent="Willkommen zurück, Kommandant...";
+      setTimeout(()=>window.location.href="dashboard.html",800);
+    };
+
+    // REGISTRIERUNG
+    btnRegister.onclick=async()=>{
+      const name=regName.value.trim(), pass=regPass.value.trim(), pass2=regPassRepeat.value.trim();
+      if(!name||!pass||!pass2) return msg.textContent="Bitte alle Felder ausfüllen.";
+      if(pass!==pass2) return msg.textContent="Passwörter stimmen nicht überein.";
+      if(pass.length<6) return msg.textContent="Mind. 6 Zeichen.";
+      const email=`${name.toLowerCase()}@bullfrog.fake`;
+      const {data,error}=await supabase.auth.signUp({email,password:pass});
+      if(error) return msg.textContent="Fehler: "+error.message;
+      const id=data.user.id;
+      const {data:existing}=await supabase.from("users").select("id");
+      const role=!existing||existing.length===0?"admin":"member";
+      const status=role==="admin"?"active":"pending";
+      const {error:insertErr}=await supabase.from("users").insert([{id,name,role,status,created_at:new Date()}]);
+      if(insertErr) msg.textContent="DB Fehler: "+insertErr.message;
+      else{
+        msg.textContent="Rekrutierung abgeschlossen. Auf Freigabe warten...";
+        setTimeout(()=>{registerBox.style.display="none";loginBox.style.display="block";},1500);
+      }
     };
   </script>
 </body>
