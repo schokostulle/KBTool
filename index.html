@@ -6,192 +6,137 @@
   <title>Bullfrog Tools – Login</title>
   <style>
     body {
-      margin: 0;
+      background: #121212;
+      color: #eee;
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
     }
-
-    .container {
+    .card {
       background: #1e1e1e;
       padding: 30px;
       border-radius: 10px;
       width: 350px;
-      box-shadow: 0 0 10px #000;
+      box-shadow: 0 0 8px #000;
     }
-
-    h1 {
-      text-align: center;
-      color: #00aaff;
-      margin-bottom: 20px;
-    }
-
-    input {
+    input, button {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
+      margin-top: 8px;
+      border-radius: 6px;
       border: none;
-      border-radius: 5px;
+      font-size: 1em;
+    }
+    input {
       background: #2a2a2a;
       color: #fff;
     }
-
-    input:focus {
-      outline: 2px solid #00aaff;
-    }
-
     button {
-      width: 100%;
-      padding: 10px;
       background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
+      color: #fff;
       cursor: pointer;
-      font-size: 1em;
-      margin-top: 10px;
     }
-
     button:hover {
       background: #0099ff;
     }
-
     .switch {
       text-align: center;
-      margin-top: 15px;
+      margin-top: 12px;
     }
-
     .switch a {
       color: #00aaff;
       cursor: pointer;
       text-decoration: underline;
     }
-
-    .message {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 0.9em;
-    }
+    .msg { text-align:center; margin-top:10px; color:#ccc; font-size:0.9em; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Bullfrog Tools</h1>
+  <div class="card">
+    <h2 style="text-align:center;color:#00aaff;">Bullfrog Tools</h2>
 
     <!-- Login -->
-    <div id="loginForm">
-      <input type="text" id="loginName" placeholder="Name eingeben" />
-      <input type="password" id="loginPassword" placeholder="Passwort" />
+    <div id="loginBox">
+      <input id="loginName" placeholder="Name" />
+      <input id="loginPass" type="password" placeholder="Passwort" />
       <button id="btnLogin">Anmelden</button>
       <div class="switch">
-        Noch kein Account? <a id="toRegister">Registrieren</a>
+        Kein Account? <a id="toRegister">Registrieren</a>
       </div>
     </div>
 
     <!-- Registrierung -->
-    <div id="registerForm" style="display:none;">
-      <input type="text" id="regName" placeholder="Name wählen" />
-      <input type="password" id="regPassword" placeholder="Passwort festlegen" />
+    <div id="registerBox" style="display:none;">
+      <input id="regName" placeholder="Name" />
+      <input id="regPass" type="password" placeholder="Passwort" />
       <button id="btnRegister">Registrieren</button>
       <div class="switch">
         Bereits registriert? <a id="toLogin">Anmelden</a>
       </div>
     </div>
 
-    <div class="message" id="message"></div>
+    <div class="msg" id="msg"></div>
   </div>
 
-  <!-- Script -->
   <script type="module">
     import { supabase } from "./supabase.js";
+    const msg = document.getElementById("msg");
 
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
-    const msg = document.getElementById("message");
-
-    // Umschalten zwischen Login / Registrierung
-    document.getElementById("toRegister").addEventListener("click", () => {
-      loginForm.style.display = "none";
-      registerForm.style.display = "block";
+    document.getElementById("toRegister").onclick = () => {
+      loginBox.style.display = "none";
+      registerBox.style.display = "block";
       msg.textContent = "";
-    });
-
-    document.getElementById("toLogin").addEventListener("click", () => {
-      registerForm.style.display = "none";
-      loginForm.style.display = "block";
+    };
+    document.getElementById("toLogin").onclick = () => {
+      registerBox.style.display = "none";
+      loginBox.style.display = "block";
       msg.textContent = "";
-    });
+    };
 
-    // LOGIN ----------------------------------------------------
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const name = document.getElementById("loginName").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-
-      if (!name || !password) {
-        msg.textContent = "Bitte Name und Passwort eingeben.";
-        return;
-      }
-
-      const email = `${name.toLowerCase()}@bullfrog.fake`;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        msg.textContent = "Login fehlgeschlagen: " + error.message;
-      } else {
-        msg.textContent = "Login erfolgreich. Weiterleitung...";
-        setTimeout(() => (window.location.href = "dashboard.html"), 1000);
-      }
-    });
-
-    // REGISTRIERUNG --------------------------------------------
-    document.getElementById("btnRegister").addEventListener("click", async () => {
-      const name = document.getElementById("regName").value.trim();
-      const password = document.getElementById("regPassword").value.trim();
-
-      if (!name || !password) {
-        msg.textContent = "Bitte Name und Passwort eingeben.";
-        return;
-      }
-
+    // 🟢 Login
+    document.getElementById("btnLogin").onclick = async () => {
+      const name = loginName.value.trim();
+      const pass = loginPass.value.trim();
+      if (!name || !pass) return (msg.textContent = "Bitte alles ausfüllen.");
       const email = `${name.toLowerCase()}@bullfrog.fake`;
 
-      // Benutzer anlegen (Supabase Auth)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { user_role: "member", user_status: "pending" },
-        },
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) return (msg.textContent = "Fehler: " + error.message);
 
-      if (error) {
-        msg.textContent = "Registrierung fehlgeschlagen: " + error.message;
-        return;
-      }
+      msg.textContent = "Login erfolgreich...";
+      setTimeout(() => (window.location.href = "dashboard.html"), 800);
+    };
 
-      // In public.users Tabelle eintragen
-      const { error: insertErr } = await supabase.from("users").insert({
-        id: data.user.id,
-        name,
-        role: "member",
-        status: "pending",
-        created_at: new Date(),
-      });
+    // 🟡 Registrierung
+    document.getElementById("btnRegister").onclick = async () => {
+      const name = regName.value.trim();
+      const pass = regPass.value.trim();
+      if (!name || !pass) return (msg.textContent = "Bitte alles ausfüllen.");
+      const email = `${name.toLowerCase()}@bullfrog.fake`;
 
-      if (insertErr) {
-        msg.textContent = "Fehler beim Speichern: " + insertErr.message;
-      } else {
-        msg.textContent = "Registrierung erfolgreich! Bitte auf Freischaltung warten.";
+      const { data, error } = await supabase.auth.signUp({ email, password: pass });
+      if (error) return (msg.textContent = "Fehler: " + error.message);
+
+      const id = data.user.id;
+      // Erster User wird automatisch Admin
+      const { data: existing } = await supabase.from("users").select("id");
+      const role = !existing || existing.length === 0 ? "admin" : "member";
+      const status = role === "admin" ? "active" : "pending";
+
+      const { error: insertErr } = await supabase.from("users").insert([
+        { id, name, role, status, created_at: new Date() },
+      ]);
+      if (insertErr) msg.textContent = "DB Fehler: " + insertErr.message;
+      else {
+        msg.textContent = "Registriert! Bitte auf Freischaltung warten.";
         setTimeout(() => {
-          registerForm.style.display = "none";
-          loginForm.style.display = "block";
+          registerBox.style.display = "none";
+          loginBox.style.display = "block";
         }, 1500);
       }
-    });
+    };
   </script>
 </body>
 </html>
