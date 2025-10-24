@@ -1,18 +1,52 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bullfrog Tools Dashboard</title>
 <style>
-body{margin:0;display:flex;background:#19150e;color:#d8c7a0;font-family:Trebuchet MS;height:100vh}
-nav{width:220px;background:#231f14;display:flex;flex-direction:column;border-right:1px solid #3b3322}
-nav button{background:none;border:none;color:#d8c7a0;padding:14px;text-align:left;cursor:pointer;border-bottom:1px solid #3b3322}
-nav button:hover,nav button.active{background:#b9923d;color:#19150e}
-main{flex:1;padding:25px;overflow:auto}
-h1{color:#b9923d}
+body{
+  margin:0;display:flex;
+  background:#19150e;color:#d8c7a0;
+  font-family:Trebuchet MS;height:100vh;
+}
+nav{
+  width:220px;background:#231f14;
+  display:flex;flex-direction:column;
+  border-right:1px solid #3b3322;
+}
+nav button{
+  background:none;border:none;color:#d8c7a0;
+  padding:14px;text-align:left;cursor:pointer;
+  border-bottom:1px solid #3b3322;
+}
+nav button:hover,nav button.active{
+  background:#b9923d;color:#19150e;
+}
+main{flex:1;padding:25px;overflow:auto;position:relative}
+h1{color:#b9923d;margin-top:0}
+#logoutBtn{
+  position:absolute;top:15px;right:15px;
+  background:none;border:none;font-size:28px;
+  cursor:pointer;color:#b9923d;
+}
+#logoutBtn:hover{color:#d1a24f}
+
+/* Tabelle */
+table{border-collapse:collapse;width:100%;margin-top:10px}
+th,td{padding:8px;border:1px solid #3b3322;text-align:left}
+th{background:#2c261a;color:#b9923d}
+tr:nth-child(even){background:#1d1912}
+button.small{
+  background:#b9923d;color:#19150e;
+  border:none;border-radius:4px;
+  padding:4px 8px;margin:0 2px;cursor:pointer
+}
+button.small:hover{background:#d1a24f}
 </style>
 </head>
 <body>
+
 <nav>
   <h3 style="text-align:center;color:#b9923d">Bullfrog Tools</h3>
   <button onclick="show('briefing')" class="active">🪶 Briefing</button>
@@ -21,48 +55,89 @@ h1{color:#b9923d}
   <button onclick="show('map')">🗺️ Karte</button>
   <button class="adminOnly" onclick="show('members')">🧍 Mitglieder</button>
 </nav>
+
 <main>
+  <button id="logoutBtn" title="Zurück ins Lager">🏕️</button>
+
   <section id="briefing"><h1>Willkommen <span id="userDisplay"></span></h1></section>
   <section id="battle" style="display:none"><h1>Kriegsberichte</h1></section>
   <section id="reserve" style="display:none"><h1>Inselreservierung</h1></section>
   <section id="map" style="display:none"><h1>Karte</h1></section>
-  <section id="members" style="display:none"><h1>Mitgliederverwaltung</h1><table id="memberTable"></table></section>
+  <section id="members" style="display:none">
+    <h1>Mitgliederverwaltung</h1>
+    <table id="memberTable"></table>
+  </section>
 </main>
 
 <script type="module">
 import { supabase } from "./supabase.js";
 
-const {data:{user}}=await supabase.auth.getUser();
-if(!user)window.location="index.html";
-const name=localStorage.getItem("username")||"Unbekannt";
-const role=localStorage.getItem("role")||"member";
-document.getElementById("userDisplay").textContent=name;
+const { data:{ user } } = await supabase.auth.getUser();
+if(!user) window.location = "index.html";
 
-/* Sichtbarkeit */
-if(role!=="admin")document.querySelectorAll(".adminOnly").forEach(b=>b.style.display="none");
+const username = localStorage.getItem("username") || "Unbekannt";
+const role = localStorage.getItem("role") || "member";
+document.getElementById("userDisplay").textContent = username;
+
+/* --- Logout --- */
+document.getElementById("logoutBtn").onclick = async () => {
+  await supabase.auth.signOut();
+  localStorage.clear();
+  window.location = "index.html";
+};
+
+/* --- Sichtbarkeit --- */
+if(role !== "admin") document.querySelectorAll(".adminOnly").forEach(b=>b.style.display="none");
 else loadMembers();
 
-/* Navigation */
-window.show=id=>{
+/* --- Navigation --- */
+window.show = id => {
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll("nav button")].find(b=>(b.getAttribute("onclick")||"").includes(id)).classList.add("active");
 };
 
-/* Mitgliederliste (Admin) */
+/* --- Mitgliederverwaltung --- */
 async function loadMembers(){
-  const {data}=await supabase.from("users").select("*");
+  const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: true });
+  if(error){ console.error(error); return; }
   const t=document.getElementById("memberTable");
   t.innerHTML="<tr><th>Name</th><th>Rolle</th><th>Status</th><th>Aktion</th></tr>";
+
   data.forEach(u=>{
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${u.username}</td><td>${u.role}</td><td>${u.status}</td>
-    <td>${u.status==='pending'?`<button onclick="activate('${u.id}')">✅</button>`:""}</td>`;
+    let actions="";
+    if(u.status==="pending"){
+      actions+=`<button class='small' onclick="updateStatus('${u.id}','active')">✅ Freigeben</button>`;
+      actions+=`<button class='small' onclick="updateStatus('${u.id}','denied')">❌ Ablehnen</button>`;
+    }
+    actions+=`<button class='small' onclick="deleteUser('${u.id}')">🗑️ Löschen</button>`;
+    if(u.role==="admin")
+      actions+=`<button class='small' onclick="changeRole('${u.id}','member')">⬇️ Zu Member</button>`;
+    else
+      actions+=`<button class='small' onclick="changeRole('${u.id}','admin')">⬆️ Zu Admin</button>`;
+    tr.innerHTML=`<td>${u.username}</td><td>${u.role}</td><td>${u.status}</td><td>${actions}</td>`;
     t.appendChild(tr);
   });
 }
-window.activate=async(id)=>{await supabase.from("users").update({status:"active"}).eq("id",id);loadMembers();}
+
+/* --- Aktionen --- */
+window.updateStatus = async (id, status) => {
+  await supabase.from("users").update({ status }).eq("id", id);
+  loadMembers();
+};
+
+window.changeRole = async (id, role) => {
+  await supabase.from("users").update({ role }).eq("id", id);
+  loadMembers();
+};
+
+window.deleteUser = async (id) => {
+  if(!confirm("Benutzer wirklich löschen?")) return;
+  await supabase.from("users").delete().eq("id", id);
+  loadMembers();
+};
 </script>
 </body>
 </html>
