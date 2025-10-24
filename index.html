@@ -3,116 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Tools - Login</title>
-  <script type="module" src="supabase.js"></script>
-
+  <title>Bullfrog Tools – Anmeldung</title>
   <style>
-    :root {
-      --bg-dark: #1a1d1a;
-      --card-dark: #2b2e2b;
-      --text-dark: #f4f4f4;
-      --accent: #3a5c39;
-      --accent-hover: #4b724a;
-    }
-
     body {
-      margin: 0;
-      font-family: "Inter", sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
       height: 100vh;
+      gap: 20px;
     }
-
-    .card {
-      background: var(--card-dark);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-      width: 320px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 1.5rem;
-      color: var(--accent);
-    }
-
     input {
-      width: 90%;
-      padding: 0.6rem;
-      margin-bottom: 1rem;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-      background-color: #2e322e;
-      color: #f4f4f4;
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #555;
+      background-color: #222;
+      color: #fff;
     }
-
     button {
-      width: 95%;
-      padding: 0.8rem;
-      margin: 0.5rem 0;
+      padding: 8px 15px;
       border: none;
-      border-radius: 6px;
-      background-color: var(--accent);
+      border-radius: 5px;
+      background-color: #007bff;
       color: white;
-      font-size: 1rem;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
-
     button:hover {
-      background-color: var(--accent-hover);
+      background-color: #0056b3;
     }
-
-    #msg {
-      margin-top: 0.8rem;
-      font-size: 0.9rem;
-      color: #ccc;
-    }
+    h2 { margin-bottom: 5px; }
   </style>
 </head>
-
 <body>
-  <div class="card">
-    <h1>🐸 Bullfrog Tools</h1>
-    <input id="name" placeholder="Ingame-Name" />
-    <input id="pass" type="password" placeholder="Passwort" />
-    <button id="loginBtn">Anmelden</button>
-    <button id="registerBtn">Registrieren</button>
-    <p id="msg"></p>
+  <div>
+    <h2>Registrierung</h2>
+    <input id="regUser" placeholder="Ingame-Name" />
+    <input id="regPass" type="password" placeholder="Passwort" />
+    <button id="btnRegister">Registrieren</button>
   </div>
 
-  <script type="module">
-    import { register, login } from "./supabase.js";
+  <div>
+    <h2>Login</h2>
+    <input id="logUser" placeholder="Ingame-Name" />
+    <input id="logPass" type="password" placeholder="Passwort" />
+    <button id="btnLogin">Login</button>
+  </div>
 
-    const msg = document.getElementById("msg");
-    const name = document.getElementById("name");
-    const pass = document.getElementById("pass");
+  <button id="btnLogout">Logout</button>
 
-    // ===== Login =====
-    document.getElementById("loginBtn").onclick = async () => {
-      try {
-        msg.textContent = "Anmeldung...";
-        await login(name.value.trim(), pass.value.trim());
-      } catch (e) {
-        msg.textContent = e.message;
-      }
-    };
-
-    // ===== Registrierung =====
-    document.getElementById("registerBtn").onclick = async () => {
-      try {
-        msg.textContent = "Registriere...";
-        await register(name.value.trim(), pass.value.trim());
-      } catch (e) {
-        msg.textContent = e.message;
-      }
-    };
-  </script>
+  <!-- Verknüpfung zum Supabase-Frontend-Code -->
+  <script type="module" src="./supabase.js"></script>
 </body>
 </html>
