@@ -173,6 +173,41 @@
       padding-bottom: 70px;
     }
   }
+
+/* === ICON-BUTTONS (Logout + Theme) === */
+.icon-btn {
+  position: fixed;
+  top: 15px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+  z-index: 50;
+}
+
+.icon-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: translateY(-1px);
+}
+
+/* Positionierung: neben Theme-Button */
+#themeToggle { right: 65px; }
+#logoutBtn { right: 15px; }
+
+/* Mobile Ansicht */
+@media (max-width: 768px) {
+  #themeToggle { right: 65px; top: 10px; }
+  #logoutBtn { right: 15px; top: 10px; }
+}
+
 </style>
 </head>
 <body>
