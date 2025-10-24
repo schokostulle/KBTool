@@ -4,225 +4,120 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Tools – Dashboard</title>
-  <script type="module" src="supabase.js"></script>
-
   <style>
-    :root {
-      --bg-dark: #1a1d1a;
-      --card-dark: #2b2e2b;
-      --text-dark: #f4f4f4;
-      --accent: #3a5c39;
-      --accent-hover: #4b724a;
-    }
-
     body {
       margin: 0;
-      font-family: "Inter", sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
       display: flex;
+      flex-direction: row;
       height: 100vh;
-      overflow: hidden;
     }
 
-    /* Seitenmenü (Desktop) */
     nav {
-      width: 230px;
-      background-color: var(--card-dark);
+      width: 220px;
+      background: #1e1e1e;
       display: flex;
       flex-direction: column;
-      padding: 1rem;
-      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
+      padding: 15px;
     }
 
     nav h2 {
-      color: var(--accent);
-      margin-bottom: 1.2rem;
+      font-size: 1.2em;
+      margin-bottom: 15px;
     }
 
     nav button {
-      background: none;
+      background: #333;
       border: none;
-      color: var(--text-dark);
+      color: #eee;
+      padding: 10px;
       text-align: left;
-      padding: 0.6rem 0.8rem;
-      margin-bottom: 0.3rem;
+      margin-bottom: 5px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s;
     }
 
-    nav button:hover,
-    nav button.active {
-      background-color: var(--accent);
-      color: #fff;
+    nav button:hover {
+      background: #007bff;
     }
 
     main {
-      flex-grow: 1;
-      padding: 1.5rem;
+      flex: 1;
+      padding: 20px;
       overflow-y: auto;
     }
 
-    h1 {
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-
-    .event {
-      background-color: var(--card-dark);
-      padding: 1rem;
+    .pending {
+      background-color: #553;
+      padding: 20px;
       border-radius: 8px;
-      margin-bottom: 0.8rem;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      color: #ffcc00;
     }
 
-    .event strong {
-      color: var(--accent);
-    }
-
-    .event small {
-      color: #aaa;
-    }
-
-    /* Mobile Navigation */
-    #mobileNav {
+    .hidden {
       display: none;
-    }
-
-    @media (max-width: 768px) {
-      nav {
-        display: none;
-      }
-
-      #mobileNav {
-        display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--card-dark);
-        justify-content: space-around;
-        padding: 0.5rem 0;
-        border-top: 1px solid var(--accent);
-      }
-
-      #mobileNav button {
-        background: none;
-        border: none;
-        color: var(--text-dark);
-        font-size: 1.2rem;
-      }
-
-      body {
-        flex-direction: column;
-      }
-
-      main {
-        height: calc(100vh - 60px);
-      }
-    }
-
-    #logoutBtn {
-      margin-top: auto;
-      background-color: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 0.6rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    #logoutBtn:hover {
-      background-color: var(--accent-hover);
     }
   </style>
 </head>
-
 <body>
-  <!-- Seitenmenü -->
-  <nav>
-    <h2>🐸 Bullfrog</h2>
-    <button class="active" id="btnEvents">Ereignisse</button>
-    <button id="btnReports">Kampfberichte</button>
-    <button id="btnIslands">Inseln</button>
-    <button id="btnMap">Karte</button>
-    <button id="btnDefense">Angriff / Verteidigung</button>
-    <hr style="margin:1rem 0;border-color:#3a5c39;">
+  <nav id="nav">
+    <h2>Bullfrog Tools</h2>
+    <button data-section="events">Ereignisse</button>
+    <button data-section="battle">Kampfberichte</button>
+    <button data-section="reserve">Inseln reservieren</button>
+    <button data-section="map">Inselkarte</button>
+    <div id="adminPanel" class="hidden">
+      <hr />
+      <button data-section="csv">CSV-Tabelle</button>
+      <button data-section="members">Mitgliederverwaltung</button>
+      <button data-section="diplomacy">Diplomatie</button>
+    </div>
+    <hr />
     <button id="btnLogout">Abmelden</button>
   </nav>
 
-  <!-- Hauptbereich -->
-  <main>
-    <h1>Ereignisse</h1>
-    <div id="events"></div>
+  <main id="main">
+    <h1>Willkommen bei Bullfrog Tools</h1>
+    <div id="pendingNotice" class="pending hidden">
+      Dein Account ist noch nicht freigeschaltet. Bitte warte auf Freigabe durch einen Admin.
+    </div>
   </main>
 
-  <!-- Mobile Menü -->
-  <div id="mobileNav">
-    <button title="Ereignisse">🏠</button>
-    <button title="Berichte">⚔️</button>
-    <button title="Inseln">🏝️</button>
-    <button title="Karte">🗺️</button>
-    <button title="Zeiten">⏱️</button>
-  </div>
-
   <script type="module">
-    import {
-      getCurrentUser,
-      getUserProfile,
-      loadEvents,
-      logout
-    } from "./supabase.js";
+    import { supabase, checkSession, logout } from "./supabase.js";
 
-    // Logout
-    document.getElementById("btnLogout").onclick = async () => {
-      await logout();
-    };
+    document.getElementById("btnLogout").addEventListener("click", logout);
 
-    // Initialisierung
-    async function init() {
-      const user = await getCurrentUser();
-      if (!user) {
-        location.href = "index.html";
-        return;
+    const nav = document.getElementById("nav");
+    const adminPanel = document.getElementById("adminPanel");
+    const pendingNotice = document.getElementById("pendingNotice");
+    const main = document.getElementById("main");
+
+    // Session prüfen
+    const user = await checkSession();
+    if (!user) {
+      alert("Keine aktive Sitzung – bitte neu anmelden.");
+      window.location.href = "index.html";
+    } else {
+      main.innerHTML = `<h1>Willkommen, ${user.email.split("@")[0]}!</h1>`;
+      if (user.status === "pending") {
+        pendingNotice.classList.remove("hidden");
       }
-
-      const profile = await getUserProfile(user.id);
-      if (!profile || profile.status !== "active") {
-        alert("Dein Konto ist noch nicht freigeschaltet.");
-        await logout();
-        return;
+      if (user.role === "admin") {
+        adminPanel.classList.remove("hidden");
       }
-
-      // Ereignisse laden
-      const events = await loadEvents();
-      renderEvents(events);
     }
 
-    function renderEvents(events) {
-      const container = document.getElementById("events");
-      if (!events || events.length === 0) {
-        container.innerHTML = "<p>Keine Ereignisse vorhanden.</p>";
-        return;
-      }
-      container.innerHTML = events
-        .map(
-          (e) => `
-          <div class="event">
-            <strong>${e.title}</strong><br>
-            <small>${new Date(e.timestamp).toLocaleString()} — ${
-              e.author || "System"
-            }</small>
-            <p>${e.message}</p>
-          </div>`
-        )
-        .join("");
-    }
-
-    init();
+    // Navigation
+    nav.querySelectorAll("button[data-section]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const section = btn.getAttribute("data-section");
+        main.innerHTML = `<h2>${section}</h2><p>Hier wird später das ${section}-Modul angezeigt.</p>`;
+      });
+    });
   </script>
 </body>
 </html>
