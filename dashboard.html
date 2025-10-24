@@ -4,67 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Bullfrog Tools Dashboard</title>
-<style>
-
-\\ Designzentrale
-:root {
-  /* === Farbpalette – Military Theme === */
-  --bg-dark: #19150e;          /* Hintergrund */
-  --bg-card: #231f14;          /* Karten / Panels */
-  --bg-highlight: #2c261a;     /* Tabellenkopf */
-  --border-dark: #3b3322;      /* Ränder */
-
-  --text-main: #d8c7a0;        /* Standardtext */
-  --text-muted: #a8997a;       /* Sekundärtext */
-  --accent-gold: #b9923d;      /* Hauptakzent (Buttons) */
-  --accent-gold-hover: #d1a24f;
-  --accent-green: #4CAF50;
-  --accent-red: #e74c3c;
-  --accent-orange: #ff9f43;
-  --accent-gray: #666;
-  --accent-gray-hover: #888;
-
-  /* === Schrift & Übergänge === */
-  --font-main: "Trebuchet MS", sans-serif;
-  --radius: 8px;
-  --shadow: 0 0 10px #0006;
-  --transition: all 0.3s ease;
-}
-
-body{margin:0;display:flex;background:#19150e;color:#d8c7a0;
-      font-family:Trebuchet MS;height:100vh}
-nav{width:220px;background:#231f14;display:flex;flex-direction:column;
-     border-right:1px solid #3b3322}
-nav button{background:none;border:none;color:#d8c7a0;padding:14px;
-            text-align:left;cursor:pointer;border-bottom:1px solid #3b3322}
-nav button:hover,nav button.active{background:#b9923d;color:#19150e}
-main{flex:1;padding:25px;overflow:auto;position:relative}
-h1{color:#b9923d;margin-top:0}
-#logoutBtn{position:absolute;top:15px;right:15px;background:none;border:none;
-           font-size:28px;cursor:pointer;color:#b9923d}
-#logoutBtn:hover{color:#d1a24f}
-
-/* Tabelle */
-table{border-collapse:collapse;width:100%;margin-top:10px}
-th,td{padding:8px;border:1px solid #3b3322;text-align:left}
-th{background:#2c261a;color:#b9923d}
-tr:nth-child(even){background:#1d1912}
-
-/* Buttons */
-button.small{border:none;border-radius:4px;padding:4px 8px;margin:0 2px;
-             cursor:pointer;font-weight:bold;color:#19150e}
-.small.green{background:#4CAF50}.small.green:hover{background:#5ed65e}
-.small.red{background:#e74c3c}.small.red:hover{background:#ff6b5c}
-.small.gray{background:#666}.small.gray:hover{background:#888}
-.small.gold{background:#b9923d;color:#19150e}.small.gold:hover{background:#d1a24f}
-.small.orange{background:#ff9f43;color:#19150e}.small.orange:hover{background:#ffb866}
-
-/* Hinweisbox */
-#infoBox{position:fixed;bottom:20px;right:20px;background:#b9923d;color:#19150e;
-         padding:10px 16px;border-radius:6px;display:none;box-shadow:0 0 10px #0007;
-         opacity:0;transition:opacity 0.5s ease}
-#infoBox.show{display:block;opacity:1}
-</style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 <nav>
