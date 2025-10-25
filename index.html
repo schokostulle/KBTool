@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bullfrog Command – Anmeldung</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600..900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/stylesheet.css" />
+</head>
+<body class="theme-dark ocean-bg">
+  <header class="auth-header">
+    <h1 class="brand"><span class="brand-accent">⚓</span> Bullfrog Command</h1>
+    <p class="subtitle">Strategie-Tool der Flotte — Zeitalter der Seefahrt</p>
+  </header>
+
+  <main class="auth-card">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="login">Anmelden</button>
+      <button class="tab-btn" data-tab="register">Registrieren</button>
+    </div>
+
+    <section id="login" class="tab-panel active">
+      <form id="loginForm">
+        <label>Nutzername
+          <input type="text" id="login-username" required placeholder="z. B. athen_krieger" />
+        </label>
+        <label>Passwort
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </label>
+        <button type="submit" class="btn primary">Anmelden</button>
+      </form>
+      <p class="hint">E-Mail wird intern als <code>&lt;nutzername&gt;@bullfrog.fake</code> erzeugt.</p>
+      <div id="loginMsg" class="msg"></div>
+    </section>
+
+    <section id="register" class="tab-panel">
+      <form id="registerForm">
+        <label>Wunsch-Nutzername
+          <input type="text" id="reg-username" required />
+        </label>
+        <label>Passwort
+          <input type="password" id="reg-password" required minlength="8" />
+        </label>
+        <button type="submit" class="btn brass">Registrieren</button>
+      </form>
+      <p class="hint">Neue Nutzer starten als <strong>Anwärter</strong>. Beförderung durch Admin.</p>
+      <div id="registerMsg" class="msg"></div>
+    </section>
+  </main>
+
+  <footer class="auth-footer">
+    <small>© Bullfrog Fleet • Dark Nautical Theme</small>
+  </footer>
+
+  <!-- Supabase CDN & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { registerUser, loginUser } from './js/supabase.js';
+    import { bindAuthTabs, uiMsg } from './js/main.js';
+
+    bindAuthTabs();
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value;
+      uiMsg('loginMsg', '… prüfe Anmeldedaten', 'info');
+
+      const res = await loginUser(u, p);
+      if (res.success) {
+        uiMsg('loginMsg', 'Anmeldung erfolgreich. Weiter zum Dashboard …', 'success');
+        window.location.href = './dashboard.html';
+      } else {
+        uiMsg('loginMsg', `Fehler: ${res.error}`, 'error');
+      }
+    });
+
+    // Registrierung
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('reg-username').value.trim();
+      const p = document.getElementById('reg-password').value;
+      uiMsg('registerMsg', '… erstelle Konto', 'info');
+
+      const res = await registerUser(u, p);
+      if (res.success) {
+        uiMsg('registerMsg', 'Konto erstellt. Du kannst dich jetzt anmelden.', 'success');
+      } else {
+        uiMsg('registerMsg', `Fehler: ${res.error}`, 'error');
+      }
+    });
+  </script>
+</body>
+</html>
