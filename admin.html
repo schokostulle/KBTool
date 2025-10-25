@@ -2,29 +2,31 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Admin-Bereich</title>
+  <title>Adminbereich</title>
 </head>
 <body>
-  <h1>Admin – Nutzerfreischaltung</h1>
-  <ul id="user-list"></ul>
+  <h1>Adminbereich</h1>
+  <ul id="userList"></ul>
 
   <script type="module">
-    import { supabase } from './js/supabaseClient.js';
+    import { supabase } from "./js/supabaseClient.js";
 
     async function loadApplicants() {
-      const { data } = await supabase.from('user_roles')
-        .select('user_id, role')
-        .eq('role', 'anwaerter');
+      const { data } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("role", "anwaerter");
 
-      const list = document.getElementById('user-list');
+      const list = document.getElementById("userList");
       list.innerHTML = data.map(u =>
         `<li>${u.user_id} 
-          <button onclick="approveUser('${u.user_id}')">Freischalten</button>
-        </li>`).join('');
+          <button onclick="approve('${u.user_id}')">Freischalten</button>
+        </li>`
+      ).join('');
     }
 
-    window.approveUser = async (id) => {
-      await supabase.from('user_roles').update({ role: 'member' }).eq('user_id', id);
+    window.approve = async (userId) => {
+      await supabase.from("user_roles").update({ role: "member" }).eq("user_id", userId);
       loadApplicants();
     };
 
