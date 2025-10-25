@@ -1,101 +1,124 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bullfrog Tools – Anmeldung</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
 </head>
 
-<body>
-  <h1>Bullfrog Tools</h1>
+<body style="font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0;">
 
-  <main id="authContainer">
-    <!-- Login -->
-    <form id="loginForm">
-      <h2>Anmeldung</h2>
-      <label>Benutzername</label>
-      <input type="text" id="loginUsername" required />
-      <label>Passwort</label>
-      <input type="password" id="loginPassword" required />
-      <button type="submit">Einloggen</button>
-      <p>Noch kein Konto? <a href="#" id="toRegister">Registrieren</a></p>
-    </form>
+  <!-- Header -->
+  <header style="background: #222; color: #fff; padding: 15px; text-align: center;">
+    <h1>Bullfrog Tools</h1>
+  </header>
 
-    <!-- Registrierung -->
-    <form id="registerForm" hidden>
-      <h2>Registrierung</h2>
-      <label>Benutzername</label>
-      <input type="text" id="regUsername" required />
-      <label>Passwort</label>
-      <input type="password" id="regPassword" required />
-      <label>Passwort wiederholen</label>
-      <input type="password" id="regPasswordRepeat" required />
-      <button type="submit">Registrieren</button>
-      <p>Bereits ein Konto? <a href="#" id="toLogin">Anmelden</a></p>
-    </form>
+  <!-- Container -->
+  <main style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+    <div style="background: #1e1e1e; padding: 30px; border-radius: 8px; width: 300px; text-align: center;">
+      <h2 id="formTitle">Anmeldung</h2>
 
-    <div id="messageBox"></div>
+      <!-- Login-Form -->
+      <div id="loginForm">
+        <input type="text" id="loginName" placeholder="Benutzername" style="width:100%;padding:8px;margin:5px 0;"><br>
+        <input type="password" id="loginPass" placeholder="Passwort" style="width:100%;padding:8px;margin:5px 0;"><br>
+        <button id="loginBtn" style="width:100%;padding:8px;">Einloggen</button>
+        <p style="margin-top:10px;">Noch kein Account? <a href="#" id="showRegister">Registrieren</a></p>
+      </div>
+
+      <!-- Registrierungs-Form -->
+      <div id="registerForm" hidden>
+        <input type="text" id="regName" placeholder="Benutzername" style="width:100%;padding:8px;margin:5px 0;"><br>
+        <input type="password" id="regPass" placeholder="Passwort" style="width:100%;padding:8px;margin:5px 0;"><br>
+        <input type="password" id="regPass2" placeholder="Passwort wiederholen" style="width:100%;padding:8px;margin:5px 0;"><br>
+        <button id="registerBtn" style="width:100%;padding:8px;">Registrieren</button>
+        <p style="margin-top:10px;">Schon registriert? <a href="#" id="showLogin">Zurück zum Login</a></p>
+      </div>
+
+      <!-- Statusmeldung -->
+      <div id="message" style="margin-top:15px;min-height:24px;color:#0f0;"></div>
+    </div>
   </main>
 
+  <!-- Script -->
   <script type="module">
     import { registerUser, loginUser } from "./supabase.js";
 
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
-    const messageBox = document.getElementById("messageBox");
+    const loginForm = document.querySelector("#loginForm");
+    const registerForm = document.querySelector("#registerForm");
+    const messageBox = document.querySelector("#message");
+    const formTitle = document.querySelector("#formTitle");
 
-    // Formularwechsel
-    document.getElementById("toRegister").onclick = (e) => {
-      e.preventDefault();
+    // Anzeigen: Registrierung oder Login
+    document.querySelector("#showRegister").addEventListener("click", () => {
       loginForm.hidden = true;
       registerForm.hidden = false;
-    };
-    document.getElementById("toLogin").onclick = (e) => {
-      e.preventDefault();
+      formTitle.textContent = "Registrierung";
+      messageBox.textContent = "";
+    });
+
+    document.querySelector("#showLogin").addEventListener("click", () => {
       registerForm.hidden = true;
       loginForm.hidden = false;
-    };
+      formTitle.textContent = "Anmeldung";
+      messageBox.textContent = "";
+    });
 
-    // Registrierung
-    registerForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = regUsername.value.trim();
-      const pw = regPassword.value;
-      const pw2 = regPasswordRepeat.value;
+    // Login
+    document.querySelector("#loginBtn").addEventListener("click", async () => {
+      const username = document.querySelector("#loginName").value.trim();
+      const password = document.querySelector("#loginPass").value.trim();
 
-      if (pw !== pw2) {
-        showMessage("Passwörter stimmen nicht überein");
+      if (!username || !password) {
+        showMessage("Bitte alle Felder ausfüllen.", "red");
         return;
       }
 
-      try {
-        const result = await registerUser(username, pw);
-        showMessage(result.message);
-      } catch (err) {
-        showMessage("Fehler bei der Registrierung: " + err.message);
+      const result = await loginUser(username, password);
+      showMessage(result.message, result.success ? "lime" : "red");
+
+      if (result.success) {
+        setTimeout(() => window.location.href = "dashboard.html", 1000);
       }
     });
 
-    // Anmeldung
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = loginUsername.value.trim();
-      const pw = loginPassword.value;
+    // Registrierung
+    document.querySelector("#registerBtn").addEventListener("click", async () => {
+      const username = document.querySelector("#regName").value.trim();
+      const pw1 = document.querySelector("#regPass").value.trim();
+      const pw2 = document.querySelector("#regPass2").value.trim();
 
-      try {
-        const result = await loginUser(username, pw);
-        showMessage(result.message);
-        if (result.success) {
-          setTimeout(() => (window.location.href = "dashboard.html"), 1500);
-        }
-      } catch (err) {
-        showMessage("Fehler bei der Anmeldung: " + err.message);
+      if (!username || !pw1 || !pw2) {
+        showMessage("Bitte alle Felder ausfüllen.", "red");
+        return;
+      }
+      if (pw1 !== pw2) {
+        showMessage("Passwörter stimmen nicht überein.", "red");
+        return;
+      }
+
+      const result = await registerUser(username, pw1);
+      showMessage(result.message, result.success ? "lime" : "red");
+
+      if (result.success) {
+        // zurück zur Anmeldung nach 3 Sekunden
+        setTimeout(() => {
+          registerForm.hidden = true;
+          loginForm.hidden = false;
+          formTitle.textContent = "Anmeldung";
+          messageBox.textContent = "";
+        }, 3000);
       }
     });
 
-    function showMessage(text) {
+    // Hilfsfunktion für Statusmeldungen
+    function showMessage(text, color = "#0f0") {
       messageBox.textContent = text;
-      setTimeout(() => (messageBox.textContent = ""), 7000);
+      messageBox.style.color = color;
+      if (text) {
+        setTimeout(() => { messageBox.textContent = ""; }, 7000);
+      }
     }
   </script>
 </body>
