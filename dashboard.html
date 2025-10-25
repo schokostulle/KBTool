@@ -67,6 +67,51 @@
       csv: "csvSection"
     };
 
+import { listUsers, updateUserStatus, changeUserRole, deleteUser } from "./supabase.js";
+
+async function loadMembers() {
+  const tableBody = document.querySelector("#membersTable tbody");
+  tableBody.innerHTML = "";
+  const users = await listUsers();
+
+  users.forEach(u => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${u.username}</td>
+      <td>${u.role}</td>
+      <td>${u.status}</td>
+      <td>
+        <button data-action="activate" data-id="${u.id}" ${u.status === "active" ? "disabled" : ""}>Freigeben</button>
+        <button data-action="block" data-id="${u.id}" ${u.status === "blocked" ? "disabled" : ""}>Blockieren</button>
+        <button data-action="toggleRole" data-id="${u.id}">Rolle ändern</button>
+        <button data-action="delete" data-id="${u.id}">Löschen</button>
+      </td>`;
+    tableBody.appendChild(row);
+  });
+
+  // Event-Handler für Buttons
+  tableBody.querySelectorAll("button").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === "activate") {
+        await updateUserStatus(id, "active");
+      } else if (action === "block") {
+        await updateUserStatus(id, "blocked");
+      } else if (action === "toggleRole") {
+        const newRole = prompt("Neue Rolle (admin/member):", "member");
+        if (newRole) await changeUserRole(id, newRole);
+      } else if (action === "delete") {
+        if (confirm("Diesen Benutzer wirklich löschen?")) await deleteUser(id);
+      }
+      await loadMembers();
+    };
+  });
+}
+
+// Wenn auf Menüpunkt "Mitgliederverwaltung" geklickt wird → Tabelle laden
+document.querySelector('[data-section="members"]').addEventListener("click", loadMembers);
+
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
