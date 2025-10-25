@@ -2,40 +2,40 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Login & Registrierung</title>
+  <title>Konto-Verwaltung</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <h1>Konto-Verwaltung</h1>
 
-  <section id="register">
-    <h2>Registrieren</h2>
+  <section>
+    <h2>Registrierung</h2>
     <input type="email" id="regEmail" placeholder="E-Mail">
     <input type="password" id="regPass" placeholder="Passwort">
-    <button id="btnRegister">Registrieren</button>
+    <button id="registerBtn">Registrieren</button>
   </section>
 
-  <section id="login">
+  <section>
     <h2>Login</h2>
     <input type="email" id="logEmail" placeholder="E-Mail">
     <input type="password" id="logPass" placeholder="Passwort">
-    <button id="btnLogin">Login</button>
+    <button id="loginBtn">Login</button>
   </section>
 
   <script type="module">
-    import { registerUser, loginUser } from './js/auth.js';
+    import { register, login } from "./js/auth.js";
 
-    document.getElementById('btnRegister').onclick = () => {
-      registerUser(
-        document.getElementById('regEmail').value,
-        document.getElementById('regPass').value
+    document.getElementById("registerBtn").onclick = () => {
+      register(
+        document.getElementById("regEmail").value,
+        document.getElementById("regPass").value
       );
     };
 
-    document.getElementById('btnLogin').onclick = () => {
-      loginUser(
-        document.getElementById('logEmail').value,
-        document.getElementById('logPass').value
+    document.getElementById("loginBtn").onclick = () => {
+      login(
+        document.getElementById("logEmail").value,
+        document.getElementById("logPass").value
       );
     };
   </script>
