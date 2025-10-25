@@ -7,17 +7,15 @@
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
 </head>
 
-<body>
-  <header style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#222;color:#fff;">
+<body style="font-family: Arial, sans-serif; background-color:#111; color:#eee; margin:0;">
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#222;">
     <h2>Bullfrog Tools</h2>
-    <button id="logoutBtn" title="Logout" style="background:none;border:none;cursor:pointer;">
-      🏕️
-    </button>
+    <button id="logoutBtn" title="Logout" style="background:none;border:none;cursor:pointer;font-size:20px;">🏕️</button>
   </header>
 
   <main style="display:flex;min-height:100vh;">
-    <!-- ==================== SEITENMENÜ ==================== -->
-    <nav id="sideMenu" style="width:200px;background:#333;color:#fff;padding:10px;">
+    <!-- ================== Navigation ================== -->
+    <nav id="sideMenu" style="width:200px;background:#2a2a2a;padding:10px;">
       <button class="navBtn" data-section="events">Ereignisse</button>
       <button class="navBtn" data-section="reports">Kriegsberichte</button>
       <button class="navBtn" data-section="fleet">Flottenstärke</button>
@@ -28,62 +26,62 @@
 
       <div class="admin-only" style="margin-top:20px;border-top:1px solid #555;padding-top:10px;">
         <h4>Admin</h4>
-        <button class="navBtn" data-section="members">Mitglieder</button>
+        <button class="navBtn" data-section="members">Mitgliederverwaltung</button>
         <button class="navBtn" data-section="diplomacy">Diplomatie</button>
-        <button class="navBtn" data-section="csv">CSV-Tabelle</button>
+        <button class="navBtn" data-section="csv">CSV-Datenbasis</button>
       </div>
     </nav>
 
-    <!-- ==================== INHALTSBEREICH ==================== -->
+    <!-- ================== Inhalt ================== -->
     <section id="content" style="flex:1;padding:20px;">
       <h3 id="welcomeText"></h3>
 
-      <!-- Abschnitt: Ereignisse -->
+      <!-- Ereignisse -->
       <section id="eventsSection" class="contentSection">
-        <h2>Ereignisse & Informationen</h2>
-        <p>Hier erscheinen wichtige Mitteilungen der Admins und laufende Angriffe.</p>
+        <h2>Ereignisse & Mitteilungen</h2>
+        <p>Hier erscheinen wichtige Informationen und aktuelle Kriegsereignisse.</p>
       </section>
 
-      <!-- Abschnitt: Kriegsberichte -->
+      <!-- Kriegsberichte -->
       <section id="reportsSection" class="contentSection" hidden>
         <h2>Kriegsberichte</h2>
-        <p>Hier können Mitglieder ihre Kampfberichte eintragen.</p>
+        <p>Bereich für das Hochladen oder Einfügen von Kampfberichten.</p>
       </section>
 
-      <!-- Abschnitt: Flottenstärke -->
+      <!-- Flottenstärke -->
       <section id="fleetSection" class="contentSection" hidden>
         <h2>Flottenstärke</h2>
         <p>Übersicht über bekannte Truppen- und Flottenstärken.</p>
       </section>
 
-      <!-- Abschnitt: Inselreservierung -->
+      <!-- Inselreservierung -->
       <section id="reserveSection" class="contentSection" hidden>
         <h2>Inselreservierungen</h2>
         <p>Hier kannst du Inseln reservieren oder freigeben.</p>
       </section>
 
-      <!-- Abschnitt: Angriff & Verteidigung -->
+      <!-- Angriff & Verteidigung -->
       <section id="attackSection" class="contentSection" hidden>
-        <h2>Angriffs- & Verteidigungstool</h2>
-        <p>Berechnungen zu Laufzeiten, Entfernungen und Startzeiten.</p>
+        <h2>Angriff & Verteidigung</h2>
+        <p>Berechnungen zu Laufzeiten und Entfernungen.</p>
       </section>
 
-      <!-- Abschnitt: Karte -->
+      <!-- Karte -->
       <section id="mapSection" class="contentSection" hidden>
         <h2>Inselkarte</h2>
         <p>Visuelle Übersicht aller bekannten Inseln und Spieler.</p>
       </section>
 
-      <!-- Abschnitt: KB-Datenbank -->
+      <!-- KB-Datenbank -->
       <section id="kbdataSection" class="contentSection" hidden>
         <h2>Kampfberichte-Datenbank</h2>
         <p>Gespeicherte Berichte zur Analyse gegnerischer Stärke.</p>
       </section>
 
-      <!-- Abschnitt: Mitgliederverwaltung (nur Admin) -->
+      <!-- Mitgliederverwaltung -->
       <section id="membersSection" class="contentSection admin-only" hidden>
         <h2>Mitgliederverwaltung</h2>
-        <table id="membersTable" border="1" cellspacing="0" cellpadding="5">
+        <table id="membersTable" border="1" cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;">
           <thead>
             <tr>
               <th>Benutzername</th>
@@ -96,13 +94,13 @@
         </table>
       </section>
 
-      <!-- Abschnitt: Diplomatie -->
+      <!-- Diplomatie -->
       <section id="diplomacySection" class="contentSection admin-only" hidden>
         <h2>Diplomatie</h2>
         <p>Verwaltung befreundeter und feindlicher Allianzen.</p>
       </section>
 
-      <!-- Abschnitt: CSV -->
+      <!-- CSV -->
       <section id="csvSection" class="contentSection admin-only" hidden>
         <h2>CSV-Datenbasis</h2>
         <p>Hier kann die aktuelle CSV-Datei hochgeladen werden.</p>
@@ -110,7 +108,7 @@
     </section>
   </main>
 
-  <!-- ==================== SCRIPT ==================== -->
+  <!-- ================== SCRIPT ================== -->
   <script type="module">
     import {
       getCurrentUser,
@@ -121,29 +119,27 @@
       deleteUser
     } from "./supabase.js";
 
-    // Benutzer abrufen
     const user = getCurrentUser();
     if (!user.username) {
       window.location.href = "index.html";
     }
 
     // Willkommensnachricht
-    document.querySelector("#welcomeText").textContent =
+    document.querySelector("#welcomeText").textContent = 
       `Willkommen, ${user.username} (${user.role})`;
 
-    // Admin-Bereiche sichtbar / unsichtbar
+    // Admin-spezifische Bereiche anzeigen
     document.querySelectorAll(".admin-only").forEach(el => {
       el.style.display = user.role === "admin" ? "block" : "none";
     });
 
-    // Navigation zwischen Abschnitten
+    // Navigation
     const sections = document.querySelectorAll(".contentSection");
     document.querySelectorAll(".navBtn").forEach(btn => {
       btn.addEventListener("click", () => {
         sections.forEach(sec => (sec.hidden = true));
         const target = document.querySelector(`#${btn.dataset.section}Section`);
         if (target) target.hidden = false;
-
         if (btn.dataset.section === "members" && user.role === "admin") {
           loadMembers();
         }
