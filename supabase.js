@@ -166,37 +166,25 @@ export async function getUserProfile(userId) {
 export async function listUsers() {
   const { data, error } = await supabase
     .from("users")
-    .select("*")
+    .select("id, username, role, status")
     .order("created_at", { ascending: true });
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   return data;
 }
 
-/**
- * Benutzer-Status ändern (pending / active / blocked / denied)
- */
-export async function updateUserStatus(id, status) {
-  const { error } = await supabase.from("users").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
+export async function updateUserStatus(id, newStatus) {
+  const { error } = await supabase.from("users").update({ status: newStatus }).eq("id", id);
+  if (error) throw error;
 }
 
-/**
- * Benutzer-Rolle ändern (admin / member)
- */
-export async function changeUserRole(id, role) {
-  const { error } = await supabase.from("users").update({ role }).eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
+export async function changeUserRole(id, newRole) {
+  const { error } = await supabase.from("users").update({ role: newRole }).eq("id", id);
+  if (error) throw error;
 }
 
-/**
- * Benutzer aus der Datenbank löschen
- */
 export async function deleteUser(id) {
   const { error } = await supabase.from("users").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  return true;
+  if (error) throw error;
 }
 
 // ============================================================
