@@ -1,32 +1,17 @@
-// ============================================================
-//  Bullfrog Tools – Supabase-Verbindung & User-Management
-// ============================================================
+// =====================================================
+// 🔧 Supabase Setup
+// =====================================================
+const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co"; // <-- anpassen!
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo"; // <-- anpassen!
 
-// 🔧 Supabase SDK importieren
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ============================================================
-//  1️⃣ Projekt-Konfiguration
-// ============================================================
-// 👉 Trage hier deine Projektdaten aus Supabase ein:
-const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo";
-
-// 🔗 Verbindung einmalig erstellen
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ============================================================
-//  2️⃣ Authentifizierungs-Funktionen
-// ============================================================
-
-/**
- * Registrierung eines neuen Users
- * - Der erste Benutzer wird automatisch Admin
- * - Alle weiteren müssen durch Admin freigeschaltet werden
- */
+// =====================================================
+// 🧩 REGISTRIERUNG
+// =====================================================
 export async function registerUser(username, password) {
   try {
-    // Prüfen ob Name vergeben ist
+    // Prüfen, ob Benutzername schon existiert
     const { data: existing, error: checkErr } = await supabase
       .from("users")
       .select("id")
@@ -38,29 +23,27 @@ export async function registerUser(username, password) {
       return { success: false, message: "Dieser Benutzername ist bereits vergeben." };
     }
 
-    // Prüfen ob es schon Admins gibt
+    // Prüfen, ob es bereits einen Benutzer gibt → erster wird Admin
     const { count, error: countErr } = await supabase
       .from("users")
       .select("id", { count: "exact", head: true });
-
     if (countErr) throw countErr;
-    const isFirstUser = count === 0;
 
-    // Fake-Mail generieren (da Auth Mail braucht)
+    const isFirstUser = count === 0;
+    const role = isFirstUser ? "admin" : "member";
+    const status = isFirstUser ? "active" : "pending";
+
+    // Fake-Mail (Supabase Auth braucht E-Mail)
     const email = `${username}@bullfrog.fake`;
 
-    // Supabase Auth erstellen
+    // Auth-Account erstellen
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
-
     if (authError) throw authError;
 
-    // Eintrag in Tabelle "users"
-    const role = isFirstUser ? "admin" : "member";
-    const status = isFirstUser ? "active" : "pending";
-
+    // Benutzer in Tabelle eintragen
     const { error: insertErr } = await supabase.from("users").insert([
       {
         id: authData.user.id,
@@ -69,10 +52,9 @@ export async function registerUser(username, password) {
         status,
       },
     ]);
-
     if (insertErr) throw insertErr;
 
-    // Rückmeldung
+    // Erfolgsmeldung
     if (isFirstUser) {
       return {
         success: true,
@@ -90,39 +72,33 @@ export async function registerUser(username, password) {
     console.error("Registrierungsfehler:", err.message);
     return { success: false, message: "Fehler bei der Registrierung: " + err.message };
   }
-const { data: userData, error: userError } = await supabase
-  .from("users")
-  .select("id, username, role, status")
-  .eq("username", username)
-  .maybeSingle();
-
-if (userError) throw userError;
-if (!userData) {
-  return { success: false, message: "Benutzername nicht gefunden." };
 }
-}
-/**
- * Anmeldung eines Users mit Username (nicht E-Mail)
- */
 
-
-// ====================================================
+// =====================================================
 // 🔐 LOGIN
-// ====================================================
+// =====================================================
 export async function loginUser(username, password) {
   try {
     const email = `${username}@bullfrog.fake`;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Login bei Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (error) throw error;
 
-    // Benutzerprofil aus Tabelle "users" holen
+    // Benutzerprofil abrufen
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id, username, role, status")
       .eq("username", username)
-      .single();
+      .maybeSingle();
 
     if (userError) throw userError;
+    if (!userData) {
+      return { success: false, message: "Benutzername nicht gefunden." };
+    }
 
     // Status prüfen
     if (userData.status === "pending") {
@@ -134,7 +110,7 @@ export async function loginUser(username, password) {
       return { success: false, message: "Dein Account ist derzeit gesperrt." };
     }
 
-    // Erfolg → Infos lokal speichern
+    // Erfolg → Daten lokal speichern
     localStorage.setItem("user_id", userData.id);
     localStorage.setItem("username", userData.username);
     localStorage.setItem("role", userData.role);
@@ -147,9 +123,17 @@ export async function loginUser(username, password) {
   }
 }
 
-// ====================================================
-// 🔐 ROLE / STATUS CHECK
-// ====================================================
+// =====================================================
+// 🚪 LOGOUT
+// =====================================================
+export async function logoutUser() {
+  localStorage.clear();
+  await supabase.auth.signOut();
+}
+
+// =====================================================
+// 🧠 USER HELPER
+// =====================================================
 export function getCurrentUser() {
   return {
     id: localStorage.getItem("user_id"),
@@ -159,19 +143,9 @@ export function getCurrentUser() {
   };
 }
 
-export function logoutUser() {
-  localStorage.clear();
-  return supabase.auth.signOut();
-}
-
-// ============================================================
-//  3️⃣ User-Datenbank-Funktionen
-// ============================================================
-
-
-/**
- * Liste aller Benutzer (nur für Admins)
- */
+// =====================================================
+// 👥 MITGLIEDERVERWALTUNG (Admin)
+// =====================================================
 export async function listUsers() {
   const { data, error } = await supabase
     .from("users")
@@ -195,50 +169,3 @@ export async function deleteUser(id) {
   const { error } = await supabase.from("users").delete().eq("id", id);
   if (error) throw error;
 }
-
-// ============================================================
-//  4️⃣ Zusatzfunktionen (Vorbereitung für spätere Tools)
-// ============================================================
-
-/**
- * CSV-Daten hochladen oder ersetzen
- */
-export async function uploadCSV(rows) {
-  // Beispielhafte Struktur
-  const { error } = await supabase.from("islands").upsert(rows);
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * CSV-Daten abrufen
- */
-export async function getCSV() {
-  const { data, error } = await supabase.from("islands").select("*");
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-/**
- * Diplomatie-Status speichern (z. B. Freund/Feind/Neutral)
- */
-export async function setDiplomacy(alliance, status) {
-  const { error } = await supabase
-    .from("diplomacy")
-    .upsert({ alliance, status }, { onConflict: ["alliance"] });
-  if (error) throw new Error(error.message);
-  return true;
-}
-
-/**
- * Diplomatie-Liste abrufen
- */
-export async function getDiplomacy() {
-  const { data, error } = await supabase.from("diplomacy").select("*");
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-// ============================================================
-//  Ende der Datei
-// ============================================================
