@@ -1,17 +1,17 @@
 // =====================================================
 // 🔧 Supabase Setup
 // =====================================================
-const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co"; // <-- anpassen!
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo"; // <-- anpassen!
+const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co";  // <-- anpassen!
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo";            // <-- anpassen!
 
 export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // =====================================================
-// 🧩 REGISTRIERUNG
+// 🧩 Registrierung
 // =====================================================
 export async function registerUser(username, password) {
   try {
-    // Prüfen, ob Benutzername schon existiert
+    // Prüfen, ob Benutzername bereits existiert
     const { data: existing, error: checkErr } = await supabase
       .from("users")
       .select("id")
@@ -19,31 +19,30 @@ export async function registerUser(username, password) {
       .maybeSingle();
 
     if (checkErr) throw checkErr;
-    if (existing) {
-      return { success: false, message: "Dieser Benutzername ist bereits vergeben." };
-    }
+    if (existing) return { success: false, message: "Benutzername bereits vergeben." };
 
-    // Prüfen, ob es bereits einen Benutzer gibt → erster wird Admin
+    // Zählen, wie viele Benutzer es schon gibt
     const { count, error: countErr } = await supabase
       .from("users")
       .select("id", { count: "exact", head: true });
+
     if (countErr) throw countErr;
 
-    const isFirstUser = count === 0;
-    const role = isFirstUser ? "admin" : "member";
-    const status = isFirstUser ? "active" : "pending";
+    const isFirst = count === 0;
+    const role = isFirst ? "admin" : "applicant";
+    const status = isFirst ? "active" : "pending";
 
-    // Fake-Mail (Supabase Auth braucht E-Mail)
+    // Supabase Auth braucht E-Mail — Fake-Mail generieren
     const email = `${username}@bullfrog.fake`;
 
-    // Auth-Account erstellen
+    // Authentifizierungskonto erstellen
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
     if (authError) throw authError;
 
-    // Benutzer in Tabelle eintragen
+    // Benutzer in Tabelle "users" eintragen
     const { error: insertErr } = await supabase.from("users").insert([
       {
         id: authData.user.id,
@@ -54,18 +53,17 @@ export async function registerUser(username, password) {
     ]);
     if (insertErr) throw insertErr;
 
-    // Erfolgsmeldung
-    if (isFirstUser) {
+    if (isFirst) {
       return {
         success: true,
         message:
-          "Registrierung erfolgreich. Du bist der erste Benutzer und wurdest als Admin angelegt.",
+          "Registrierung erfolgreich! Du bist der erste Benutzer und wurdest als Admin angelegt.",
       };
     } else {
       return {
         success: true,
         message:
-          "Registrierung erfolgreich. Ein Admin muss dich noch freischalten, bevor du dich einloggen kannst.",
+          "Registrierung erfolgreich! Dein Account wurde angelegt. Ein Admin muss dich noch freischalten.",
       };
     }
   } catch (err) {
@@ -75,13 +73,12 @@ export async function registerUser(username, password) {
 }
 
 // =====================================================
-// 🔐 LOGIN
+// 🔐 Login
 // =====================================================
 export async function loginUser(username, password) {
   try {
     const email = `${username}@bullfrog.fake`;
 
-    // Login bei Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -89,25 +86,26 @@ export async function loginUser(username, password) {
     if (error) throw error;
 
     // Benutzerprofil abrufen
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userErr } = await supabase
       .from("users")
       .select("id, username, role, status")
       .eq("username", username)
       .maybeSingle();
 
-    if (userError) throw userError;
+    if (userErr) throw userErr;
     if (!userData) {
       return { success: false, message: "Benutzername nicht gefunden." };
     }
 
-    // Status prüfen
+    // Statusprüfung
     if (userData.status === "pending") {
       await supabase.auth.signOut();
-      return { success: false, message: "Dein Account wurde erstellt, ist aber noch nicht freigeschaltet." };
+      return { success: false, message: "Dein Account wurde noch nicht freigeschaltet." };
     }
+
     if (userData.status === "blocked") {
       await supabase.auth.signOut();
-      return { success: false, message: "Dein Account ist derzeit gesperrt." };
+      return { success: false, message: "Dein Account wurde gesperrt." };
     }
 
     // Erfolg → Daten lokal speichern
@@ -116,15 +114,15 @@ export async function loginUser(username, password) {
     localStorage.setItem("role", userData.role);
     localStorage.setItem("status", userData.status);
 
-    return { success: true, message: `Willkommen ${userData.username}!` };
+    return { success: true, message: `Willkommen, ${userData.username}!` };
   } catch (err) {
-    console.error("Login-Fehler:", err.message);
+    console.error("Loginfehler:", err.message);
     return { success: false, message: "Login fehlgeschlagen: " + err.message };
   }
 }
 
 // =====================================================
-// 🚪 LOGOUT
+// 🚪 Logout
 // =====================================================
 export async function logoutUser() {
   localStorage.clear();
@@ -132,7 +130,7 @@ export async function logoutUser() {
 }
 
 // =====================================================
-// 🧠 USER HELPER
+// 🧠 Benutzer abrufen (lokal)
 // =====================================================
 export function getCurrentUser() {
   return {
@@ -144,7 +142,7 @@ export function getCurrentUser() {
 }
 
 // =====================================================
-// 👥 MITGLIEDERVERWALTUNG (Admin)
+// 👥 Mitgliederverwaltung (Admin)
 // =====================================================
 export async function listUsers() {
   const { data, error } = await supabase
