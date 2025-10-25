@@ -1,201 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Tools – Dashboard</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
 </head>
+<body>
+  <h1>Willkommen im Dashboard</h1>
+  <p>Rolle: <span id="role"></span></p>
+  <div id="tool-container"></div>
 
-<body style="font-family: Arial, sans-serif; background-color:#111; color:#eee; margin:0;">
-  <header style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#222;">
-    <h2>Bullfrog Tools</h2>
-    <button id="logoutBtn" title="Logout" style="background:none;border:none;cursor:pointer;font-size:20px;">🏕️</button>
-  </header>
+  <script>
+    const role = localStorage.getItem("role");
+    if (!role) window.location.href = "index.html";
+    document.getElementById("role").textContent = role;
 
-  <main style="display:flex;min-height:100vh;">
-    <!-- ================== Navigation ================== -->
-    <nav id="sideMenu" style="width:200px;background:#2a2a2a;padding:10px;">
-      <button class="navBtn" data-section="events">Ereignisse</button>
-      <button class="navBtn" data-section="reports">Kriegsberichte</button>
-      <button class="navBtn" data-section="fleet">Flottenstärke</button>
-      <button class="navBtn" data-section="reserve">Inselreservierung</button>
-      <button class="navBtn" data-section="attack">Angriff & Verteidigung</button>
-      <button class="navBtn" data-section="map">Karte</button>
-      <button class="navBtn" data-section="kbdata">KB-Datenbank</button>
-
-      <div class="admin-only" style="margin-top:20px;border-top:1px solid #555;padding-top:10px;">
-        <h4>Admin</h4>
-        <button class="navBtn" data-section="members">Mitgliederverwaltung</button>
-        <button class="navBtn" data-section="diplomacy">Diplomatie</button>
-        <button class="navBtn" data-section="csv">CSV-Datenbasis</button>
-      </div>
-    </nav>
-
-    <!-- ================== Inhalt ================== -->
-    <section id="content" style="flex:1;padding:20px;">
-      <h3 id="welcomeText"></h3>
-
-      <!-- Ereignisse -->
-      <section id="eventsSection" class="contentSection">
-        <h2>Ereignisse & Mitteilungen</h2>
-        <p>Hier erscheinen wichtige Informationen und aktuelle Kriegsereignisse.</p>
-      </section>
-
-      <!-- Kriegsberichte -->
-      <section id="reportsSection" class="contentSection" hidden>
-        <h2>Kriegsberichte</h2>
-        <p>Bereich für das Hochladen oder Einfügen von Kampfberichten.</p>
-      </section>
-
-      <!-- Flottenstärke -->
-      <section id="fleetSection" class="contentSection" hidden>
-        <h2>Flottenstärke</h2>
-        <p>Übersicht über bekannte Truppen- und Flottenstärken.</p>
-      </section>
-
-      <!-- Inselreservierung -->
-      <section id="reserveSection" class="contentSection" hidden>
-        <h2>Inselreservierungen</h2>
-        <p>Hier kannst du Inseln reservieren oder freigeben.</p>
-      </section>
-
-      <!-- Angriff & Verteidigung -->
-      <section id="attackSection" class="contentSection" hidden>
-        <h2>Angriff & Verteidigung</h2>
-        <p>Berechnungen zu Laufzeiten und Entfernungen.</p>
-      </section>
-
-      <!-- Karte -->
-      <section id="mapSection" class="contentSection" hidden>
-        <h2>Inselkarte</h2>
-        <p>Visuelle Übersicht aller bekannten Inseln und Spieler.</p>
-      </section>
-
-      <!-- KB-Datenbank -->
-      <section id="kbdataSection" class="contentSection" hidden>
-        <h2>Kampfberichte-Datenbank</h2>
-        <p>Gespeicherte Berichte zur Analyse gegnerischer Stärke.</p>
-      </section>
-
-      <!-- Mitgliederverwaltung -->
-      <section id="membersSection" class="contentSection admin-only" hidden>
-        <h2>Mitgliederverwaltung</h2>
-        <table id="membersTable" border="1" cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>Benutzername</th>
-              <th>Rolle</th>
-              <th>Status</th>
-              <th>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <!-- Diplomatie -->
-      <section id="diplomacySection" class="contentSection admin-only" hidden>
-        <h2>Diplomatie</h2>
-        <p>Verwaltung befreundeter und feindlicher Allianzen.</p>
-      </section>
-
-      <!-- CSV -->
-      <section id="csvSection" class="contentSection admin-only" hidden>
-        <h2>CSV-Datenbasis</h2>
-        <p>Hier kann die aktuelle CSV-Datei hochgeladen werden.</p>
-      </section>
-    </section>
-  </main>
-
-  <!-- ================== SCRIPT ================== -->
-  <script type="module">
-    import {
-      getCurrentUser,
-      logoutUser,
-      listUsers,
-      updateUserStatus,
-      changeUserRole,
-      deleteUser
-    } from "./supabase.js";
-
-    const user = getCurrentUser();
-    if (!user.username) {
-      window.location.href = "index.html";
-    }
-
-    // Willkommensnachricht
-    document.querySelector("#welcomeText").textContent = 
-      `Willkommen, ${user.username} (${user.role})`;
-
-    // Admin-spezifische Bereiche anzeigen
-    document.querySelectorAll(".admin-only").forEach(el => {
-      el.style.display = user.role === "admin" ? "block" : "none";
-    });
-
-    // Navigation
-    const sections = document.querySelectorAll(".contentSection");
-    document.querySelectorAll(".navBtn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        sections.forEach(sec => (sec.hidden = true));
-        const target = document.querySelector(`#${btn.dataset.section}Section`);
-        if (target) target.hidden = false;
-        if (btn.dataset.section === "members" && user.role === "admin") {
-          loadMembers();
-        }
-      });
-    });
-
-    // Logout
-    document.querySelector("#logoutBtn").addEventListener("click", async () => {
-      await logoutUser();
-      window.location.href = "index.html";
-    });
-
-    // Mitgliederverwaltung laden
-    async function loadMembers() {
-      const tbody = document.querySelector("#membersTable tbody");
-      tbody.innerHTML = "<tr><td colspan='4'>Lade...</td></tr>";
-
-      try {
-        const users = await listUsers();
-        tbody.innerHTML = "";
-
-        users.forEach(u => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${u.username}</td>
-            <td>${u.role}</td>
-            <td>${u.status}</td>
-            <td>
-              <button data-action="activate" data-id="${u.id}" ${u.status === "active" ? "disabled" : ""}>Freigeben</button>
-              <button data-action="block" data-id="${u.id}" ${u.status === "blocked" ? "disabled" : ""}>Blockieren</button>
-              <button data-action="role" data-id="${u.id}">Rolle ändern</button>
-              <button data-action="delete" data-id="${u.id}">Löschen</button>
-            </td>`;
-          tbody.appendChild(row);
-        });
-
-        tbody.querySelectorAll("button").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const id = btn.dataset.id;
-            const action = btn.dataset.action;
-
-            if (action === "activate") await updateUserStatus(id, "active");
-            if (action === "block") await updateUserStatus(id, "blocked");
-            if (action === "role") {
-              const newRole = prompt("Neue Rolle (admin/member):", "member");
-              if (newRole) await changeUserRole(id, newRole);
-            }
-            if (action === "delete") {
-              if (confirm("Diesen Benutzer wirklich löschen?")) await deleteUser(id);
-            }
-            await loadMembers();
-          });
-        });
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan='4'>Fehler: ${err.message}</td></tr>`;
-      }
+    // Beispielhafte Tool-Logik
+    if (role === "admin") {
+      document.getElementById("tool-container").innerHTML = `<a href="admin.html">Zum Adminbereich</a>`;
+    } else {
+      document.getElementById("tool-container").innerHTML = `<p>Tools werden hier angezeigt…</p>`;
     }
   </script>
 </body>
