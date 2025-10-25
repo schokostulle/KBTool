@@ -2,159 +2,205 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Tools – Dashboard</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
 </head>
 
 <body>
-  <button id="logoutBtn">Logout</button>
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#222;color:#fff;">
+    <h2>Bullfrog Tools</h2>
+    <button id="logoutBtn" title="Logout" style="background:none;border:none;cursor:pointer;">
+      🏕️
+    </button>
+  </header>
 
-  <nav id="sidebar">
-    <button class="nav-btn active" data-section="events">Ereignisse</button>
-    <button class="nav-btn" data-section="reports">Kriegsberichte</button>
-    <button class="nav-btn" data-section="fleet">Flottenstärke</button>
-    <button class="nav-btn" data-section="reservations">Inselreservierung</button>
-    <button class="nav-btn" data-section="battle">Angriff & Verteidigung</button>
-    <button class="nav-btn" data-section="map">Karte</button>
-    <button class="nav-btn" data-section="database">KB-Datenbank</button>
-    <hr>
-    <button class="nav-btn admin-only" data-section="members">Mitgliederverwaltung</button>
-    <button class="nav-btn admin-only" data-section="diplomacy">Diplomatie</button>
-    <button class="nav-btn admin-only" data-section="csv">CSV-Datenbasis</button>
-  </nav>
+  <main style="display:flex;min-height:100vh;">
+    <!-- ==================== SEITENMENÜ ==================== -->
+    <nav id="sideMenu" style="width:200px;background:#333;color:#fff;padding:10px;">
+      <button class="navBtn" data-section="events">Ereignisse</button>
+      <button class="navBtn" data-section="reports">Kriegsberichte</button>
+      <button class="navBtn" data-section="fleet">Flottenstärke</button>
+      <button class="navBtn" data-section="reserve">Inselreservierung</button>
+      <button class="navBtn" data-section="attack">Angriff & Verteidigung</button>
+      <button class="navBtn" data-section="map">Karte</button>
+      <button class="navBtn" data-section="kbdata">KB-Datenbank</button>
 
-  <div id="content">
-    <section id="eventsSection"><h2>Ereignisse</h2></section>
-    <section id="reportsSection" hidden><h2>Kriegsberichte</h2></section>
-    <section id="fleetSection" hidden><h2>Flottenstärke</h2></section>
-    <section id="reservationsSection" hidden><h2>Inselreservierung</h2></section>
-    <section id="battleSection" hidden><h2>Angriff & Verteidigung</h2></section>
-    <section id="mapSection" hidden><h2>Karte</h2></section>
-    <section id="databaseSection" hidden><h2>KB-Datenbank</h2></section>
-    <h2 id="welcomeText"></h2>
+      <div class="admin-only" style="margin-top:20px;border-top:1px solid #555;padding-top:10px;">
+        <h4>Admin</h4>
+        <button class="navBtn" data-section="members">Mitglieder</button>
+        <button class="navBtn" data-section="diplomacy">Diplomatie</button>
+        <button class="navBtn" data-section="csv">CSV-Tabelle</button>
+      </div>
+    </nav>
 
-<!-- Beispiel: Admin-Bereich -->
-<section id="membersSection" class="admin-only">
-  <h3>Mitgliederverwaltung</h3>
-  ...
-</section>
-  <table id="membersTable">
-    <thead>
-      <tr>
-        <th>Benutzername</th>
-        <th>Rolle</th>
-        <th>Status</th>
-        <th>Aktionen</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
-    <section id="diplomacySection" hidden><h2>Diplomatie</h2></section>
-    <section id="csvSection" hidden><h2>CSV-Datenbasis</h2></section>
-  </div>
+    <!-- ==================== INHALTSBEREICH ==================== -->
+    <section id="content" style="flex:1;padding:20px;">
+      <h3 id="welcomeText"></h3>
 
+      <!-- Abschnitt: Ereignisse -->
+      <section id="eventsSection" class="contentSection">
+        <h2>Ereignisse & Informationen</h2>
+        <p>Hier erscheinen wichtige Mitteilungen der Admins und laufende Angriffe.</p>
+      </section>
+
+      <!-- Abschnitt: Kriegsberichte -->
+      <section id="reportsSection" class="contentSection" hidden>
+        <h2>Kriegsberichte</h2>
+        <p>Hier können Mitglieder ihre Kampfberichte eintragen.</p>
+      </section>
+
+      <!-- Abschnitt: Flottenstärke -->
+      <section id="fleetSection" class="contentSection" hidden>
+        <h2>Flottenstärke</h2>
+        <p>Übersicht über bekannte Truppen- und Flottenstärken.</p>
+      </section>
+
+      <!-- Abschnitt: Inselreservierung -->
+      <section id="reserveSection" class="contentSection" hidden>
+        <h2>Inselreservierungen</h2>
+        <p>Hier kannst du Inseln reservieren oder freigeben.</p>
+      </section>
+
+      <!-- Abschnitt: Angriff & Verteidigung -->
+      <section id="attackSection" class="contentSection" hidden>
+        <h2>Angriffs- & Verteidigungstool</h2>
+        <p>Berechnungen zu Laufzeiten, Entfernungen und Startzeiten.</p>
+      </section>
+
+      <!-- Abschnitt: Karte -->
+      <section id="mapSection" class="contentSection" hidden>
+        <h2>Inselkarte</h2>
+        <p>Visuelle Übersicht aller bekannten Inseln und Spieler.</p>
+      </section>
+
+      <!-- Abschnitt: KB-Datenbank -->
+      <section id="kbdataSection" class="contentSection" hidden>
+        <h2>Kampfberichte-Datenbank</h2>
+        <p>Gespeicherte Berichte zur Analyse gegnerischer Stärke.</p>
+      </section>
+
+      <!-- Abschnitt: Mitgliederverwaltung (nur Admin) -->
+      <section id="membersSection" class="contentSection admin-only" hidden>
+        <h2>Mitgliederverwaltung</h2>
+        <table id="membersTable" border="1" cellspacing="0" cellpadding="5">
+          <thead>
+            <tr>
+              <th>Benutzername</th>
+              <th>Rolle</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Abschnitt: Diplomatie -->
+      <section id="diplomacySection" class="contentSection admin-only" hidden>
+        <h2>Diplomatie</h2>
+        <p>Verwaltung befreundeter und feindlicher Allianzen.</p>
+      </section>
+
+      <!-- Abschnitt: CSV -->
+      <section id="csvSection" class="contentSection admin-only" hidden>
+        <h2>CSV-Datenbasis</h2>
+        <p>Hier kann die aktuelle CSV-Datei hochgeladen werden.</p>
+      </section>
+    </section>
+  </main>
+
+  <!-- ==================== SCRIPT ==================== -->
   <script type="module">
-    
-import { getCurrentUser, logoutUser } from "./supabase.js";
+    import {
+      getCurrentUser,
+      logoutUser,
+      listUsers,
+      updateUserStatus,
+      changeUserRole,
+      deleteUser
+    } from "./supabase.js";
 
-// Benutzerrolle abrufen
-const user = getCurrentUser();
+    // Benutzer abrufen
+    const user = getCurrentUser();
+    if (!user.username) {
+      window.location.href = "index.html";
+    }
 
-// Falls nicht eingeloggt → zurück zur Login-Seite
-if (!user.username) {
-  window.location.href = "index.html";
-}
+    // Willkommensnachricht
+    document.querySelector("#welcomeText").textContent =
+      `Willkommen, ${user.username} (${user.role})`;
 
-// Benutzerrolle im Dashboard anzeigen
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelector("#welcomeText").textContent = `Willkommen, ${user.username} (${user.role})`;
+    // Admin-Bereiche sichtbar / unsichtbar
+    document.querySelectorAll(".admin-only").forEach(el => {
+      el.style.display = user.role === "admin" ? "block" : "none";
+    });
 
-  // Admin-spezifische Bereiche ein-/ausblenden
-  const adminSections = document.querySelectorAll(".admin-only");
-  adminSections.forEach(sec => {
-    sec.style.display = user.role === "admin" ? "block" : "none";
-  });
-});
-
-// Logout
-document.querySelector("#logoutBtn").addEventListener("click", async () => {
-  await logoutUser();
-  window.location.href = "index.html";
-});
-
-    const sections = {
-      events: "eventsSection",
-      reports: "reportsSection",
-      fleet: "fleetSection",
-      reservations: "reservationsSection",
-      battle: "battleSection",
-      map: "mapSection",
-      database: "databaseSection",
-      members: "membersSection",
-      diplomacy: "diplomacySection",
-      csv: "csvSection"
-    };
-
-import { listUsers, updateUserStatus, changeUserRole, deleteUser } from "./supabase.js";
-
-async function loadMembers() {
-  const tableBody = document.querySelector("#membersTable tbody");
-  tableBody.innerHTML = "";
-  const users = await listUsers();
-
-  users.forEach(u => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${u.username}</td>
-      <td>${u.role}</td>
-      <td>${u.status}</td>
-      <td>
-        <button data-action="activate" data-id="${u.id}" ${u.status === "active" ? "disabled" : ""}>Freigeben</button>
-        <button data-action="block" data-id="${u.id}" ${u.status === "blocked" ? "disabled" : ""}>Blockieren</button>
-        <button data-action="toggleRole" data-id="${u.id}">Rolle ändern</button>
-        <button data-action="delete" data-id="${u.id}">Löschen</button>
-      </td>`;
-    tableBody.appendChild(row);
-  });
-
-  // Event-Handler für Buttons
-  tableBody.querySelectorAll("button").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-      if (action === "activate") {
-        await updateUserStatus(id, "active");
-      } else if (action === "block") {
-        await updateUserStatus(id, "blocked");
-      } else if (action === "toggleRole") {
-        const newRole = prompt("Neue Rolle (admin/member):", "member");
-        if (newRole) await changeUserRole(id, newRole);
-      } else if (action === "delete") {
-        if (confirm("Diesen Benutzer wirklich löschen?")) await deleteUser(id);
-      }
-      await loadMembers();
-    };
-  });
-}
-
-// Wenn auf Menüpunkt "Mitgliederverwaltung" geklickt wird → Tabelle laden
-document.querySelector('[data-section="members"]').addEventListener("click", loadMembers);
-
-    document.querySelectorAll(".nav-btn").forEach(btn => {
+    // Navigation zwischen Abschnitten
+    const sections = document.querySelectorAll(".contentSection");
+    document.querySelectorAll(".navBtn").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        for (const key in sections)
-          document.getElementById(sections[key]).hidden = true;
-        const sec = sections[btn.dataset.section];
-        if (sec) document.getElementById(sec).hidden = false;
+        sections.forEach(sec => (sec.hidden = true));
+        const target = document.querySelector(`#${btn.dataset.section}Section`);
+        if (target) target.hidden = false;
+
+        if (btn.dataset.section === "members" && user.role === "admin") {
+          loadMembers();
+        }
       });
     });
 
-    const role = localStorage.getItem("role");
-    if (role !== "admin")
-      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    // Logout
+    document.querySelector("#logoutBtn").addEventListener("click", async () => {
+      await logoutUser();
+      window.location.href = "index.html";
+    });
+
+    // Mitgliederverwaltung laden
+    async function loadMembers() {
+      const tbody = document.querySelector("#membersTable tbody");
+      tbody.innerHTML = "<tr><td colspan='4'>Lade...</td></tr>";
+
+      try {
+        const users = await listUsers();
+        tbody.innerHTML = "";
+
+        users.forEach(u => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${u.username}</td>
+            <td>${u.role}</td>
+            <td>${u.status}</td>
+            <td>
+              <button data-action="activate" data-id="${u.id}" ${u.status === "active" ? "disabled" : ""}>Freigeben</button>
+              <button data-action="block" data-id="${u.id}" ${u.status === "blocked" ? "disabled" : ""}>Blockieren</button>
+              <button data-action="role" data-id="${u.id}">Rolle ändern</button>
+              <button data-action="delete" data-id="${u.id}">Löschen</button>
+            </td>`;
+          tbody.appendChild(row);
+        });
+
+        tbody.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.id;
+            const action = btn.dataset.action;
+
+            if (action === "activate") await updateUserStatus(id, "active");
+            if (action === "block") await updateUserStatus(id, "blocked");
+            if (action === "role") {
+              const newRole = prompt("Neue Rolle (admin/member):", "member");
+              if (newRole) await changeUserRole(id, newRole);
+            }
+            if (action === "delete") {
+              if (confirm("Diesen Benutzer wirklich löschen?")) await deleteUser(id);
+            }
+            await loadMembers();
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan='4'>Fehler: ${err.message}</td></tr>`;
+      }
+    }
   </script>
 </body>
 </html>
