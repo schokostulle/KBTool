@@ -4,8 +4,8 @@
 // Diese Werte findest du in deinem Supabase Projekt unter
 // Settings → API → Project URL & anon public key
 
-const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+const SUPABASE_URL = 'https://xgdybrinpypeppdswheb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo';
 
 // Supabase-Client erstellen (globale Variable)
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
