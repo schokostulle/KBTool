@@ -6,37 +6,37 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>Konto-Verwaltung</h1>
+  <h1>Konto-Verwaltung 🐸</h1>
 
   <section>
-    <h2>Registrierung</h2>
-    <input type="email" id="regEmail" placeholder="E-Mail">
-    <input type="password" id="regPass" placeholder="Passwort">
-    <button id="registerBtn">Registrieren</button>
+    <h2>Registrieren</h2>
+    <input type="text" id="regNick" placeholder="Nickname">
+    <input type="password" id="regPass1" placeholder="Passwort">
+    <input type="password" id="regPass2" placeholder="Passwort bestätigen">
+    <button id="btnRegister">Registrieren</button>
   </section>
 
   <section>
     <h2>Login</h2>
-    <input type="email" id="logEmail" placeholder="E-Mail">
+    <input type="text" id="logNick" placeholder="Nickname">
     <input type="password" id="logPass" placeholder="Passwort">
-    <button id="loginBtn">Login</button>
+    <button id="btnLogin">Login</button>
   </section>
 
   <script type="module">
-    import { register, login } from "./js/auth.js";
+    import { registerUser, loginUser } from "./js/auth.js";
 
-    document.getElementById("registerBtn").onclick = () => {
-      register(
-        document.getElementById("regEmail").value,
-        document.getElementById("regPass").value
-      );
+    document.getElementById("btnRegister").onclick = () => {
+      const nick = document.getElementById("regNick").value.trim();
+      const pass1 = document.getElementById("regPass1").value;
+      const pass2 = document.getElementById("regPass2").value;
+      registerUser(nick, pass1, pass2);
     };
 
-    document.getElementById("loginBtn").onclick = () => {
-      login(
-        document.getElementById("logEmail").value,
-        document.getElementById("logPass").value
-      );
+    document.getElementById("btnLogin").onclick = () => {
+      const nick = document.getElementById("logNick").value.trim();
+      const pass = document.getElementById("logPass").value;
+      loginUser(nick, pass);
     };
   </script>
 </body>
