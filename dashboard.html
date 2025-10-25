@@ -50,9 +50,33 @@
   </div>
 
   <script type="module">
-    import { logoutUser } from "./supabase.js";
+    
+import { getCurrentUser, logoutUser } from "./supabase.js";
 
-    document.getElementById("logoutBtn").onclick = () => logoutUser();
+// Benutzerrolle abrufen
+const user = getCurrentUser();
+
+// Falls nicht eingeloggt → zurück zur Login-Seite
+if (!user.username) {
+  window.location.href = "index.html";
+}
+
+// Benutzerrolle im Dashboard anzeigen
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector("#welcomeText").textContent = `Willkommen, ${user.username} (${user.role})`;
+
+  // Admin-spezifische Bereiche ein-/ausblenden
+  const adminSections = document.querySelectorAll(".admin-only");
+  adminSections.forEach(sec => {
+    sec.style.display = user.role === "admin" ? "block" : "none";
+  });
+});
+
+// Logout
+document.querySelector("#logoutBtn").addEventListener("click", async () => {
+  await logoutUser();
+  window.location.href = "index.html";
+});
 
     const sections = {
       events: "eventsSection",
