@@ -1,108 +1,43 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Tools – Anmeldung</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <meta charset="UTF-8">
+  <title>Login & Registrierung</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+<body>
+  <h1>Konto-Verwaltung</h1>
 
-<body style="font-family: Arial, sans-serif; background-color: #111; color: #eee; margin: 0;">
-  <header style="text-align:center; padding:20px; background-color:#222;">
-    <h1>Bullfrog Tools</h1>
-  </header>
+  <section id="register">
+    <h2>Registrieren</h2>
+    <input type="email" id="regEmail" placeholder="E-Mail">
+    <input type="password" id="regPass" placeholder="Passwort">
+    <button id="btnRegister">Registrieren</button>
+  </section>
 
-  <main style="display:flex; justify-content:center; align-items:center; height:80vh;">
-    <div style="background:#1b1b1b; padding:30px; border-radius:8px; width:300px;">
-      <h2 id="formTitle" style="text-align:center;">Anmeldung</h2>
-
-      <!-- 🔐 Login -->
-      <div id="loginForm">
-        <input id="loginName" type="text" placeholder="Benutzername" style="width:100%;padding:8px;margin:6px 0;"><br>
-        <input id="loginPass" type="password" placeholder="Passwort" style="width:100%;padding:8px;margin:6px 0;"><br>
-        <button id="loginBtn" style="width:100%;padding:8px;margin-top:8px;">Einloggen</button>
-        <p style="text-align:center;margin-top:10px;">
-          Noch kein Konto? <a href="#" id="toRegister">Registrieren</a>
-        </p>
-      </div>
-
-      <!-- 📝 Registrierung -->
-      <div id="registerForm" hidden>
-        <input id="regName" type="text" placeholder="Benutzername" style="width:100%;padding:8px;margin:6px 0;"><br>
-        <input id="regPass" type="password" placeholder="Passwort" style="width:100%;padding:8px;margin:6px 0;"><br>
-        <input id="regPass2" type="password" placeholder="Passwort wiederholen" style="width:100%;padding:8px;margin:6px 0;"><br>
-        <button id="registerBtn" style="width:100%;padding:8px;margin-top:8px;">Registrieren</button>
-        <p style="text-align:center;margin-top:10px;">
-          Bereits registriert? <a href="#" id="toLogin">Zum Login</a>
-        </p>
-      </div>
-
-      <p id="message" style="margin-top:15px; text-align:center; min-height:22px;"></p>
-    </div>
-  </main>
+  <section id="login">
+    <h2>Login</h2>
+    <input type="email" id="logEmail" placeholder="E-Mail">
+    <input type="password" id="logPass" placeholder="Passwort">
+    <button id="btnLogin">Login</button>
+  </section>
 
   <script type="module">
-    import { registerUser, loginUser } from "./supabase.js";
+    import { registerUser, loginUser } from './js/auth.js';
 
-    const loginForm = document.querySelector("#loginForm");
-    const registerForm = document.querySelector("#registerForm");
-    const msg = document.querySelector("#message");
-    const formTitle = document.querySelector("#formTitle");
+    document.getElementById('btnRegister').onclick = () => {
+      registerUser(
+        document.getElementById('regEmail').value,
+        document.getElementById('regPass').value
+      );
+    };
 
-    // Umschalten zwischen Login & Registrierung
-    document.querySelector("#toRegister").addEventListener("click", () => {
-      loginForm.hidden = true;
-      registerForm.hidden = false;
-      formTitle.textContent = "Registrierung";
-      msg.textContent = "";
-    });
-
-    document.querySelector("#toLogin").addEventListener("click", () => {
-      registerForm.hidden = true;
-      loginForm.hidden = false;
-      formTitle.textContent = "Anmeldung";
-      msg.textContent = "";
-    });
-
-    // 🧩 Login
-    document.querySelector("#loginBtn").addEventListener("click", async () => {
-      const name = document.querySelector("#loginName").value.trim();
-      const pass = document.querySelector("#loginPass").value.trim();
-      if (!name || !pass) return showMsg("Bitte alle Felder ausfüllen", "red");
-
-      const result = await loginUser(name, pass);
-      showMsg(result.message, result.success ? "lime" : "red");
-
-      if (result.success) setTimeout(() => window.location.href = "dashboard.html", 1000);
-    });
-
-    // 🧩 Registrierung
-    document.querySelector("#registerBtn").addEventListener("click", async () => {
-      const name = document.querySelector("#regName").value.trim();
-      const pass1 = document.querySelector("#regPass").value.trim();
-      const pass2 = document.querySelector("#regPass2").value.trim();
-      if (!name || !pass1 || !pass2) return showMsg("Bitte alle Felder ausfüllen", "red");
-      if (pass1 !== pass2) return showMsg("Passwörter stimmen nicht überein", "red");
-
-      const result = await registerUser(name, pass1);
-      showMsg(result.message, result.success ? "lime" : "red");
-
-      if (result.success) {
-        setTimeout(() => {
-          registerForm.hidden = true;
-          loginForm.hidden = false;
-          formTitle.textContent = "Anmeldung";
-          msg.textContent = "";
-        }, 3000);
-      }
-    });
-
-    // Hilfsfunktion für Meldungen
-    function showMsg(text, color="lime") {
-      msg.style.color = color;
-      msg.textContent = text;
-      setTimeout(() => msg.textContent = "", 7000);
-    }
+    document.getElementById('btnLogin').onclick = () => {
+      loginUser(
+        document.getElementById('logEmail').value,
+        document.getElementById('logPass').value
+      );
+    };
   </script>
 </body>
 </html>
