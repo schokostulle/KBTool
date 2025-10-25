@@ -90,6 +90,15 @@ export async function registerUser(username, password) {
     console.error("Registrierungsfehler:", err.message);
     return { success: false, message: "Fehler bei der Registrierung: " + err.message };
   }
+const { data: userData, error: userError } = await supabase
+  .from("users")
+  .select("id, username, role, status")
+  .eq("username", username)
+  .maybeSingle();
+
+if (userError) throw userError;
+if (!userData) {
+  return { success: false, message: "Benutzername nicht gefunden." };
 }
 
 /**
