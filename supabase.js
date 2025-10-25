@@ -100,7 +100,7 @@ if (userError) throw userError;
 if (!userData) {
   return { success: false, message: "Benutzername nicht gefunden." };
 }
-
+}
 /**
  * Anmeldung eines Users mit Username (nicht E-Mail)
  */
