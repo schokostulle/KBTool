@@ -95,70 +95,70 @@ export async function registerUser(username, password) {
 /**
  * Anmeldung eines Users mit Username (nicht E-Mail)
  */
+
+
+// ====================================================
+// 🔐 LOGIN
+// ====================================================
 export async function loginUser(username, password) {
   try {
-    // E-Mail erzeugen, falls du Fake-Mail nutzt
     const email = `${username}@bullfrog.fake`;
-
-    // Anmeldung bei Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
-    // Benutzerprofil laden
-    const { data: profile, error: profileErr } = await supabase
+    // Benutzerprofil aus Tabelle "users" holen
+    const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("*")
+      .select("id, username, role, status")
       .eq("username", username)
       .single();
 
-    if (profileErr) throw profileErr;
-    if (!profile) throw new Error("Benutzerprofil nicht gefunden");
+    if (userError) throw userError;
 
     // Status prüfen
-    if (profile.status !== "active") {
+    if (userData.status === "pending") {
       await supabase.auth.signOut();
-      return {
-        success: false,
-        message:
-          profile.status === "pending"
-            ? "Dein Account wurde erstellt, ist aber noch nicht freigeschaltet. Bitte warte auf die Freigabe durch einen Admin."
-            : "Dein Account ist derzeit gesperrt."
-      };
+      return { success: false, message: "Dein Account wurde erstellt, ist aber noch nicht freigeschaltet." };
+    }
+    if (userData.status === "blocked") {
+      await supabase.auth.signOut();
+      return { success: false, message: "Dein Account ist derzeit gesperrt." };
     }
 
-    // Erfolg → lokale Daten speichern
-    localStorage.setItem("username", profile.username);
-    localStorage.setItem("role", profile.role);
-    return { success: true, message: `Willkommen ${profile.username}!` };
+    // Erfolg → Infos lokal speichern
+    localStorage.setItem("user_id", userData.id);
+    localStorage.setItem("username", userData.username);
+    localStorage.setItem("role", userData.role);
+    localStorage.setItem("status", userData.status);
+
+    return { success: true, message: `Willkommen ${userData.username}!` };
   } catch (err) {
     console.error("Login-Fehler:", err.message);
     return { success: false, message: "Login fehlgeschlagen: " + err.message };
   }
 }
 
-/**
- * Logout / Session beenden
- */
-export async function logoutUser() {
-  await supabase.auth.signOut();
+// ====================================================
+// 🔐 ROLE / STATUS CHECK
+// ====================================================
+export function getCurrentUser() {
+  return {
+    id: localStorage.getItem("user_id"),
+    username: localStorage.getItem("username"),
+    role: localStorage.getItem("role"),
+    status: localStorage.getItem("status"),
+  };
+}
+
+export function logoutUser() {
   localStorage.clear();
+  return supabase.auth.signOut();
 }
 
 // ============================================================
 //  3️⃣ User-Datenbank-Funktionen
 // ============================================================
 
-/**
- * Benutzerprofil anhand der Auth-ID abrufen
- */
-export async function getUserProfile(userId) {
-  const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data;
-}
 
 /**
  * Liste aller Benutzer (nur für Admins)
