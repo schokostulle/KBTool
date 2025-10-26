@@ -56,7 +56,7 @@
     <p>⚓ Bullfrog Fleet Command – Gemeinschaft der Seefahrer</p>
   </footer>
 
-  <!-- Supabase + JS -->
+  <!-- Supabase -->
   <script type="module">
     import { supabase } from './js/supabase.js';
 
@@ -71,6 +71,7 @@
       loginContainer.classList.add('hidden');
       registerContainer.classList.remove('hidden');
     });
+
     document.getElementById('showLogin').addEventListener('click', () => {
       registerContainer.classList.add('hidden');
       loginContainer.classList.remove('hidden');
@@ -83,12 +84,13 @@
       loginMsg.classList.remove('hidden');
       loginMsg.textContent = '⏳ Anmeldung läuft...';
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
       if (error) {
         loginMsg.textContent = `❌ Fehler: ${error.message}`;
       } else {
         loginMsg.textContent = '✅ Willkommen zurück, Kommandant!';
-        setTimeout(() => (window.location.href = './dashboard.html'), 800);
+        setTimeout(() => window.location.href = './dashboard.html', 800);
       }
     });
 
@@ -104,7 +106,8 @@
         return;
       }
 
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
       if (error) {
         registerMsg.textContent = `❌ Fehler: ${error.message}`;
       } else {
@@ -112,14 +115,16 @@
         setTimeout(() => {
           registerContainer.classList.add('hidden');
           loginContainer.classList.remove('hidden');
-        }, 1200);
+        }, 1000);
       }
     });
 
-    // Automatisches Weiterleiten, falls eingeloggt
+    // Prüfen, ob Benutzer bereits eingeloggt ist
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data?.session) window.location.href = './dashboard.html';
+      if (data?.session) {
+        window.location.href = './dashboard.html';
+      }
     })();
   </script>
 </body>
