@@ -1,111 +1,85 @@
 <!-- ========================================================= -->
-<!-- BLOCK 5: dashboard.html – Grundseite mit Navigation       -->
+<!-- FILE: dashboard.html – Kompatibel mit style.css            -->
 <!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard – Seefahrer Kommando</title>
+  <title>⚓ Dashboard – Seefahrer Kommando</title>
   <link rel="stylesheet" href="./CSS/style.css" />
 </head>
 
 <body>
-  <!-- ========== Abschnitt: Kopfbereich ========== -->
+  <!-- HEADER -->
   <header>
     <h1>⚓ Seefahrer-Kommando – Dashboard</h1>
     <button id="logout-button">Logout</button>
   </header>
 
-  <!-- ========== Abschnitt: Navigation ========== -->
+  <!-- NAVIGATION -->
   <nav>
     <ul id="nav-menu">
-      <!-- Sichtbar für alle -->
       <li><a href="./dashboard.html">🏠 Start</a></li>
       <li><a href="./tools/tool1.html">⚙️ Tool 1</a></li>
       <li><a href="./tools/tool2.html">🧭 Tool 2</a></li>
-
-      <!-- Sichtbar nur für Admin -->
-      <li class="admin-only"><a href="./tools/csv-upload.html">📜 CSV Upload</a></li>
-      <li class="admin-only"><a href="./tools/diplomatie.html">🕊️ Diplomatie</a></li>
-      <li class="admin-only"><a href="./tools/mitglieder.html">👑 Mitgliederverwaltung</a></li>
+      <li class="admin-only"><a href="./tools/mitglieder.html">👑 Mitglieder</a></li>
     </ul>
   </nav>
 
-  <!-- ========== Abschnitt: Hauptinhalt ========== -->
+  <!-- INHALT -->
   <main>
     <section id="welcome-section">
       <h2 id="welcome-message">Willkommen, Seefahrer!</h2>
-      <p>Hier erscheinen demnächst Neuigkeiten und Ankündigungen.</p>
+      <p>Hier erscheinen Neuigkeiten und Ankündigungen.</p>
     </section>
 
     <section id="news-section">
-      <h3>📢 Aktuelle Meldungen</h3>
+      <h3>📜 Letzte Meldungen</h3>
       <ul id="news-list">
-        <li>– Noch keine Einträge –</li>
+        <li>– Keine Einträge –</li>
       </ul>
     </section>
   </main>
 
-  <!-- ========== Abschnitt: Skriptintegration ========== -->
+  <footer>
+    <p>⚓ Seefahrer-Kommando © 2025</p>
+  </footer>
+
+  <!-- SCRIPT -->
   <script type="module">
-    // =========================================================
-    // BLOCK: Supabase-Client importieren
-    // =========================================================
     import { supabase } from './JS/supabase.js';
 
-    // =========================================================
-    // BLOCK: Nutzer-Sitzung prüfen
-    // =========================================================
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        // Keine aktive Anmeldung → zurück zur Startseite
-        window.location.href = './index.html';
-        return;
-      }
-
-      // Nutzerinformationen laden
-      const user = data.session.user;
-      loadProfile(user.id);
-    }
-
-    // =========================================================
-    // BLOCK: Profil abrufen & Rollenerkennung
-    // =========================================================
-    async function loadProfile(userId) {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('username, role')
-        .eq('id', userId)
-        .single();
-
-      const welcome = document.getElementById('welcome-message');
-      if (error || !profile) {
-        welcome.textContent = "⚓ Willkommen, unbekannter Seefahrer!";
-        return;
-      }
-
-      welcome.textContent = `⚓ Willkommen, ${profile.username || 'Seefahrer'}!`;
-
-      // Admin-Bereiche ein-/ausblenden
-      const adminItems = document.querySelectorAll('.admin-only');
-      adminItems.forEach(item => {
-        item.style.display = (profile.role === 'admin') ? 'list-item' : 'none';
-      });
-    }
-
-    // =========================================================
-    // BLOCK: Logout
-    // =========================================================
+    // SEGMENT: Logout
     document.getElementById('logout-button').addEventListener('click', async () => {
       await supabase.auth.signOut();
       window.location.href = './index.html';
     });
 
-    // =========================================================
-    // BLOCK: Initialer Aufruf
-    // =========================================================
+    // SEGMENT: Sessionprüfung
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      const user = data.session.user;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', user.id)
+        .single();
+
+      document.getElementById('welcome-message').textContent =
+        `⚓ Willkommen, ${profile?.username || 'Seefahrer'}!`;
+
+      // Admin-Sichtbarkeit
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = profile?.role === 'admin' ? 'list-item' : 'none';
+      });
+    }
+
     checkSession();
   </script>
 </body>
