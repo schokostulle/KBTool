@@ -1,0 +1,13 @@
+{
+  "name": "bullfrog-admin-api",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.44.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
