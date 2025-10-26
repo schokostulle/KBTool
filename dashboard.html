@@ -1,170 +1,119 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bullfrog Command – Dashboard</title>
-
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600..900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bullfrog Command Dashboard</title>
   <link rel="stylesheet" href="./css/stylesheet.css" />
 </head>
-<body class="theme-dark ocean-bg">
-  <header class="topbar">
-    <div class="brand-row">
-      <h1 class="brand"><span class="brand-accent">☸</span> Bullfrog Command</h1>
-      <div class="role-badge" id="roleBadge">Gast</div>
-    </div>
-    <nav class="top-actions">
-      <button id="logoutBtn" class="btn subtle">Abmelden</button>
+
+<body class="dark-theme">
+  <header class="header">
+    <h1>⚓ Bullfrog Command</h1>
+    <nav>
+      <button id="logoutBtn" class="nav-btn">🚪 Logout</button>
     </nav>
   </header>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <a class="nav-item active" data-link="home">🏠 Dashboard</a>
-      <a class="nav-item" href="./tools/example.html">🗺️ Schlachtplan (Beispiel)</a>
-      <a class="nav-item" data-link="units">⚔️ Einheiten</a>
-      <a class="nav-item" data-link="news">📰 News</a>
-      <div class="divider"></div>
-      <a class="nav-item only-member">📦 Ressourcen</a>
-      <a class="nav-item only-member">⏱️ Zeitpläne</a>
-      <a class="nav-item only-admin" data-link="admin">👑 Admin</a>
-    </aside>
+  <main>
+    <!-- ========================== -->
+    <!-- 🧭 Dashboard Startbereich -->
+    <!-- ========================== -->
+    <section class="dashboard-intro">
+      <h2>Willkommen, <span id="username">Kommandant</span>!</h2>
+      <p>Dies ist dein Hauptquartier. Wähle ein Tool oder öffne den Adminbereich (falls du berechtigt bist).</p>
+    </section>
 
-    <main class="content">
-      <!-- HOME -->
-      <section id="view-home" class="view active">
-        <h2>Willkommen, <span id="userName">Kapitän</span>!</h2>
-        <p class="lead">
-          Koordiniere Operationen der Flotte. Dieses Tool unterstützt Rollen:
-          <strong>Anwärter</strong>, <strong>Member</strong>, <strong>Admin</strong>.
-        </p>
+    <!-- ========================== -->
+    <!-- 🧰 Beispiel-Tools -->
+    <!-- ========================== -->
+    <section class="tools-grid">
+      <div class="tool-card" onclick="window.location.href='./fleet.html'">
+        ⚔️ <strong>Flottenplanung</strong><br>
+        <small>Strategische Übersicht deiner Fregatten</small>
+      </div>
 
-        <div class="card-grid">
-          <article class="card">
-            <h3>Fraktionen & Einheiten</h3>
-            <p>Seefahrt-Fokus: <strong>Fregatten</strong> (Marine), <strong>Bogenschützen</strong>, <strong>Lanzenträger</strong>, <strong>Steinschleuderer</strong>.</p>
-            <button class="btn brass" data-link="units">Einheiten öffnen</button>
-          </article>
+      <div class="tool-card" onclick="window.location.href='./resources.html'">
+        🪓 <strong>Ressourcenverwaltung</strong><br>
+        <small>Verteilung von Holz, Eisen und Steinen</small>
+      </div>
 
-          <article class="card">
-            <h3>Schlachtplan</h3>
-            <p>Erstelle Routen, markiere Landungszonen und Angriffswellen.</p>
-            <a class="btn primary" href="./tools/example.html">Beispiel-Tool öffnen</a>
-          </article>
+      <div class="tool-card" onclick="window.location.href='./battlemap.html'">
+        🗺️ <strong>Kriegsgebiete</strong><br>
+        <small>Schlachtfelder & Allianzen</small>
+      </div>
+    </section>
 
-          <article class="card">
-            <h3>News & Lagebild</h3>
-            <p>Notizen der Führung, Hafenmeldungen, geplante Feldzüge.</p>
-            <button class="btn subtle" data-link="news">News ansehen</button>
-          </article>
-        </div>
-      </section>
+    <!-- ========================== -->
+    <!-- 👑 ADMIN-BEREICH -->
+    <!-- ========================== -->
+    <section id="admin-members" class="admin-section hidden">
+      <h2 class="section-title">👑 Mitgliederverwaltung</h2>
 
-      <!-- UNITS -->
-      <section id="view-units" class="view">
-        <h2>Einheiten-Tafel</h2>
-        <div class="units-grid">
-          <div class="unit">
-            <div class="unit-crest crest-frigate">⚓</div>
-            <h4>Fregatte</h4>
-            <p>Marine-Überlegenheit, Konvoi-Schutz, Küstenbeschuss.</p>
-          </div>
-          <div class="unit">
-            <div class="unit-crest crest-archer">🏹</div>
-            <h4>Bogenschütze</h4>
-            <p>Fernkampf-Unterstützung, Landungsdeckung.</p>
-          </div>
-          <div class="unit">
-            <div class="unit-crest crest-pikeman">🗡️</div>
-            <h4>Lanzenträger</h4>
-            <p>Linientruppen gegen Kavallerie/Anstürme.</p>
-          </div>
-          <div class="unit">
-            <div class="unit-crest crest-slinger">🪨</div>
-            <h4>Steinschleuderer</h4>
-            <p>Billig, flexibel, Belagerungs-Belästigung.</p>
-          </div>
-        </div>
-      </section>
+      <div id="infoBox" class="info-box hidden"></div>
 
-      <!-- NEWS -->
-      <section id="view-news" class="view">
-        <h2>Flotten-News</h2>
-        <ul id="newsList" class="news-list"></ul>
-      </section>
+      <div class="admin-toolbar">
+        <input type="text" id="memberSearch" placeholder="🔍 Mitglieder suchen..." />
+        <select id="roleFilter">
+          <option value="all">Alle Rollen</option>
+          <option value="admin">Admin</option>
+          <option value="member">Mitglied</option>
+          <option value="applicant">Anwärter</option>
+          <option value="banned">Gesperrt</option>
+        </select>
+        <button id="refreshMembers">🔄 Aktualisieren</button>
+      </div>
 
-      <!-- ADMIN -->
-      <section id="view-admin" class="view">
-        <h2>Adminbereich</h2>
-        <p>Nutze die Nutzer-ID eines Spielers, um Rollen zu ändern.</p>
-        <form id="roleForm" class="role-form">
-          <label>Nutzer-ID
-            <input type="text" id="userIdInput" placeholder="uuid-…" required />
-          </label>
-          <label>Neue Rolle
-            <select id="roleSelect">
-              <option value="applicant">Anwärter</option>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-          <button class="btn brass" type="submit">Rolle setzen</button>
-        </form>
-        <div id="adminMsg" class="msg"></div>
-      </section>
-    </main>
-  </div>
+      <div id="membersContainer" class="members-grid"></div>
+    </section>
+  </main>
 
-  <!-- Supabase & App Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <footer class="footer">
+    <p>⚓ Bullfrog Fleet Command – Gemeinschaft der Seefahrer</p>
+  </footer>
+
+  <!-- ========================== -->
+  <!-- 🔗 SCRIPTS -->
+  <!-- ========================== -->
+  <script type="module" src="./js/supabase.js"></script>
   <script type="module">
-    import { getCurrentUser, getUserRole, logoutUser, setUserRole } from './js/supabase.js';
-    import { initDashboardNav, uiMsg, seedNews } from './js/main.js';
+    import { supabase } from './js/supabase.js';
 
-    // Auth Gate
-    const user = (await getCurrentUser());
-    if (!user) {
-      window.location.replace('./index.html');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const usernameEl = document.getElementById('username');
+    const adminSection = document.getElementById('admin-members');
+
+    async function loadUser() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // Profil laden
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', user.id)
+        .single();
+
+      usernameEl.textContent = profile?.username || 'Kommandant';
+
+      // Adminbereich sichtbar machen
+      if (profile?.role === 'admin') {
+        adminSection.classList.remove('hidden');
+      }
     }
 
-    // UI init
-    initDashboardNav();
-
-    // Name / Badge
-    document.getElementById('userName').textContent = user.user_metadata?.displayName || user.email.split('@')[0];
-    const role = await getUserRole();
-    const badge = document.getElementById('roleBadge');
-    badge.textContent = (role === 'admin' ? 'Admin' : role === 'member' ? 'Member' : 'Anwärter');
-    document.querySelectorAll('.only-admin').forEach(el => el.style.display = role === 'admin' ? '' : 'none');
-    document.querySelectorAll('.only-member').forEach(el => el.style.display = (role === 'admin' || role === 'member') ? '' : 'none');
-
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await logoutUser();
-      window.location.replace('./index.html');
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = './index.html';
     });
 
-    // News (Demo lokal)
-    seedNews([
-      { title: 'Konvoi bereit', text: 'Fregatten 2–4 liegen im Westhafen vor Anker.', ts: 'Heute' },
-      { title: 'Landungszone Beta', text: 'Bogenschützen verlegen an Strandabschnitt B.', ts: 'Gestern' },
-      { title: 'Aufklärung', text: 'Steinschleuderer sichten Belagerungsgerät im Norden.', ts: 'Vor 2 Tagen' },
-    ]);
-
-    // Admin Rollensetzer
-    if (role === 'admin') {
-      document.getElementById('roleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('userIdInput').value.trim();
-        const newRole = document.getElementById('roleSelect').value;
-        uiMsg('adminMsg', '… ändere Rolle', 'info');
-        const res = await setUserRole(id, newRole);
-        if (res.success) uiMsg('adminMsg', 'Rolle aktualisiert.', 'success');
-        else uiMsg('adminMsg', `Fehler: ${res.error}`, 'error');
-      });
-    }
+    loadUser();
   </script>
+
+  <!-- Adminmodul -->
+  <script type="module" src="./js/members.js"></script>
 </body>
 </html>
