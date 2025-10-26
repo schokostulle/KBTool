@@ -1,5 +1,6 @@
 <!-- ========================================================= -->
-<!-- BLOCK 4: index.html – Anmeldung & Registrierung (Fix)     -->
+<!-- FILE: index.html                                          -->
+<!-- DESCRIPTION: Startseite mit Anmeldung & Registrierung     -->
 <!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
@@ -11,107 +12,128 @@
 </head>
 
 <body>
-  <!-- ========== Kopfbereich ========== -->
+  <!-- ========================================================= -->
+  <!-- SEGMENT 1: HEADER                                         -->
+  <!-- ========================================================= -->
   <header>
     <h1>⚓ Seefahrer-Kommando</h1>
   </header>
 
-  <!-- ========== Hauptbereich ========== -->
+  <!-- ========================================================= -->
+  <!-- SEGMENT 2: LOGIN-FORMULAR                                 -->
+  <!-- ========================================================= -->
   <main>
-    <!-- -------- LOGIN -------- -->
     <section id="login-section">
       <h2>Anmeldung</h2>
-      <p>Bitte melde dich mit deiner E-Mail und deinem Passwort an.</p>
-
       <input type="email" id="login-email" placeholder="E-Mail-Adresse" />
       <input type="password" id="login-password" placeholder="Passwort" />
       <button id="login-button">Einloggen</button>
 
       <p>
         Noch kein Konto?
-        <span id="show-register" class="link">Jetzt registrieren ⚔️</span>
+        <span id="show-register" class="link" style="color:var(--accent);cursor:pointer;">
+          Jetzt registrieren ⚔️
+        </span>
       </p>
 
       <div id="login-message"></div>
     </section>
 
-    <!-- -------- REGISTRIERUNG -------- -->
+    <!-- ========================================================= -->
+    <!-- SEGMENT 3: REGISTRIERUNG-FORMULAR                         -->
+    <!-- ========================================================= -->
     <section id="register-section" style="display:none;">
       <h2>Registrierung</h2>
-      <p>Erstelle ein neues Konto, um loszulegen.</p>
-
       <input type="email" id="register-email" placeholder="E-Mail-Adresse" />
       <input type="password" id="register-password" placeholder="Passwort" />
-
-      <!-- 👉 Der fehlende Button ist hier -->
       <button id="register-button">Registrieren</button>
 
       <p>
         Bereits registriert?
-        <span id="show-login" class="link">Zum Login ⚓</span>
+        <span id="show-login" class="link" style="color:var(--accent);cursor:pointer;">
+          Zum Login ⚓
+        </span>
       </p>
 
       <div id="register-message"></div>
     </section>
   </main>
 
-  <!-- ========== Skriptintegration ========== -->
-  <script type="module">
-    // =========================================================
-    // BLOCK: Supabase-Client importieren
-    // =========================================================
-    import { supabase } from './JS/supabase.js';
+  <!-- ========================================================= -->
+  <!-- SEGMENT 4: FOOTER                                          -->
+  <!-- ========================================================= -->
+  <footer>
+    <p>⚓ Seefahrer-Kommando © 2025</p>
+  </footer>
 
-    // =========================================================
-    // BLOCK: Umschalten Login ↔ Registrierung
-    // =========================================================
+  <!-- ========================================================= -->
+  <!-- SEGMENT 5: SCRIPT-BEREICH (Supabase + Logik)              -->
+  <!-- ========================================================= -->
+  <script type="module">
+    /* =========================================================
+       SEGMENT 5.1: SUPABASE INITIALISIERUNG
+       ========================================================= */
+    import { supabase } from './JS/supabase.js';
+    console.log("✅ Supabase Script geladen");
+
+    /* =========================================================
+       SEGMENT 5.2: UMSCHALTUNG LOGIN <-> REGISTRIERUNG
+       ========================================================= */
     const loginSection = document.getElementById('login-section');
     const registerSection = document.getElementById('register-section');
+
     document.getElementById('show-register').addEventListener('click', () => {
+      console.log("➡️ Umschaltung: Login → Registrierung");
       loginSection.style.display = 'none';
       registerSection.style.display = 'block';
     });
+
     document.getElementById('show-login').addEventListener('click', () => {
+      console.log("➡️ Umschaltung: Registrierung → Login");
       registerSection.style.display = 'none';
       loginSection.style.display = 'block';
     });
 
-    // =========================================================
-    // BLOCK: Anmeldung (Login)
-    // =========================================================
+    /* =========================================================
+       SEGMENT 5.3: LOGIN-FUNKTION
+       ========================================================= */
     document.getElementById('login-button').addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
       const msg = document.getElementById('login-message');
       msg.textContent = "⏳ Anmeldung läuft...";
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("➡️ Login-Versuch:", email);
 
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         msg.textContent = "❌ Fehler: " + error.message;
+        console.error("Login-Fehler:", error.message);
       } else {
-        msg.textContent = "✅ Anmeldung erfolgreich!";
-        setTimeout(() => {
-          window.location.href = "./dashboard.html";
-        }, 800);
+        msg.textContent = "✅ Willkommen!";
+        console.log("✅ Login erfolgreich – Weiterleitung...");
+        setTimeout(() => window.location.href = "./dashboard.html", 800);
       }
     });
 
-    // =========================================================
-    // BLOCK: Registrierung (Signup)
-    // =========================================================
+    /* =========================================================
+       SEGMENT 5.4: REGISTRIERUNGS-FUNKTION
+       ========================================================= */
     document.getElementById('register-button').addEventListener('click', async () => {
-      const email = document.getElementById('register-email').value;
-      const password = document.getElementById('register-password').value;
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value.trim();
       const msg = document.getElementById('register-message');
       msg.textContent = "⚓ Registrierung läuft...";
 
-      const { error } = await supabase.auth.signUp({ email, password });
+      console.log("➡️ Registrierungsversuch:", email);
 
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) {
         msg.textContent = "❌ Fehler: " + error.message;
+        console.error("Registrierungsfehler:", error.message);
       } else {
         msg.textContent = "✅ Konto erstellt! Du kannst dich jetzt anmelden.";
+        console.log("✅ Registrierung erfolgreich – zurück zum Login.");
         setTimeout(() => {
           registerSection.style.display = 'none';
           loginSection.style.display = 'block';
@@ -119,12 +141,13 @@
       }
     });
 
-    // =========================================================
-    // BLOCK: Automatische Weiterleitung bei aktiver Sitzung
-    // =========================================================
+    /* =========================================================
+       SEGMENT 5.5: AUTO-LOGIN WEITERLEITUNG
+       ========================================================= */
     (async () => {
       const { data } = await supabase.auth.getSession();
       if (data?.session) {
+        console.log("ℹ️ Session erkannt – Weiterleitung zum Dashboard");
         window.location.href = './dashboard.html';
       }
     })();
