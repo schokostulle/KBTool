@@ -1,93 +1,32 @@
-// js/supabase.js
+// =========================================================
+// BLOCK 6: supabase.js – Verbindung zum Supabase-Backend
+// =========================================================
 
-// --- Supabase Verbindung konfigurieren ---
-// Diese Werte findest du in deinem Supabase Projekt unter
-// Settings → API → Project URL & anon public key
+// Supabase-Bibliothek aus dem offiziellen CDN laden
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const SUPABASE_URL = 'https://xgdybrinpypeppdswheb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo';
+// =========================================================
+// BLOCK: Projekt-Konfiguration
+// =========================================================
 
-// Supabase-Client erstellen (globale Variable)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// HINWEIS:
+// - Trage hier deine eigene Projekt-URL und den "Public Anon Key" ein.
+// - Diese Daten findest du im Supabase-Dashboard unter:
+//   Settings → API → Project URL & anon public key.
 
-// --- Authentifizierungsfunktionen ---
+const SUPABASE_URL = 'https://deinprojekt.supabase.co';       // <-- hier ersetzen
+const SUPABASE_ANON_KEY = 'dein_public_anon_key';             // <-- hier ersetzen
 
-// Benutzer registrieren (mit Fake-Mail-Domain)
-async function registerUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
+// =========================================================
+// BLOCK: Client-Erstellung
+// =========================================================
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { role: 'applicant' } // Anwärter als Standardrolle
-    }
-  });
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  if (error) {
-    console.error('Registrierungsfehler:', error.message);
-    return { success: false, error: error.message };
-  }
+// =========================================================
+// BLOCK: Funktions-Test (optional für Anfänger)
+// =========================================================
 
-  return { success: true, user: data.user };
-}
-
-// Benutzer anmelden
-async function loginUser(username, password) {
-  const email = `${username}@bullfrog.fake`;
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    console.error('Loginfehler:', error.message);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, user: data.user };
-}
-
-// Benutzer abmelden
-async function logoutUser() {
-  const { error } = await supabase.auth.signOut();
-  if (error) console.error('Logoutfehler:', error.message);
-}
-
-// Aktuell eingeloggten Benutzer abrufen
-async function getCurrentUser() {
-  const { data } = await supabase.auth.getUser();
-  return data?.user || null;
-}
-
-// Benutzerrolle abrufen (aus user_metadata)
-async function getUserRole() {
-  const user = await getCurrentUser();
-  return user?.user_metadata?.role || 'guest';
-}
-
-// Benutzerrolle ändern (nur Admin)
-async function setUserRole(userId, newRole) {
-  const { data, error } = await supabase.auth.admin.updateUserById(userId, {
-    user_metadata: { role: newRole }
-  });
-
-  if (error) {
-    console.error('Rollenänderungsfehler:', error.message);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, user: data.user };
-}
-
-// --- Export für andere JS-Dateien ---
-export {
-  supabase,
-  registerUser,
-  loginUser,
-  logoutUser,
-  getCurrentUser,
-  getUserRole,
-  setUserRole
-};
+// Diese Zeile schreibt bei erfolgreicher Verbindung eine Meldung in die Konsole.
+// Du kannst sie löschen, wenn alles läuft.
+console.log('✅ Supabase-Client erfolgreich initialisiert');
