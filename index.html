@@ -1,180 +1,126 @@
+<!-- ========================================================= -->
+<!-- BLOCK 4: index.html – Anmeldung & Registrierung (Grundlage) -->
+<!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Command – Anmeldung</title>
-  <link rel="stylesheet" href="./css/stylesheet.css" />
-  <style>
-    /* Zusätzlicher Stil nur für Login-Seite */
-    .auth-container {
-      max-width: 420px;
-      margin: 6rem auto;
-      background: rgba(20, 20, 25, 0.9);
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 18px rgba(0,0,0,0.6);
-      text-align: center;
-    }
-
-    .auth-container h2 {
-      font-family: "Cinzel", serif;
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-
-    .auth-container p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .auth-container input {
-      width: 90%;
-      margin: 0.5rem 0;
-      padding: 0.6rem;
-      border-radius: 0.4rem;
-      border: 1px solid var(--border);
-      background: #111;
-      color: var(--text-light);
-      font-family: var(--font-body);
-    }
-
-    .auth-container button {
-      width: 94%;
-      margin-top: 1rem;
-      padding: 0.6rem;
-      border: none;
-      border-radius: 0.4rem;
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .auth-container button:hover {
-      background: var(--accent-light);
-    }
-
-    .toggle-link {
-      color: var(--accent-light);
-      cursor: pointer;
-      display: block;
-      margin-top: 1rem;
-      text-decoration: underline;
-    }
-
-    .info-box {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      border-left: 4px solid var(--accent);
-      background: #111;
-      color: #fff;
-      border-radius: 0.3rem;
-      font-size: 0.9rem;
-    }
-  </style>
+  <title>Anmeldung – Seefahrer Kommando</title>
+  <!-- Verbindung zur späteren globalen CSS-Datei -->
+  <link rel="stylesheet" href="./CSS/style.css" />
 </head>
 
-<body class="dark-theme">
-  <header class="header">
-    <h1>⚓ Bullfrog Command</h1>
+<body>
+  <!-- ========== Abschnitt: Seitenkopf ========== -->
+  <header>
+    <h1>⚓ Seefahrer-Kommando</h1>
   </header>
 
+  <!-- ========== Abschnitt: Hauptinhalt ========== -->
   <main>
-    <section class="auth-container" id="loginContainer">
-      <h2>Login</h2>
-      <p>Melde dich mit deiner @bullfrog.fake Adresse an</p>
+    <!-- Login-Bereich -->
+    <section id="login-section">
+      <h2>Anmeldung</h2>
+      <p>Bitte melde dich mit deiner E-Mail und deinem Passwort an.</p>
 
-      <input type="email" id="loginEmail" placeholder="E-Mail (z. B. deinname@bullfrog.fake)" />
-      <input type="password" id="loginPassword" placeholder="Passwort" />
+      <input type="email" id="login-email" placeholder="E-Mail-Adresse" />
+      <input type="password" id="login-password" placeholder="Passwort" />
+      <button id="login-button">Einloggen</button>
 
-      <button id="loginBtn">Einloggen</button>
-      <span class="toggle-link" id="showRegister">Noch kein Konto? Jetzt registrieren ⚔️</span>
+      <p>Noch kein Konto? <span id="show-register">Jetzt registrieren</span></p>
 
-      <div id="loginMsg" class="info-box hidden"></div>
+      <!-- Bereich für Rückmeldungen -->
+      <div id="login-message"></div>
     </section>
 
-    <section class="auth-container hidden" id="registerContainer">
+    <!-- Registrierung-Bereich -->
+    <section id="register-section" style="display:none;">
       <h2>Registrierung</h2>
-      <p>Erstelle ein Konto mit deiner @bullfrog.fake E-Mail</p>
+      <p>Erstelle ein neues Konto, um loszulegen.</p>
 
-      <input type="email" id="regEmail" placeholder="E-Mail (z. B. deinname@bullfrog.fake)" />
-      <input type="password" id="regPassword" placeholder="Passwort" />
+      <input type="email" id="register-email" placeholder="E-Mail-Adresse" />
+      <input type="password" id="register-password" placeholder="Passwort" />
+      <button id="register-button">Registrieren</button>
 
-      <button id="registerBtn">Registrieren</button>
-      <span class="toggle-link" id="showLogin">Schon registriert? Zum Login ⚓</span>
+      <p>Bereits registriert? <span id="show-login">Zum Login</span></p>
 
-      <div id="registerMsg" class="info-box hidden"></div>
+      <div id="register-message"></div>
     </section>
   </main>
 
-  <footer class="footer">
-    <p>⚓ Bullfrog Fleet Command – Gemeinschaft der Seefahrer</p>
-  </footer>
-
-  <!-- Supabase -->
+  <!-- ========== Abschnitt: Skriptintegration ========== -->
   <script type="module">
-    import { supabase } from './js/supabase.js';
+    // =========================================================
+    // BLOCK: Supabase-Client importieren
+    // =========================================================
+    import { supabase } from './JS/supabase.js';
 
-    // Umschalten Login/Registrierung
-    document.getElementById('showRegister').addEventListener('click', () => {
-      document.getElementById('loginContainer').classList.add('hidden');
-      document.getElementById('registerContainer').classList.remove('hidden');
+    // =========================================================
+    // BLOCK: Umschalten zwischen Login und Registrierung
+    // =========================================================
+    const loginSection = document.getElementById('login-section');
+    const registerSection = document.getElementById('register-section');
+    document.getElementById('show-register').addEventListener('click', () => {
+      loginSection.style.display = 'none';
+      registerSection.style.display = 'block';
+    });
+    document.getElementById('show-login').addEventListener('click', () => {
+      registerSection.style.display = 'none';
+      loginSection.style.display = 'block';
     });
 
-    document.getElementById('showLogin').addEventListener('click', () => {
-      document.getElementById('registerContainer').classList.add('hidden');
-      document.getElementById('loginContainer').classList.remove('hidden');
-    });
-
-    // Login
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const loginMsg = document.getElementById('loginMsg');
-      loginMsg.classList.remove('hidden');
-      loginMsg.textContent = '⏳ Anmeldung läuft...';
+    // =========================================================
+    // BLOCK: Anmeldung (Login)
+    // =========================================================
+    document.getElementById('login-button').addEventListener('click', async () => {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const msg = document.getElementById('login-message');
+      msg.textContent = "⏳ Anmeldung läuft...";
 
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+
       if (error) {
-        loginMsg.textContent = `❌ Fehler: ${error.message}`;
+        msg.textContent = "❌ Fehler: " + error.message;
       } else {
-        loginMsg.textContent = '✅ Willkommen zurück, Kommandant!';
-        setTimeout(() => window.location.href = './dashboard.html', 800);
+        msg.textContent = "✅ Anmeldung erfolgreich!";
+        setTimeout(() => {
+          window.location.href = "./dashboard.html";
+        }, 800);
       }
     });
 
-    // Registrierung
-    document.getElementById('registerBtn').addEventListener('click', async () => {
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value.trim();
-      const registerMsg = document.getElementById('registerMsg');
-      registerMsg.classList.remove('hidden');
-      registerMsg.textContent = '⚓ Registrierung läuft...';
-
-      if (!email.endsWith('@bullfrog.fake')) {
-        registerMsg.textContent = '❌ Bitte nutze eine @bullfrog.fake E-Mail-Adresse';
-        return;
-      }
+    // =========================================================
+    // BLOCK: Registrierung (Signup)
+    // =========================================================
+    document.getElementById('register-button').addEventListener('click', async () => {
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      const msg = document.getElementById('register-message');
+      msg.textContent = "⚓ Registrierung läuft...";
 
       const { error } = await supabase.auth.signUp({ email, password });
+
       if (error) {
-        registerMsg.textContent = `❌ Fehler: ${error.message}`;
+        msg.textContent = "❌ Fehler: " + error.message;
       } else {
-        registerMsg.textContent = '✅ Konto erstellt! Du kannst dich jetzt einloggen.';
+        msg.textContent = "✅ Konto erstellt! Du kannst dich jetzt anmelden.";
         setTimeout(() => {
-          document.getElementById('registerContainer').classList.add('hidden');
-          document.getElementById('loginContainer').classList.remove('hidden');
-        }, 1000);
+          registerSection.style.display = 'none';
+          loginSection.style.display = 'block';
+        }, 1200);
       }
     });
 
-    // Session prüfen
+    // =========================================================
+    // BLOCK: Automatische Weiterleitung bei aktiver Sitzung
+    // =========================================================
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data?.session) window.location.href = './dashboard.html';
+      if (data?.session) {
+        window.location.href = './dashboard.html';
+      }
     })();
   </script>
 </body>
