@@ -1,99 +1,126 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bullfrog Command – Anmeldung</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600..900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="./css/stylesheet.css" />
 </head>
-<body class="theme-dark ocean-bg">
-  <header class="auth-header">
-    <h1 class="brand"><span class="brand-accent">⚓</span> Bullfrog Command</h1>
-    <p class="subtitle">Strategie-Tool der Flotte — Zeitalter der Seefahrt</p>
+
+<body class="dark-theme">
+  <header class="header">
+    <h1>⚓ Bullfrog Command</h1>
   </header>
 
-  <main class="auth-card">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="login">Anmelden</button>
-      <button class="tab-btn" data-tab="register">Registrieren</button>
-    </div>
+  <main>
+    <!-- LOGIN -->
+    <section class="auth-section" id="loginContainer">
+      <div class="auth-box">
+        <h2>Login</h2>
+        <p>Melde dich mit deiner @bullfrog.fake Adresse an</p>
 
-    <section id="login" class="tab-panel active">
-      <form id="loginForm">
-        <label>Nutzername
-          <input type="text" id="login-username" required placeholder="z. B. athen_krieger" />
-        </label>
-        <label>Passwort
-          <input type="password" id="login-password" required placeholder="••••••••" />
-        </label>
-        <button type="submit" class="btn primary">Anmelden</button>
-      </form>
-      <p class="hint">E-Mail wird intern als <code>&lt;nutzername&gt;@bullfrog.fake</code> erzeugt.</p>
-      <div id="loginMsg" class="msg"></div>
+        <input type="email" id="loginEmail" placeholder="E-Mail" class="auth-input" />
+        <input type="password" id="loginPassword" placeholder="Passwort" class="auth-input" />
+        <button id="loginBtn" class="auth-btn">Einloggen</button>
+
+        <p class="toggle-text">
+          Noch kein Konto?
+          <span id="showRegister" class="toggle-link">Jetzt registrieren ⚔️</span>
+        </p>
+
+        <div id="loginMsg" class="info-box hidden"></div>
+      </div>
     </section>
 
-    <section id="register" class="tab-panel">
-      <form id="registerForm">
-        <label>Wunsch-Nutzername
-          <input type="text" id="reg-username" required />
-        </label>
-        <label>Passwort
-          <input type="password" id="reg-password" required minlength="8" />
-        </label>
-        <button type="submit" class="btn brass">Registrieren</button>
-      </form>
-      <p class="hint">Neue Nutzer starten als <strong>Anwärter</strong>. Beförderung durch Admin.</p>
-      <div id="registerMsg" class="msg"></div>
+    <!-- REGISTRIERUNG -->
+    <section class="auth-section hidden" id="registerContainer">
+      <div class="auth-box">
+        <h2>Registrierung</h2>
+        <p>Erstelle ein Konto mit deiner @bullfrog.fake E-Mail</p>
+
+        <input type="email" id="regEmail" placeholder="E-Mail" class="auth-input" />
+        <input type="password" id="regPassword" placeholder="Passwort" class="auth-input" />
+        <button id="registerBtn" class="auth-btn">Registrieren</button>
+
+        <p class="toggle-text">
+          Schon registriert?
+          <span id="showLogin" class="toggle-link">Zum Login ⚓</span>
+        </p>
+
+        <div id="registerMsg" class="info-box hidden"></div>
+      </div>
     </section>
   </main>
 
-  <footer class="auth-footer">
-    <small>© Bullfrog Fleet • Dark Nautical Theme</small>
+  <footer class="footer">
+    <p>⚓ Bullfrog Fleet Command – Gemeinschaft der Seefahrer</p>
   </footer>
 
-  <!-- Supabase CDN & App Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase + JS -->
   <script type="module">
-    import { registerUser, loginUser } from './js/supabase.js';
-    import { bindAuthTabs, uiMsg } from './js/main.js';
+    import { supabase } from './js/supabase.js';
 
-    bindAuthTabs();
+    // Elemente
+    const loginContainer = document.getElementById('loginContainer');
+    const registerContainer = document.getElementById('registerContainer');
+    const loginMsg = document.getElementById('loginMsg');
+    const registerMsg = document.getElementById('registerMsg');
+
+    // Umschalten Login/Registrierung
+    document.getElementById('showRegister').addEventListener('click', () => {
+      loginContainer.classList.add('hidden');
+      registerContainer.classList.remove('hidden');
+    });
+    document.getElementById('showLogin').addEventListener('click', () => {
+      registerContainer.classList.add('hidden');
+      loginContainer.classList.remove('hidden');
+    });
 
     // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const u = document.getElementById('login-username').value.trim();
-      const p = document.getElementById('login-password').value;
-      uiMsg('loginMsg', '… prüfe Anmeldedaten', 'info');
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      loginMsg.classList.remove('hidden');
+      loginMsg.textContent = '⏳ Anmeldung läuft...';
 
-      const res = await loginUser(u, p);
-      if (res.success) {
-        uiMsg('loginMsg', 'Anmeldung erfolgreich. Weiter zum Dashboard …', 'success');
-        window.location.href = './dashboard.html';
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        loginMsg.textContent = `❌ Fehler: ${error.message}`;
       } else {
-        uiMsg('loginMsg', `Fehler: ${res.error}`, 'error');
+        loginMsg.textContent = '✅ Willkommen zurück, Kommandant!';
+        setTimeout(() => (window.location.href = './dashboard.html'), 800);
       }
     });
 
     // Registrierung
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const u = document.getElementById('reg-username').value.trim();
-      const p = document.getElementById('reg-password').value;
-      uiMsg('registerMsg', '… erstelle Konto', 'info');
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+      registerMsg.classList.remove('hidden');
+      registerMsg.textContent = '⚓ Registrierung läuft...';
 
-      const res = await registerUser(u, p);
-      if (res.success) {
-        uiMsg('registerMsg', 'Konto erstellt. Du kannst dich jetzt anmelden.', 'success');
+      if (!email.endsWith('@bullfrog.fake')) {
+        registerMsg.textContent = '❌ Bitte nutze eine @bullfrog.fake E-Mail-Adresse';
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        registerMsg.textContent = `❌ Fehler: ${error.message}`;
       } else {
-        uiMsg('registerMsg', `Fehler: ${res.error}`, 'error');
+        registerMsg.textContent = '✅ Konto erstellt! Du kannst dich jetzt einloggen.';
+        setTimeout(() => {
+          registerContainer.classList.add('hidden');
+          loginContainer.classList.remove('hidden');
+        }, 1200);
       }
     });
+
+    // Automatisches Weiterleiten, falls eingeloggt
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) window.location.href = './dashboard.html';
+    })();
   </script>
 </body>
 </html>
