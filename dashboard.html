@@ -1,119 +1,112 @@
+<!-- ========================================================= -->
+<!-- BLOCK 5: dashboard.html – Grundseite mit Navigation       -->
+<!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bullfrog Command Dashboard</title>
-  <link rel="stylesheet" href="./css/stylesheet.css" />
+  <title>Dashboard – Seefahrer Kommando</title>
+  <link rel="stylesheet" href="./CSS/style.css" />
 </head>
 
-<body class="dark-theme">
-  <header class="header">
-    <h1>⚓ Bullfrog Command</h1>
-    <nav>
-      <button id="logoutBtn" class="nav-btn">🚪 Logout</button>
-    </nav>
+<body>
+  <!-- ========== Abschnitt: Kopfbereich ========== -->
+  <header>
+    <h1>⚓ Seefahrer-Kommando – Dashboard</h1>
+    <button id="logout-button">Logout</button>
   </header>
 
+  <!-- ========== Abschnitt: Navigation ========== -->
+  <nav>
+    <ul id="nav-menu">
+      <!-- Sichtbar für alle -->
+      <li><a href="./dashboard.html">🏠 Start</a></li>
+      <li><a href="./tools/tool1.html">⚙️ Tool 1</a></li>
+      <li><a href="./tools/tool2.html">🧭 Tool 2</a></li>
+
+      <!-- Sichtbar nur für Admin -->
+      <li class="admin-only"><a href="./tools/csv-upload.html">📜 CSV Upload</a></li>
+      <li class="admin-only"><a href="./tools/diplomatie.html">🕊️ Diplomatie</a></li>
+      <li class="admin-only"><a href="./tools/mitglieder.html">👑 Mitgliederverwaltung</a></li>
+    </ul>
+  </nav>
+
+  <!-- ========== Abschnitt: Hauptinhalt ========== -->
   <main>
-    <!-- ========================== -->
-    <!-- 🧭 Dashboard Startbereich -->
-    <!-- ========================== -->
-    <section class="dashboard-intro">
-      <h2>Willkommen, <span id="username">Kommandant</span>!</h2>
-      <p>Dies ist dein Hauptquartier. Wähle ein Tool oder öffne den Adminbereich (falls du berechtigt bist).</p>
+    <section id="welcome-section">
+      <h2 id="welcome-message">Willkommen, Seefahrer!</h2>
+      <p>Hier erscheinen demnächst Neuigkeiten und Ankündigungen.</p>
     </section>
 
-    <!-- ========================== -->
-    <!-- 🧰 Beispiel-Tools -->
-    <!-- ========================== -->
-    <section class="tools-grid">
-      <div class="tool-card" onclick="window.location.href='./fleet.html'">
-        ⚔️ <strong>Flottenplanung</strong><br>
-        <small>Strategische Übersicht deiner Fregatten</small>
-      </div>
-
-      <div class="tool-card" onclick="window.location.href='./resources.html'">
-        🪓 <strong>Ressourcenverwaltung</strong><br>
-        <small>Verteilung von Holz, Eisen und Steinen</small>
-      </div>
-
-      <div class="tool-card" onclick="window.location.href='./battlemap.html'">
-        🗺️ <strong>Kriegsgebiete</strong><br>
-        <small>Schlachtfelder & Allianzen</small>
-      </div>
-    </section>
-
-    <!-- ========================== -->
-    <!-- 👑 ADMIN-BEREICH -->
-    <!-- ========================== -->
-    <section id="admin-members" class="admin-section hidden">
-      <h2 class="section-title">👑 Mitgliederverwaltung</h2>
-
-      <div id="infoBox" class="info-box hidden"></div>
-
-      <div class="admin-toolbar">
-        <input type="text" id="memberSearch" placeholder="🔍 Mitglieder suchen..." />
-        <select id="roleFilter">
-          <option value="all">Alle Rollen</option>
-          <option value="admin">Admin</option>
-          <option value="member">Mitglied</option>
-          <option value="applicant">Anwärter</option>
-          <option value="banned">Gesperrt</option>
-        </select>
-        <button id="refreshMembers">🔄 Aktualisieren</button>
-      </div>
-
-      <div id="membersContainer" class="members-grid"></div>
+    <section id="news-section">
+      <h3>📢 Aktuelle Meldungen</h3>
+      <ul id="news-list">
+        <li>– Noch keine Einträge –</li>
+      </ul>
     </section>
   </main>
 
-  <footer class="footer">
-    <p>⚓ Bullfrog Fleet Command – Gemeinschaft der Seefahrer</p>
-  </footer>
-
-  <!-- ========================== -->
-  <!-- 🔗 SCRIPTS -->
-  <!-- ========================== -->
-  <script type="module" src="./js/supabase.js"></script>
+  <!-- ========== Abschnitt: Skriptintegration ========== -->
   <script type="module">
-    import { supabase } from './js/supabase.js';
+    // =========================================================
+    // BLOCK: Supabase-Client importieren
+    // =========================================================
+    import { supabase } from './JS/supabase.js';
 
-    const logoutBtn = document.getElementById('logoutBtn');
-    const usernameEl = document.getElementById('username');
-    const adminSection = document.getElementById('admin-members');
-
-    async function loadUser() {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) {
+    // =========================================================
+    // BLOCK: Nutzer-Sitzung prüfen
+    // =========================================================
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        // Keine aktive Anmeldung → zurück zur Startseite
         window.location.href = './index.html';
         return;
       }
 
-      // Profil laden
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, role')
-        .eq('id', user.id)
-        .single();
-
-      usernameEl.textContent = profile?.username || 'Kommandant';
-
-      // Adminbereich sichtbar machen
-      if (profile?.role === 'admin') {
-        adminSection.classList.remove('hidden');
-      }
+      // Nutzerinformationen laden
+      const user = data.session.user;
+      loadProfile(user.id);
     }
 
-    logoutBtn.addEventListener('click', async () => {
+    // =========================================================
+    // BLOCK: Profil abrufen & Rollenerkennung
+    // =========================================================
+    async function loadProfile(userId) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', userId)
+        .single();
+
+      const welcome = document.getElementById('welcome-message');
+      if (error || !profile) {
+        welcome.textContent = "⚓ Willkommen, unbekannter Seefahrer!";
+        return;
+      }
+
+      welcome.textContent = `⚓ Willkommen, ${profile.username || 'Seefahrer'}!`;
+
+      // Admin-Bereiche ein-/ausblenden
+      const adminItems = document.querySelectorAll('.admin-only');
+      adminItems.forEach(item => {
+        item.style.display = (profile.role === 'admin') ? 'list-item' : 'none';
+      });
+    }
+
+    // =========================================================
+    // BLOCK: Logout
+    // =========================================================
+    document.getElementById('logout-button').addEventListener('click', async () => {
       await supabase.auth.signOut();
       window.location.href = './index.html';
     });
 
-    loadUser();
+    // =========================================================
+    // BLOCK: Initialer Aufruf
+    // =========================================================
+    checkSession();
   </script>
-
-  <!-- Adminmodul -->
-  <script type="module" src="./js/members.js"></script>
 </body>
 </html>
