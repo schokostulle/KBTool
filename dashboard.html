@@ -2,22 +2,18 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Dashboard – Orden der Ersten Seefahrt</title>
+  <title>🧭 Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
 
-<body>
+<body onload="protectPage(['member','admin'])">
   <main class="grid">
     <aside class="sidebar">
       <h2>⚓ Menü</h2>
-      <nav>
-        <a href="dashboard.html" class="active">🧭 Dashboard</a>
-        <a href="mitglieder.html">👥 Mitglieder</a>
-        <button onclick="logout()">🚪 Logout</button>
-      </nav>
+      <nav id="menu"></nav>
     </aside>
 
     <section class="content">
@@ -27,20 +23,13 @@
       </header>
 
       <article class="card">
-        <h3>⚔️ Ankündigungen</h3>
+        <h3>⚔️ Neuigkeiten</h3>
         <ul>
-          <li><strong>27. Okt 2025:</strong> Schiffswerft fertiggestellt.</li>
-          <li><strong>20. Okt 2025:</strong> Neue Route zum Nordmeer entdeckt.</li>
+          <li><strong>27. Okt 2025:</strong> Kriegsvorbereitung abgeschlossen.</li>
+          <li><strong>22. Okt 2025:</strong> Neue Flottenstrategie eingespielt.</li>
         </ul>
       </article>
     </section>
   </main>
-
-  <script>
-    const nick = localStorage.getItem("nickname");
-    const role = localStorage.getItem("role");
-    if (!nick) location.href="index.html";
-    $("#welcome").textContent = `Willkommen ${nick} (${role})`;
-  </script>
 </body>
 </html>
