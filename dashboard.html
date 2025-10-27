@@ -1,235 +1,38 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard | Allianz-Tool</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Dashboard – Allianz</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="dashboard.js"></script>
 </head>
-
 <body>
-  <!-- Seitenleiste -->
-  <aside class="sidebar">
-    <div class="logo">⚓ Allianz-Tool</div>
-    <nav>
-      <a href="dashboard.html" class="active">🏠 Dashboard</a>
-      <a href="reservierungen.html">🎯 Reservierungen</a>
-      <a href="karte.html">🗺️ Karte</a>
-      <a href="angriffe.html">⚔️ Angriffe</a>
-      <a href="kb.html">📜 Kriegsberichte</a>
-      <a href="flotten.html">🚢 Flotten</a>
-      <hr />
-      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
-      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
-      <a href="csv.html" data-admin>📂 CSV-Daten</a>
-      <hr />
-      <button id="logoutBtn">Logout</button>
-    </nav>
+  <aside class="menu">
+    <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="reservations.html">📜 Reservierungen</a>
+    <a href="fleet.html">🚢 Flotte</a>
+    <a href="battle_reports.html">⚔️ Kampfberichte</a>
+    <a href="diplomacy.html">🕊️ Diplomatie</a>
+    <a href="members.html">👥 Mitglieder</a>
+    <a href="csv.html">📂 CSV Upload</a>
   </aside>
 
-  <!-- Hauptinhalt -->
   <main>
-    <header class="topbar">
-      <div id="user-info"></div>
-      <h1>🏠 Allianz-Dashboard</h1>
-    </header>
+    <h1>Allianz-Dashboard</h1>
 
-    <section class="content">
-      <!-- NEWS & ANKÜNDIGUNGEN -->
-      <div class="card">
-        <h2>📢 News & Ankündigungen</h2>
+    <section>
+      <h2>Aktuelle Ankündigungen</h2>
+      <div id="newsList">Lade Ankündigungen...</div>
+    </section>
 
-        <!-- Admin News Formular -->
-        <form id="newsForm" style="display:none;">
-          <label>Neue Ankündigung
-            <textarea id="newsText" rows="3" placeholder="Mitteilung an die Allianz..."></textarea>
-          </label>
-          <button type="submit">Veröffentlichen</button>
-        </form>
-
-        <!-- News Liste -->
-        <div id="newsList" style="margin-top:1rem;">Lade Ankündigungen...</div>
-      </div>
-
-      <!-- FLOTTENSTÄRKE -->
-      <div class="card">
-        <h2>⚓ Flottenstärke</h2>
-        <div id="fleetStats">
-          <p><strong>Gesamte Allianzflotte:</strong> wird geladen...</p>
-          <p><strong>Eigene Flottenstärke:</strong> wird geladen...</p>
-        </div>
-      </div>
+    <section id="adminNewsForm" style="display:none;">
+      <h3>Neue Ankündigung (nur Admin)</h3>
+      <form id="newsForm">
+        <input id="title" type="text" placeholder="Titel" required>
+        <textarea id="content" placeholder="Nachricht an die Allianz..." required></textarea>
+        <button type="submit">Veröffentlichen</button>
+      </form>
     </section>
   </main>
-
-  <script type="module" src="authguard.js"></script>
-
-  <!-- LOGIK -->
-  <script type="module">
-    import { supabase } from "./supabase.js";
-
-    let currentUser = null;
-
-    /* === Nutzer laden === */
-    async function getCurrentUser() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        window.location.href = "index.html";
-        return;
-      }
-      const { data: user } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-      currentUser = user;
-
-      if (user.role === "admin") {
-        document.getElementById("newsForm").style.display = "block";
-      }
-    }
-
-    /* === NEWS LADEN === */
-    async function loadNews() {
-      const list = document.getElementById("newsList");
-      const { data, error } = await supabase
-        .from("news")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (error) {
-        list.textContent = "Fehler beim Laden.";
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        list.textContent = "Keine Ankündigungen vorhanden.";
-        return;
-      }
-
-      list.innerHTML = "";
-      for (const n of data) {
-        const date = new Date(n.created_at).toLocaleString("de-DE");
-        list.insertAdjacentHTML("beforeend", `
-          <article class="news-entry">
-            <header>
-              <h3>${n.titel || "Allianzmitteilung"}</h3>
-              <span>${date}</span>
-              <small>von ${n.verfasser_name || "Unbekannt"}</small>
-            </header>
-            <p>${n.text}</p>
-          </article>
-        `);
-      }
-    }
-
-    /* === NEWS SPEICHERN === */
-    document.getElementById("newsForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const text = document.getElementById("newsText").value.trim();
-      if (!text) return alert("Bitte Text eingeben.");
-
-      const { error } = await supabase.from("news").insert({
-        titel: "Allianzmitteilung",
-        text,
-        verfasser_id: currentUser.id,
-        verfasser_name: currentUser.username
-      });
-
-      if (error) alert("Fehler beim Speichern: " + error.message);
-      else {
-        document.getElementById("newsText").value = "";
-        loadNews();
-      }
-    });
-
-    /* === FLOTTENSTÄRKE BERECHNEN === */
-    async function loadFleetStats() {
-      const fleetDiv = document.getElementById("fleetStats");
-
-      const { data: all, error } = await supabase
-        .from("flotte")
-        .select("user_id, text");
-
-      if (error || !all) {
-        fleetDiv.textContent = "Fehler beim Laden der Flotten.";
-        return;
-      }
-
-      let totalShips = 0;
-      let myShips = 0;
-
-      // Zähle alle numerischen Werte aus den Flottenberichten
-      for (const entry of all) {
-        const numbers = (entry.text.match(/\b\d+\b/g) || []).map(Number);
-        const sum = numbers.reduce((a, b) => a + b, 0);
-        totalShips += sum;
-        if (entry.user_id === currentUser.id) myShips += sum;
-      }
-
-      fleetDiv.innerHTML = `
-        <p><strong>Gesamte Allianzflotte:</strong> ${totalShips.toLocaleString("de-DE")} Einheiten</p>
-        <p><strong>Eigene Flottenstärke:</strong> ${myShips.toLocaleString("de-DE")} Einheiten</p>
-      `;
-    }
-
-    /* === INIT === */
-    await getCurrentUser();
-    await loadNews();
-    await loadFleetStats();
-
-    /* === Admin-Links ausblenden für Member === */
-    document.addEventListener("DOMContentLoaded", () => {
-      const roleInfo = document.getElementById("user-info");
-      const observer = new MutationObserver(() => {
-        if (roleInfo.textContent.includes("(member)")) {
-          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
-        }
-      });
-      observer.observe(roleInfo, { childList: true });
-    });
-  </script>
-
-  <style>
-    textarea {
-      border: 1px solid #B08B4F;
-      border-radius: 6px;
-      width: 100%;
-      padding: 0.6rem;
-      font-family: inherit;
-    }
-
-    .news-entry {
-      border-top: 1px solid #B08B4F;
-      padding: 0.8rem 0;
-    }
-
-    .news-entry header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-wrap: wrap;
-    }
-
-    .news-entry h3 {
-      margin: 0;
-      color: #1C2C3C;
-    }
-
-    .news-entry p {
-      margin-top: 0.4rem;
-      background: #F9F7E8;
-      border: 1px solid #B08B4F;
-      border-radius: 4px;
-      padding: 0.5rem;
-      white-space: pre-wrap;
-    }
-
-    #fleetStats p {
-      margin: 0.3rem 0;
-      font-size: 1rem;
-    }
-  </style>
 </body>
 </html>
