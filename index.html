@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Seefahrt – Anmeldung & Registrierung (Nickname)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orden der Ersten Seefahrt – Anmeldung & Registrierung</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,51 +12,47 @@
   <main class="auth-shell">
     <header class="brand">
       <h1>⚓ Orden der Ersten Seefahrt</h1>
-      <p class="tagline">Melde dich mit deinem Nickname an — die E-Mail ist verborgen.</p>
+      <p class="tagline">Melde dich mit deinem Nickname an oder heuere an.</p>
     </header>
 
     <section class="tabs">
-      <button class="tab active" id="tab-login">Anmelden (Nickname)</button>
-      <button class="tab" id="tab-register">Registrieren (Nickname)</button>
+      <button class="tab active" id="tab-login">Anmelden</button>
+      <button class="tab" id="tab-register">Registrieren</button>
     </section>
 
-    <!-- LOGIN by nickname -->
+    <!-- Login -->
     <section class="panel active" id="panel-login">
-      <form id="login-form" class="form-card" autocomplete="off">
-        <label class="field"><span>Nickname</span>
-          <input type="text" name="nickname" placeholder="z.B. kapitän" required />
+      <form id="login-form" class="form-card">
+        <label>Nickname
+          <input type="text" name="nickname" required />
         </label>
-        <label class="field"><span>Passwort</span>
-          <input type="password" name="password" placeholder="••••••••" required />
+        <label>Passwort
+          <input type="password" name="password" required />
         </label>
         <button type="submit" class="btn primary">Anmelden</button>
       </form>
     </section>
 
-    <!-- REGISTER by nickname -->
+    <!-- Registrierung -->
     <section class="panel" id="panel-register" hidden>
-      <form id="register-form" class="form-card" autocomplete="off">
-        <label class="field"><span>Nickname</span>
-          <input type="text" name="nickname" placeholder="Wähle einen Nickname" minlength="3" required />
+      <form id="register-form" class="form-card">
+        <label>Nickname
+          <input type="text" name="nickname" minlength="3" required />
         </label>
-
         <div class="grid-2">
-          <label class="field"><span>Passwort</span>
+          <label>Passwort
             <input type="password" name="password" minlength="8" required />
           </label>
-          <label class="field"><span>Passwort bestätigen</span>
+          <label>Passwort bestätigen
             <input type="password" name="password_confirm" minlength="8" required />
           </label>
         </div>
-
         <button type="submit" class="btn accent">Heuern</button>
-        <p class="note" style="font-size:.9rem;margin-top:8px;color:#d7e7ef;opacity:.9;">
-          Deine echte E-Mail wird nicht benötigt — intern wird eine Fake-Adresse verwendet.
-        </p>
       </form>
+      <p class="note">Deine E-Mail wird nicht benötigt – intern wird eine Fake-Adresse erstellt.</p>
     </section>
 
-    <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+    <div id="feedback" class="feedback"></div>
   </main>
 
   <script src="app.js"></script>
