@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>🚢 Flottenstärke</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
+</head>
+<body onload="protectPage(['member','admin'])">
+  <main class="grid">
+    <aside class="sidebar">
+      <h2>⚓ Menü</h2>
+      <nav id="menu"></nav>
+    </aside>
+
+    <section class="content">
+      <header>
+        <h1>🚢 Flottenstärke</h1>
+        <p id="welcome"></p>
+      </header>
+
+      <div class="card">
+        <table class="table">
+          <tr><th>Schiffstyp</th><th>Anzahl</th><th>Status</th></tr>
+          <tr><td>Fregatten</td><td>12</td><td>🟢 Einsatzbereit</td></tr>
+          <tr><td>Galeeren</td><td>8</td><td>🟡 Wartung</td></tr>
+          <tr><td>Handelsschiffe</td><td>4</td><td>🟢 Aktiv</td></tr>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
