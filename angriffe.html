@@ -1,34 +1,438 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>🛡️ Angriff & Verteidigung</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Angriffe | Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html" class="active">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr/>
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr/>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptbereich -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>⚔️ Angriffsplanung</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>🛡️ Angriff & Verteidigung</h1>
-        <p id="welcome"></p>
-      </header>
+      <div class="card">
+        <h2>Neuen Angriff planen</h2>
+
+        <!-- Parameter / Skalen -->
+        <details style="margin: .5rem 0;">
+          <summary><strong>Skalierung (Seemeilen pro Raster)</strong></summary>
+          <div class="scale-grid" style="display:flex; gap:1rem; margin-top:.6rem; flex-wrap:wrap;">
+            <label>nm pro Inselgruppe (ΔIG)
+              <input type="number" id="nmPerIG" value="10" step="0.1" min="0"/>
+            </label>
+            <label>nm pro Insel (ΔI)
+              <input type="number" id="nmPerI" value="2" step="0.1" min="0"/>
+            </label>
+          </div>
+          <small>Die Distanz berechnet sich als √((ΔIG·nm/IG)² + (ΔI·nm/I)²).</small>
+        </details>
+
+        <!-- Formular -->
+        <div class="form-grid" style="display:grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap:1rem;">
+          <label>Flotte
+            <select id="flotteSelect"></select>
+            <small>Aus deiner Flottenliste (Geschwindigkeit: kn = nm/h)</small>
+          </label>
+
+          <label>Ziel (Spieler/Allianz/Koord.)
+            <input type="text" id="targetSearch" placeholder="Filter… (z. B. Spielername, Allianz)">
+            <select id="zielSelect"></select>
+          </label>
+
+          <label>Abflugzeit
+            <input type="datetime-local" id="departAt"/>
+          </label>
+
+          <label>Berechnete Distanz (nm)
+            <input type="text" id="distanceNm" readonly/>
+          </label>
+
+          <label>Flugdauer (hh:mm)
+            <input type="text" id="flightTime" readonly/>
+          </label>
+
+          <label>Ankunftszeit
+            <input type="text" id="arrivalAt" readonly/>
+          </label>
+        </div>
+
+        <div style="margin-top: .8rem; display:flex; gap:.6rem; flex-wrap:wrap;">
+          <button id="calcBtn">Zeit berechnen</button>
+          <button id="saveBtn">Speichern</button>
+          <button id="resetBtn" style="background:#888; color:#fff;">Zurücksetzen</button>
+        </div>
+      </div>
 
       <div class="card">
-        <h3>Geplante Aktionen</h3>
-        <ul>
-          <li>⚔️ Angriff auf Westfort – 28. Okt</li>
-          <li>🛡️ Verteidigung am Hafen – 29. Okt</li>
-        </ul>
+        <h2>Geplante Angriffe</h2>
+        <table id="angriffeTable">
+          <thead>
+            <tr>
+              <th>Angreifer</th>
+              <th>Ziel</th>
+              <th>Flotte</th>
+              <th>Abflug</th>
+              <th>Flugdauer</th>
+              <th>Ankunft</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="8">Lade…</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- Seitenlogik -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let me = null;
+    let flotte = [];
+    let ziele = [];
+    let zieleFiltered = [];
+
+    const flotteSelect = document.getElementById("flotteSelect");
+    const zielSelect = document.getElementById("zielSelect");
+    const targetSearch = document.getElementById("targetSearch");
+
+    const nmPerIGEl = document.getElementById("nmPerIG");
+    const nmPerIEl  = document.getElementById("nmPerI");
+
+    const departAt = document.getElementById("departAt");
+    const distanceNm = document.getElementById("distanceNm");
+    const flightTime = document.getElementById("flightTime");
+    const arrivalAt  = document.getElementById("arrivalAt");
+
+    const calcBtn = document.getElementById("calcBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn= document.getElementById("resetBtn");
+
+    /* ===== Helpers ===== */
+    function fmtDateTime(ts) {
+      return new Date(ts).toLocaleString("de-DE");
+    }
+
+    function hhmmFromHours(hours) {
+      const totalMin = Math.round(hours * 60);
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+    }
+
+    function addHours(ts, hours) {
+      const d = new Date(ts);
+      d.setMinutes(d.getMinutes() + Math.round(hours * 60));
+      return d;
+    }
+
+    /* Distanz via Vektorrechnung (IG/I) -> nm */
+    function computeDistanceNm(ziel, originIG, originI) {
+      const dIG = (ziel.ig ?? 0) - (originIG ?? 0);
+      const dI  = (ziel.i  ?? 0) - (originI  ?? 0);
+      const nmIG = parseFloat(nmPerIGEl.value) || 0;
+      const nmI  = parseFloat(nmPerIEl.value)  || 0;
+      const dx = dIG * nmIG;
+      const dy = dI  * nmI;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    /* ===== Load current user ===== */
+    async function loadMe() {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u?.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: rec } = await supabase
+        .from("users").select("*").eq("id", u.user.id).single();
+      me = rec;
+    }
+
+    /* ===== Load data ===== */
+    async function loadFlotte() {
+      // Admin sieht alle, Member nur eigene
+      let query = supabase.from("flotte").select("id, user_id, schiffstyp, anzahl, geschwindigkeit, position");
+      if (me.role !== "admin") query = query.eq("user_id", me.id);
+
+      const { data, error } = await query;
+      if (error) { alert("Fehler beim Laden der Flotten: " + error.message); return; }
+      flotte = data || [];
+      flotteSelect.innerHTML = "";
+      if (flotte.length === 0) {
+        flotteSelect.innerHTML = `<option value="">(Keine Flotte gefunden)</option>`;
+        return;
+      }
+      for (const f of flotte) {
+        const label = `${f.schiffstyp || "Flotte"} | v=${f.geschwindigkeit ?? "-"} kn | pos=${f.position ?? "-"}`;
+        flotteSelect.insertAdjacentHTML("beforeend",
+          `<option value="${f.id}" data-speed="${f.geschwindigkeit ?? 0}">${label}</option>`
+        );
+      }
+    }
+
+    async function loadZiele() {
+      const { data, error } = await supabase.from("ziele").select("*").limit(1000);
+      if (error) { alert("Fehler beim Laden der Ziele: " + error.message); return; }
+      ziele = data || [];
+      zieleFiltered = [...ziele];
+      renderZielSelect();
+    }
+
+    function renderZielSelect() {
+      const q = targetSearch.value.trim().toLowerCase();
+      zieleFiltered = ziele.filter(z => {
+        if (!q) return true;
+        return (
+          (z.spielername || "").toLowerCase().includes(q) ||
+          (z.allianzname || "").toLowerCase().includes(q) ||
+          (z.allianzkürzel || "").toLowerCase().includes(q) ||
+          `${z.ig ?? ""}`.includes(q) ||
+          `${z.i ?? ""}`.includes(q)
+        );
+      }).slice(0, 300); // Limit für Performance
+
+      zielSelect.innerHTML = "";
+      if (zieleFiltered.length === 0) {
+        zielSelect.innerHTML = `<option value="">(Keine Treffer)</option>`;
+        return;
+      }
+      for (const z of zieleFiltered) {
+        const label = `[IG ${z.ig ?? "?"} | I ${z.i ?? "?"}] ${z.inselname ?? "-"} — ${z.spielername ?? "-"} (${z.allianzkürzel ?? z.allianzname ?? "?"})`;
+        zielSelect.insertAdjacentHTML("beforeend",
+          `<option value="${z.id}">${label}</option>`
+        );
+      }
+    }
+
+    targetSearch.addEventListener("input", renderZielSelect);
+
+    /* ===== Calculation ===== */
+    function getSelectedFleet() {
+      const id = parseInt(flotteSelect.value);
+      return flotte.find(f => f.id === id) || null;
+    }
+
+    function getSelectedZiel() {
+      const id = parseInt(zielSelect.value);
+      return ziele.find(z => z.id === id) || null;
+    }
+
+    function parseOriginFromPosition(posText) {
+      // Erwartetes Format frei – hier einfache Heuristik:
+      // z.B. "IG:12 I:4" oder "12/4" → extrahiert IG und I
+      if (!posText) return { ig: 0, i: 0 };
+      const m1 = posText.match(/ig[:\s]*([0-9]+)/i);
+      const m2 = posText.match(/i[:\s]*([0-9]+)/i);
+      if (m1 || m2) {
+        return { ig: m1 ? parseInt(m1[1]) : 0, i: m2 ? parseInt(m2[1]) : 0 };
+      }
+      const m3 = posText.match(/([0-9]+)[^\d]+([0-9]+)/);
+      if (m3) return { ig: parseInt(m3[1]), i: parseInt(m3[2]) };
+      return { ig: 0, i: 0 };
+    }
+
+    function doCalc() {
+      const fleet = getSelectedFleet();
+      const ziel  = getSelectedZiel();
+      if (!fleet) return alert("Bitte eine Flotte wählen.");
+      if (!ziel)  return alert("Bitte ein Ziel wählen.");
+
+      const speedKn = parseFloat(fleet.geschwindigkeit) || 0; // nm/h
+      if (speedKn <= 0) return alert("Flottengeschwindigkeit ist 0. Bitte Flotte prüfen.");
+
+      const origin = parseOriginFromPosition(fleet.position);
+      const distNm = computeDistanceNm(ziel, origin.ig, origin.i);
+
+      const depart = departAt.value ? new Date(departAt.value) : new Date();
+      const hours = distNm / speedKn;
+
+      distanceNm.value = distNm.toFixed(1);
+      flightTime.value = hhmmFromHours(hours);
+      arrivalAt.value  = fmtDateTime(addHours(depart, hours));
+    }
+
+    calcBtn.addEventListener("click", doCalc);
+
+    resetBtn.addEventListener("click", () => {
+      zielSelect.selectedIndex = 0;
+      if (flotteSelect.options.length) flotteSelect.selectedIndex = 0;
+      distanceNm.value = "";
+      flightTime.value = "";
+      arrivalAt.value = "";
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 5);
+      departAt.value = new Date(now.getTime() - (now.getTimezoneOffset()*60000)).toISOString().slice(0,16);
+    });
+
+    /* ===== Save to DB ===== */
+    async function saveAttack() {
+      const fleet = getSelectedFleet();
+      const ziel  = getSelectedZiel();
+      if (!fleet || !ziel) return alert("Bitte Flotte und Ziel wählen.");
+      if (!distanceNm.value || !flightTime.value || !arrivalAt.value) {
+        return alert("Bitte zuerst berechnen.");
+      }
+
+      const depart = departAt.value ? new Date(departAt.value) : new Date();
+
+      // Flugdauer als ISO-ähnliches Interval in Sekunden (Server speichert interval)
+      const [hh, mm] = flightTime.value.split(":").map(Number);
+      const durationMinutes = (hh*60 + mm);
+      const durationISO = `${durationMinutes} minutes`;
+
+      const { error } = await supabase.from("angriffe").insert({
+        user_id: me.id,
+        ziel_id: ziel.id,
+        flotte_id: fleet.id,
+        abflugzeit: depart.toISOString(),
+        flugdauer: durationISO,
+        ankunftszeit: addHours(depart, durationMinutes/60).toISOString(),
+        status: "geplant"
+      });
+
+      if (error) alert("Fehler beim Speichern: " + error.message);
+      else {
+        alert("Angriff gespeichert.");
+        await loadAngriffe();
+      }
+    }
+
+    saveBtn.addEventListener("click", saveAttack);
+
+    /* ===== Liste Angriffe ===== */
+    async function loadAngriffe() {
+      const tbody = document.querySelector("#angriffeTable tbody");
+      tbody.innerHTML = `<tr><td colspan="8">Lade…</td></tr>`;
+
+      let query = supabase
+        .from("angriffe")
+        .select(`
+          id, user_id, ziel_id, flotte_id,
+          abflugzeit, flugdauer, ankunftszeit, status,
+          users!angriffe_user_id_fkey (username),
+          ziele!angriffe_ziel_id_fkey (inselname, ig, i, spielername, allianzkürzel, allianzname),
+          flotte!angriffe_flotte_id_fkey (schiffstyp, geschwindigkeit, position)
+        `)
+        .order("abflugzeit", { ascending: false });
+
+      if (me.role !== "admin") query = query.eq("user_id", me.id);
+
+      const { data, error } = await query;
+      if (error) { tbody.innerHTML = `<tr><td colspan="8">Fehler: ${error.message}</td></tr>`; return; }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">(Keine Angriffe)</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      for (const a of data) {
+        const userName = a.users?.username ?? "—";
+        const ziel = a.ziele
+          ? `[IG ${a.ziele.ig ?? "?"} | I ${a.ziele.i ?? "?"}] ${a.ziele.inselname ?? "-"} — ${a.ziele.spielername ?? "-"} (${a.ziele.allianzkürzel ?? a.ziele.allianzname ?? "?"})`
+          : a.ziel_id;
+
+        const flt = a.flotte
+          ? `${a.flotte.schiffstyp ?? "Flotte"} (v=${a.flotte.geschwindigkeit ?? "?"} kn)`
+          : a.flotte_id;
+
+        const dur = a.flugdauer ?? "";
+        const rowId = `row-${a.id}`;
+
+        tbody.insertAdjacentHTML("beforeend", `
+          <tr id="${rowId}">
+            <td>${userName}</td>
+            <td>${ziel}</td>
+            <td>${flt}</td>
+            <td>${fmtDateTime(a.abflugzeit)}</td>
+            <td>${typeof dur === "string" ? dur : ""}</td>
+            <td>${fmtDateTime(a.ankunftszeit)}</td>
+            <td>${a.status}</td>
+            <td>
+              ${ (me.role === "admin" || a.user_id === me.id)
+                ? `<button class="delBtn" data-id="${a.id}" title="Löschen">🗑️</button>`
+                : `—`
+              }
+            </td>
+          </tr>
+        `);
+      }
+
+      // Delete hooks
+      document.querySelectorAll(".delBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = parseInt(btn.dataset.id);
+          if (!confirm("Diesen Angriff löschen?")) return;
+          const { error } = await supabase.from("angriffe").delete().eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadAngriffe();
+        });
+      });
+    }
+
+    /* ===== Init ===== */
+    async function init() {
+      await loadMe();
+
+      // Abflugzeit (default: jetzt +5 Min, lokal)
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 5);
+      departAt.value = new Date(now.getTime() - (now.getTimezoneOffset()*60000)).toISOString().slice(0,16);
+
+      await Promise.all([loadFlotte(), loadZiele()]);
+      await loadAngriffe();
+
+      // Admin-Links ausblenden
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    }
+
+    init();
+  </script>
+
+  <style>
+    .card { background:#fff; color:#1C2C3C; border:1px solid #B08B4F; border-radius:10px; padding:1rem; margin-bottom:1.2rem; }
+    .form-grid label { display:flex; flex-direction:column; gap:.3rem; }
+    select, input[type="datetime-local"], input[readonly], input[type="number"] {
+      background:#fff; border:1px solid #B08B4F; padding:.4rem; border-radius:4px; color:#1C2C3C; font-family:inherit;
+    }
+    #angriffeTable th, #angriffeTable td { vertical-align: top; }
+  </style>
 </body>
 </html>
