@@ -2,13 +2,12 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>🤝 Diplomatie</title>
+  <title>🤝 Diplomatie – Orden der Ersten Seefahrt</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
-
 <body onload="protectPage(['admin'])">
   <main class="grid">
     <aside class="sidebar">
@@ -23,7 +22,12 @@
       </header>
 
       <div class="card">
-        <p>Verwaltung von Allianzen, Friedensverträgen und Beziehungen zu anderen Clans.</p>
+        <h3>Allianzen & Verträge</h3>
+        <table class="table">
+          <tr><th>Fraktion</th><th>Status</th><th>Aktion</th></tr>
+          <tr><td>Nordmeer-Bund</td><td>🕊️ Frieden</td><td><button>Ändern</button></td></tr>
+          <tr><td>Ostflotte</td><td>⚔️ Krieg</td><td><button>Ändern</button></td></tr>
+        </table>
       </div>
     </section>
   </main>
