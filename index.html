@@ -5,29 +5,60 @@
   <title>Allianz-Tool – Anmeldung</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="auth.js"></script>
+  <script>
+    // Umschalten zwischen Login und Registrierung
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginSection = document.getElementById("loginSection");
+      const registerSection = document.getElementById("registerSection");
+      const switchLinks = document.querySelectorAll(".switch-link");
+
+      switchLinks.forEach(link => {
+        link.addEventListener("click", e => {
+          e.preventDefault();
+          const target = e.target.dataset.target;
+          if (target === "register") {
+            loginSection.classList.add("hidden");
+            registerSection.classList.remove("hidden");
+          } else {
+            registerSection.classList.add("hidden");
+            loginSection.classList.remove("hidden");
+          }
+        });
+      });
+    });
+  </script>
 </head>
+
 <body>
   <main class="centered">
-    <h1>⚓ Allianz-Login</h1>
+    <h1>⚓ Allianz-Tool</h1>
 
-    <section class="login-section">
+    <!-- LOGIN -->
+    <section id="loginSection" class="auth-box">
       <h2>Anmelden</h2>
       <form id="loginForm">
         <input id="loginName" type="text" placeholder="Ingame-Name" required>
         <input id="loginPassword" type="password" placeholder="Passwort" required>
         <button type="submit">Anmelden</button>
       </form>
+      <p class="small text-center">
+        Noch kein Konto? 
+        <a href="#" class="switch-link" data-target="register">Jetzt registrieren</a>
+      </p>
     </section>
 
-    <hr>
-
-    <section class="register-section">
+    <!-- REGISTRIERUNG -->
+    <section id="registerSection" class="auth-box hidden">
       <h2>Registrieren</h2>
       <form id="registerForm">
         <input id="username" type="text" placeholder="Ingame-Name" required>
         <input id="password" type="password" placeholder="Passwort" required>
         <button type="submit">Registrieren</button>
       </form>
+      <p class="small text-center">
+        Bereits registriert?
+        <a href="#" class="switch-link" data-target="login">Hier anmelden</a>
+      </p>
     </section>
   </main>
 </body>
