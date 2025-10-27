@@ -1,35 +1,156 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>🧭 Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr />
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr />
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>Allianz-Dashboard</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>🧭 Dashboard</h1>
-        <p id="welcome"></p>
-      </header>
+      <!-- NEWS -->
+      <div class="card">
+        <h2>📰 Aktuelle Ankündigungen</h2>
+        <div id="news-list">Lade News...</div>
+      </div>
 
-      <article class="card">
-        <h3>⚔️ Neuigkeiten</h3>
-        <ul>
-          <li><strong>27. Okt 2025:</strong> Kriegsvorbereitung abgeschlossen.</li>
-          <li><strong>22. Okt 2025:</strong> Neue Flottenstrategie eingespielt.</li>
-        </ul>
-      </article>
+      <!-- FLOTTE -->
+      <div class="card">
+        <h2>🚢 Flottenübersicht</h2>
+        <p>Gesamte Flottenstärke der Allianz:</p>
+        <h3 id="fleet-strength">–</h3>
+      </div>
     </section>
   </main>
+
+  <!-- Authentifizierungsschutz -->
+  <script type="module" src="authguard.js"></script>
+
+  <!-- Dashboard-Logik -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    /* === News laden === */
+    async function loadNews() {
+      const { data, error } = await supabase
+        .from("news")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      const newsContainer = document.getElementById("news-list");
+
+      if (error) {
+        newsContainer.textContent = "Fehler beim Laden der News.";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        newsContainer.textContent = "Keine aktuellen Ankündigungen.";
+        return;
+      }
+
+      newsContainer.innerHTML = data
+        .map(
+          (n) => `
+          <article class="news-item">
+            <h3>${n.title}</h3>
+            <p>${n.content}</p>
+            <span class="date">${new Date(n.created_at).toLocaleString("de-DE")}</span>
+          </article>
+        `
+        )
+        .join("");
+    }
+
+    /* === Flottenstärke berechnen === */
+    async function loadFleetStrength() {
+      const { data, error } = await supabase
+        .from("flotte")
+        .select("anzahl");
+
+      const strengthEl = document.getElementById("fleet-strength");
+
+      if (error || !data) {
+        strengthEl.textContent = "Fehler beim Laden.";
+        return;
+      }
+
+      const total = data.reduce((sum, f) => sum + (f.anzahl || 0), 0);
+      strengthEl.textContent = total.toLocaleString("de-DE") + " Einheiten";
+    }
+
+    /* === Admin-Links ausblenden für Member === */
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+
+    /* === Initialisierung === */
+    loadNews();
+    loadFleetStrength();
+  </script>
+
+  <style>
+    .card {
+      background-color: #fff;
+      color: #1C2C3C;
+      border: 1px solid #B08B4F;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      color: #B08B4F;
+      margin-bottom: 0.6rem;
+    }
+    .news-item {
+      border-bottom: 1px solid #B08B4F;
+      padding: 0.4rem 0;
+    }
+    .news-item h3 {
+      font-size: 1.1rem;
+      color: #1C2C3C;
+    }
+    .news-item .date {
+      display: block;
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.3rem;
+    }
+  </style>
 </body>
 </html>
