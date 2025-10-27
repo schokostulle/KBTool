@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>📂 CSV-Verwaltung – Orden der Ersten Seefahrt</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
+</head>
+<body onload="protectPage(['admin'])">
+  <main class="grid">
+    <aside class="sidebar">
+      <h2>⚓ Menü</h2>
+      <nav id="menu"></nav>
+    </aside>
+
+    <section class="content">
+      <header>
+        <h1>📂 CSV-Import / Export</h1>
+        <p id="welcome"></p>
+      </header>
+
+      <div class="card">
+        <h3>Importieren</h3>
+        <input type="file" accept=".csv">
+        <button>📥 CSV hochladen</button>
+      </div>
+
+      <div class="card">
+        <h3>Exportieren</h3>
+        <button>📤 Daten als CSV speichern</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
