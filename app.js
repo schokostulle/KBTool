@@ -53,14 +53,6 @@ $("#register-form").addEventListener("submit", async (e) => {
   const user = signData.user;
   if (!user) return feedback("Fehler beim Anlegen des Nutzers.", "error");
 
-  const { error: profErr } = await supabase.from("profiles").insert({
-    id: user.id,
-    nickname,
-    role: "anwärter",
-    approved: false,
-  });
-  if (profErr) return feedback("Fehler beim Profil: " + profErr.message, "error");
-
   feedback("Registrierung erfolgreich. Warte auf Freischaltung durch einen Admin.", "success");
 });
 
