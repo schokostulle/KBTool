@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>📚 KB-Datenbank</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
+</head>
+<body onload="protectPage(['member','admin'])">
+  <main class="grid">
+    <aside class="sidebar">
+      <h2>⚓ Menü</h2>
+      <nav id="menu"></nav>
+    </aside>
+
+    <section class="content">
+      <header>
+        <h1>📚 Kampfdatenbank</h1>
+        <p id="welcome"></p>
+      </header>
+
+      <div class="card">
+        <p>Hier könnten Berichte, Statistiken und Kampfanalysen gespeichert werden.</p>
+        <table class="table">
+          <tr><th>Datum</th><th>Ort</th><th>Ergebnis</th></tr>
+          <tr><td>27.10.2025</td><td>Nordmeer</td><td>🏆 Sieg</td></tr>
+          <tr><td>22.10.2025</td><td>Falkenbucht</td><td>⚔️ Unentschieden</td></tr>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
