@@ -85,57 +85,39 @@ $("#login-form").addEventListener("submit", async (e) => {
   const password = e.target.password.value;
   const email = makeFakeEmail(nickname);
 
+  // Einloggen
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return feedback("Fehler: " + error.message, "error");
 
   const user = data.user;
   if (!user) return feedback("Fehler: Kein Benutzerobjekt erhalten.", "error");
 
+  // Session prüfen
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    return feedback("Session konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
+  }
+
   // Profil abrufen
-  let { data: profile, error: profErr } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("role, approved, nickname")
     .eq("id", user.id)
     .maybeSingle();
 
-  // Wenn kein Profil existiert (sollte nicht vorkommen, aber zur Sicherheit)
   if (!profile) {
-    console.warn("Kein Profil gefunden, lege eines nachträglich an …");
-    const fallbackNick = nickname || email.split("@")[0];
-    const { error: insertErr } = await supabase.from("profiles").insert({
-      id: user.id,
-      nickname: fallbackNick,
-      role: "anwärter",
-      approved: false,
-    });
-    if (insertErr) {
-      feedback("Profil konnte nicht erstellt werden: " + insertErr.message, "error");
-      await supabase.auth.signOut();
-      return;
-    }
-    feedback("Profil wurde neu angelegt. Bitte erneut anmelden.", "success");
+    feedback("Profil noch nicht vorhanden. Bitte 2 Sekunden warten und erneut einloggen.", "error");
     await supabase.auth.signOut();
     return;
   }
 
-  // Anwärter dürfen nicht ins Dashboard
   if (!profile.approved) {
     await supabase.auth.signOut();
-    return feedback(
-      "Du bist noch nicht freigeschaltet. Bitte warte auf die Aktivierung durch einen Admin.",
-      "error"
-    );
+    return feedback("Du bist noch nicht freigeschaltet. Bitte warte auf Freischaltung.", "error");
   }
 
   feedback("Willkommen zurück, " + profile.nickname + "!", "success");
 
-// Warte, bis Supabase die Session wirklich gespeichert hat
-const { data: sessionData } = await supabase.auth.getSession();
-if (sessionData.session) {
-  // erst dann weiterleiten
-  window.location.href = "dashboard.html";
-} else {
-  // wenn Session noch nicht da, kurz warten
-  setTimeout(() => (window.location.href = "dashboard.html"), 1500);
-}
+  //  Warten bis Session stabil gespeichert ist, dann weiterleiten
+  setTimeout(() => (window.location.href = "dashboard.html"), 1200);
 });
