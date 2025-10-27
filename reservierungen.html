@@ -1,35 +1,237 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>📜 Reservierungen – Orden der Ersten Seefahrt</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservierungen | Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html" class="active">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr />
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr />
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>🎯 Zielreservierungen</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>📜 Reservierungen</h1>
-        <p id="welcome"></p>
-      </header>
-
       <div class="card">
-        <h3>Aktuelle Reservierungen</h3>
-        <table class="table">
-          <tr><th>Datum</th><th>Bereich</th><th>Status</th></tr>
-          <tr><td>29.10.2025</td><td>Dock 3</td><td>✅ Bestätigt</td></tr>
-          <tr><td>01.11.2025</td><td>Arsenal</td><td>🕓 Ausstehend</td></tr>
+        <h2>Feindliche Spieler</h2>
+        <p>Wähle ein Ziel aus und reserviere es. Admins können Reservierungen prüfen.</p>
+
+        <table id="targets-table">
+          <thead>
+            <tr>
+              <th>Ozean</th>
+              <th>Inselgruppe</th>
+              <th>Insel</th>
+              <th>Spieler</th>
+              <th>Allianz</th>
+              <th>Punkte</th>
+              <th>Reservierung</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7">Lade Daten...</td></tr>
+          </tbody>
         </table>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- === LOGIK === -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let currentUser = null;
+
+    /* === Nutzer laden === */
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      currentUser = user;
+    }
+
+    /* === Ziele & Reservierungen laden === */
+    async function loadTargets() {
+      const table = document.getElementById("targets-table").querySelector("tbody");
+      table.innerHTML = "<tr><td colspan='7'>Lade Daten...</td></tr>";
+
+      const { data: ziele, error: errZiele } = await supabase
+        .from("ziele")
+        .select("*")
+        .limit(100);
+
+      if (errZiele || !ziele) {
+        table.innerHTML = "<tr><td colspan='7'>Fehler beim Laden der Daten.</td></tr>";
+        return;
+      }
+
+      // Reservierungen mitladen
+      const { data: res } = await supabase
+        .from("reservierungen")
+        .select("*");
+
+      table.innerHTML = "";
+
+      for (const ziel of ziele) {
+        const existing = res?.find(r => r.ziel_id === ziel.id);
+        const reservedBy = existing ? existing.user_id : null;
+        const status = existing ? existing.status : null;
+
+        let actionHTML = "";
+
+        // === Sichtlogik ===
+        if (!existing) {
+          actionHTML = `<button class="reserve-btn" data-id="${ziel.id}">Reservieren</button>`;
+        } else if (reservedBy === currentUser.id) {
+          actionHTML = `<span class="status self">${status}</span>`;
+        } else if (currentUser.role === "admin") {
+          actionHTML = `
+            <span>${status}</span><br>
+            <button class="confirm-btn" data-id="${existing.id}" data-status="bestätigt">✔️</button>
+            <button class="reject-btn" data-id="${existing.id}" data-status="abgelehnt">❌</button>
+          `;
+        } else {
+          actionHTML = `<span class="status">${status}</span>`;
+        }
+
+        table.insertAdjacentHTML(
+          "beforeend",
+          `
+          <tr>
+            <td>${ziel.oz}</td>
+            <td>${ziel.ig}</td>
+            <td>${ziel.i}</td>
+            <td>${ziel.spielername}</td>
+            <td>${ziel.allianzname || ziel.allianzkürzel}</td>
+            <td>${ziel.punkte?.toLocaleString("de-DE") || "-"}</td>
+            <td>${actionHTML}</td>
+          </tr>
+          `
+        );
+      }
+
+      bindButtons();
+    }
+
+    /* === Buttons verbinden === */
+    function bindButtons() {
+      // Reservieren
+      document.querySelectorAll(".reserve-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const zielId = btn.dataset.id;
+          const { error } = await supabase.from("reservierungen").insert({
+            ziel_id: zielId,
+            user_id: currentUser.id,
+            status: "ausstehend",
+          });
+          if (error) {
+            alert("Fehler: " + error.message);
+          } else {
+            alert("Reservierung eingereicht.");
+            loadTargets();
+          }
+        });
+      });
+
+      // Admin: bestätigen / ablehnen
+      document.querySelectorAll(".confirm-btn, .reject-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const status = btn.dataset.status;
+          const { error } = await supabase
+            .from("reservierungen")
+            .update({ status })
+            .eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadTargets();
+        });
+      });
+    }
+
+    /* === Start === */
+    await getCurrentUser();
+    await loadTargets();
+
+    /* === Admin-Links ausblenden für Member === */
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+  </script>
+
+  <style>
+    .card {
+      background-color: #fff;
+      color: #1C2C3C;
+      border: 1px solid #B08B4F;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .reserve-btn {
+      background-color: #B08B4F;
+      color: #1C2C3C;
+      border: none;
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      cursor: pointer;
+    }
+    .reserve-btn:hover {
+      background-color: #cda866;
+    }
+    .confirm-btn, .reject-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .confirm-btn:hover { color: green; }
+    .reject-btn:hover { color: red; }
+    .status {
+      font-weight: bold;
+    }
+    .status.self {
+      color: #B08B4F;
+    }
+  </style>
 </body>
 </html>
