@@ -1,86 +1,66 @@
-<!-- ========================================================= -->
-<!-- FILE: dashboard.html – Kompatibel mit style.css            -->
-<!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚓ Dashboard – Seefahrer Kommando</title>
-  <link rel="stylesheet" href="./CSS/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard – Orden der Ersten Seefahrt</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
-  <!-- HEADER -->
-  <header>
-    <h1>⚓ Seefahrer-Kommando – Dashboard</h1>
-    <button id="logout-button">Logout</button>
-  </header>
+  <div class="ocean-bg"></div>
+  <main class="dashboard-shell">
+    <aside class="sidebar">
+      <h2 class="logo">⚓ Crewmenü</h2>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html" class="active">🏠 Übersicht</a></li>
+          <li><a href="mitglieder.html">👥 Mitglieder</a></li>
+          <li><a href="#" id="logout-btn">🚪 Abmelden</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-  <!-- NAVIGATION -->
-  <nav>
-    <ul id="nav-menu">
-      <li><a href="./dashboard.html">🏠 Start</a></li>
-      <li><a href="./tools/tool1.html">⚙️ Tool 1</a></li>
-      <li><a href="./tools/tool2.html">🧭 Tool 2</a></li>
-      <li class="admin-only"><a href="./tools/mitglieder.html">👑 Mitglieder</a></li>
-    </ul>
-  </nav>
+    <section class="main-content">
+      <header>
+        <h1>Willkommen an Bord!</h1>
+        <p class="subtitle">Neuigkeiten und Ankündigungen der Flotte</p>
+      </header>
 
-  <!-- INHALT -->
-  <main>
-    <section id="welcome-section">
-      <h2 id="welcome-message">Willkommen, Seefahrer!</h2>
-      <p>Hier erscheinen Neuigkeiten und Ankündigungen.</p>
-    </section>
+      <article class="news">
+        <h2>⚔️ Ankündigungen</h2>
+        <ul>
+          <li><strong>27. Oktober 2025:</strong> Die neue Navigationskarte wurde veröffentlicht.</li>
+          <li><strong>20. Oktober 2025:</strong> Neue Crew-Mitglieder beigetreten.</li>
+          <li><strong>15. Oktober 2025:</strong> Sicherheitsupdate im Hafen abgeschlossen.</li>
+        </ul>
+      </article>
 
-    <section id="news-section">
-      <h3>📜 Letzte Meldungen</h3>
-      <ul id="news-list">
-        <li>– Keine Einträge –</li>
-      </ul>
+      <article class="tools">
+        <h2>⚙️ Werkzeuge</h2>
+        <p>Wähle links ein Werkzeug, um loszulegen.</p>
+      </article>
     </section>
   </main>
 
-  <footer>
-    <p>⚓ Seefahrer-Kommando © 2025</p>
-  </footer>
+  <script>
+    const SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <!-- SCRIPT -->
-  <script type="module">
-    import { supabase } from './JS/supabase.js';
-
-    // SEGMENT: Logout
-    document.getElementById('logout-button').addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      window.location.href = './index.html';
-    });
-
-    // SEGMENT: Sessionprüfung
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        window.location.href = './index.html';
-        return;
+    async function checkLogin() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
       }
-
-      const user = data.session.user;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, role')
-        .eq('id', user.id)
-        .single();
-
-      document.getElementById('welcome-message').textContent =
-        `⚓ Willkommen, ${profile?.username || 'Seefahrer'}!`;
-
-      // Admin-Sichtbarkeit
-      document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = profile?.role === 'admin' ? 'list-item' : 'none';
-      });
     }
 
-    checkSession();
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    checkLogin();
   </script>
 </body>
 </html>
