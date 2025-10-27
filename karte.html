@@ -83,9 +83,9 @@
 
     /* === Daten aus Supabase === */
     async function loadData() {
-      const { data: z } = await supabase.from("ziele").select("*").limit(500);
-      const { data: r } = await supabase.from("reservierungen").select("*");
-      const { data: d } = await supabase.from("diplomatie").select("*");
+      const { data: z } = await supabase.from("targets").select("*").limit(500);
+      const { data: r } = await supabase.from("reservations").select("*");
+      const { data: d } = await supabase.from("diplomacy").select("*");
 
       allZiele = z || [];
       reservierungen = r || [];
