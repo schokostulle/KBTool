@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mitgliederverwaltung – Orden der Ersten Seefahrt</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="ocean-bg" aria-hidden="true"></div>
+  <main class="dashboard-shell">
+    <aside class="sidebar">
+      <h2 class="logo">⚓ Crewmenü</h2>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">🏠 Übersicht</a></li>
+          <li><a href="mitglieder.html" class="active">👥 Mitglieder</a></li>
+          <li><button id="logout-btn" class="btn small">🚪 Abmelden</button></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <section class="main-content">
+      <header>
+        <h1>Mitgliederverwaltung</h1>
+        <p class="subtitle">Alle registrierten Crewmitglieder im Überblick.</p>
+      </header>
+
+      <div id="member-list" class="member-list">
+        <p>Lade Mitgliederliste …</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "index.html";
+      }
+    }
+
+    async function loadMembers() {
+      const { data, error } = await supabase.from("auth.users").select("id, email, created_at");
+      const list = document.getElementById("member-list");
+
+      if (error) {
+        list.innerHTML = `<p class='error'>Fehler beim Laden: ${error.message}</p>`;
+        return;
+      }
+
+      if (!data.length) {
+        list.innerHTML = "<p>Keine Mitglieder gefunden.</p>";
+        return;
+      }
+
+      const rows = data.map(u => `
+        <tr>
+          <td>${u.email}</td>
+          <td>${new Date(u.created_at).toLocaleDateString("de-DE")}</td>
+          <td>${u.id}</td>
+        </tr>
+      `).join("");
+
+      list.innerHTML = `
+        <table class="crew-table">
+          <thead><tr><th>E-Mail</th><th>Beigetreten</th><th>ID</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    checkUser();
+    loadMembers();
+  </script>
+</body>
+</html>
