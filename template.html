@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-role="member"> <!-- oder data-role="admin" -->
+  <aside class="sidebar">
+    <div class="logo">
+      ⚓ <span>Allianz-Tool</span>
+    </div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr>
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>Dashboard</h1>
+    </header>
+
+    <section class="content">
+      <p>Willkommen im Allianz-Tool.</p>
+    </section>
+  </main>
+
+  <script type="module" src="authguard.js"></script>
+  <script>
+    // Admin-Links ausblenden, wenn User kein Admin ist
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+  </script>
+</body>
+</html>
