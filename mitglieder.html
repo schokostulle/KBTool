@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mitgliederverwaltung – Orden der Ersten Seefahrt</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -38,41 +38,64 @@
     const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "index.html";
+    async function checkAuth() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) window.location.href = "index.html";
+    }
+
+    // Load users from auth.users — zeige nickname (raw_user_meta_data.nickname) wenn vorhanden
+    async function loadMembers() {
+      const list = document.getElementById("member-list");
+      list.innerHTML = "<p>Lädt …</p>";
+
+      try {
+        // Beachte: Zugriff auf auth.users setzt entsprechende DB-Rechte voraus (wie in deiner Vorgabe).
+        const { data, error } = await supabase
+          .from("auth.users")
+          .select("id, email, raw_user_meta_data, created_at")
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          list.innerHTML = `<p class='error'>Fehler beim Laden: ${error.message}</p>`;
+          return;
+        }
+        if (!data || data.length === 0) {
+          list.innerHTML = "<p>Keine Mitglieder gefunden.</p>";
+          return;
+        }
+
+        const rows = data.map(u => {
+          const meta = u.raw_user_meta_data || {};
+          const nickname = meta.nickname || (u.email ? u.email.split("@")[0] : "–");
+          const created = u.created_at ? new Date(u.created_at).toLocaleString("de-DE") : "-";
+          return `
+            <tr>
+              <td>${escapeHtml(nickname)}</td>
+              <td>${escapeHtml(u.email || "")}</td>
+              <td>${escapeHtml(created)}</td>
+              <td><code>${escapeHtml(u.id)}</code></td>
+            </tr>
+          `;
+        }).join("");
+
+        list.innerHTML = `
+          <table class="crew-table">
+            <thead><tr><th>Nickname</th><th>Interne E-Mail</th><th>Beigetreten</th><th>ID</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      } catch (err) {
+        list.innerHTML = `<p class='error'>Fehler: ${err.message}</p>`;
       }
     }
 
-    async function loadMembers() {
-      const { data, error } = await supabase.from("auth.users").select("id, email, created_at");
-      const list = document.getElementById("member-list");
-
-      if (error) {
-        list.innerHTML = `<p class='error'>Fehler beim Laden: ${error.message}</p>`;
-        return;
-      }
-
-      if (!data.length) {
-        list.innerHTML = "<p>Keine Mitglieder gefunden.</p>";
-        return;
-      }
-
-      const rows = data.map(u => `
-        <tr>
-          <td>${u.email}</td>
-          <td>${new Date(u.created_at).toLocaleDateString("de-DE")}</td>
-          <td>${u.id}</td>
-        </tr>
-      `).join("");
-
-      list.innerHTML = `
-        <table class="crew-table">
-          <thead><tr><th>E-Mail</th><th>Beigetreten</th><th>ID</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+    function escapeHtml(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
     document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -80,7 +103,8 @@
       window.location.href = "index.html";
     });
 
-    checkUser();
+    // Start
+    checkAuth();
     loadMembers();
   </script>
 </body>
