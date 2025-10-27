@@ -1,66 +1,71 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mitglieder – Orden der Ersten Seefahrt</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <title>Mitgliederverwaltung</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
+
 <body>
-  <main class="shell grid">
+  <main class="grid">
     <aside class="sidebar">
       <h2>⚓ Menü</h2>
       <nav>
-        <a href="dashboard.html">🏠 Übersicht</a>
+        <a href="dashboard.html">🧭 Dashboard</a>
         <a href="mitglieder.html" class="active">👥 Mitglieder</a>
-        <a href="index.html">⛵ Start</a>
+        <button onclick="logout()">🚪 Logout</button>
       </nav>
     </aside>
 
     <section class="content">
       <header>
-        <h1>Mitgliederliste</h1>
-        <p class="subtitle">Öffentliche Lesesicht (anon). Kein Login erforderlich.</p>
+        <h1>👥 Mitgliederverwaltung</h1>
+        <p>Rollen ändern & Freischalten</p>
       </header>
-
       <div id="list" class="card">Lade Mitglieder …</div>
     </section>
   </main>
 
   <script>
-    (async () => {
-      const { supabase, $, formatDE } = window.App;
+    const nick = localStorage.getItem("nickname");
+    const role = localStorage.getItem("role");
+    if (role !== "admin") document.body.innerHTML = "<h2>⛔ Kein Zugriff</h2>";
 
-      // öffentliche Lesesicht: benötigt SELECT-Policy für anon (siehe SQL unten)
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("nickname, role, approved, active, created_at")
-        .order("created_at");
-
-      const box = $("#list");
-      if (error) { box.innerHTML = `<p>Fehler beim Laden: ${error.message}</p>`; return; }
-      if (!data || !data.length) { box.innerHTML = "<p>Noch keine Mitglieder vorhanden.</p>"; return; }
-
-      const rows = data
-        .filter(r => r.active !== false) // nur aktive anzeigen
-        .map(r => `
-          <tr>
-            <td>${r.nickname}</td>
-            <td>${r.role || "–"}</td>
-            <td>${r.approved ? "✅" : "❌"}</td>
-            <td>${formatDE(r.created_at)}</td>
-          </tr>
-        `).join("");
-
-      box.innerHTML = `
+    async function loadMembers() {
+      const { data } = await supabase.from("profiles").select("*").order("created_at");
+      $("#list").innerHTML = `
         <table class="table">
-          <thead><tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Beigetreten</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    })();
+          <thead><tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Aktionen</th></tr></thead>
+          <tbody>
+          ${data.map(u=>`
+            <tr>
+              <td>${u.nickname}</td>
+              <td>
+                <select onchange="updateRole('${u.id}',this.value)">
+                  <option ${u.role==='anwärter'?'selected':''}>anwärter</option>
+                  <option ${u.role==='member'?'selected':''}>member</option>
+                  <option ${u.role==='admin'?'selected':''}>admin</option>
+                </select>
+              </td>
+              <td>${u.approved?'✅':'❌'}</td>
+              <td><button onclick="toggle('${u.id}',${u.approved})">${u.approved?'Sperren':'Freischalten'}</button></td>
+            </tr>`).join("")}
+          </tbody></table>`;
+    }
+
+    async function updateRole(id,role){
+      await supabase.from("profiles").update({role,approved:(role!=="anwärter")}).eq("id",id);
+      loadMembers();
+    }
+    async function toggle(id,approved){
+      await supabase.from("profiles").update({approved:!approved}).eq("id",id);
+      loadMembers();
+    }
+
+    loadMembers();
   </script>
 </body>
 </html>
