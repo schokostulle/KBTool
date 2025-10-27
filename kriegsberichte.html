@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>⚔️ Kriegsberichte</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
+</head>
+
+<body onload="protectPage(['member','admin'])">
+  <main class="grid">
+    <aside class="sidebar">
+      <h2>⚓ Menü</h2>
+      <nav id="menu"></nav>
+    </aside>
+
+    <section class="content">
+      <header>
+        <h1>⚔️ Kriegsberichte</h1>
+        <p id="welcome"></p>
+      </header>
+
+      <div class="card">
+        <p>Hier könnten Berichte, Kämpfe und Strategien angezeigt oder erfasst werden.</p>
+        <ul>
+          <li>📜 Bericht 1: Angriff auf den Eisfjord</li>
+          <li>📜 Bericht 2: Verteidigung der Südflotte</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
