@@ -1,15 +1,185 @@
-<script type="module">
-import { registerUser, loginUser } from "./supabase.js";
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Allianz-Tool | Anmeldung</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Seite leicht anpassen für Login */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1C2C3C url('https://upload.wikimedia.org/wikipedia/commons/1/16/Compass_rose_English.svg') center/200px no-repeat;
+    }
 
-document.getElementById("registerBtn").onclick = async () => {
-  const user = document.getElementById("regName").value;
-  const pass = document.getElementById("regPass").value;
-  await registerUser(user, pass);
-};
+    .auth-box {
+      background-color: #E8E0C0;
+      color: #1C2C3C;
+      width: 380px;
+      border: 2px solid #B08B4F;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    }
 
-document.getElementById("loginBtn").onclick = async () => {
-  const user = document.getElementById("loginName").value;
-  const pass = document.getElementById("loginPass").value;
-  await loginUser(user, pass);
-};
-</script>
+    .auth-box h1 {
+      text-align: center;
+      color: #1C2C3C;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1rem;
+    }
+
+    .tabs button {
+      background: none;
+      border: none;
+      color: #1C2C3C;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tabs button.active {
+      border-color: #B08B4F;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 0.3rem;
+    }
+
+    input {
+      background: #fff;
+      border: 1px solid #B08B4F;
+      padding: 0.4rem;
+      border-radius: 4px;
+      color: #1C2C3C;
+    }
+
+    button[type="submit"] {
+      background-color: #B08B4F;
+      color: #1C2C3C;
+      border: none;
+      padding: 0.5rem;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #d2aa67;
+    }
+
+    .notice {
+      text-align: center;
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+      color: #B08B4F;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="auth-box">
+    <h1>⚓ Allianz-Tool</h1>
+
+    <div class="tabs">
+      <button id="tabLogin" class="active">Anmelden</button>
+      <button id="tabRegister">Registrieren</button>
+    </div>
+
+    <!-- Login-Formular -->
+    <form id="loginForm">
+      <label for="loginName">Ingame Name</label>
+      <input type="text" id="loginName" placeholder="z. B. AdmiralKorn" required />
+
+      <label for="loginPass">Passwort</label>
+      <input type="password" id="loginPass" required />
+
+      <button type="submit">Anmelden</button>
+    </form>
+
+    <!-- Registrierungs-Formular -->
+    <form id="registerForm" style="display: none;">
+      <label for="regName">Ingame Name</label>
+      <input type="text" id="regName" placeholder="z. B. AdmiralKorn" required />
+
+      <label for="regPass">Passwort</label>
+      <input type="password" id="regPass" required />
+
+      <button type="submit">Registrieren</button>
+    </form>
+
+    <p class="notice">
+      Nach der Registrierung prüft der Admin deinen Account.<br>
+      Login erst nach Freischaltung möglich.
+    </p>
+  </div>
+
+  <!-- Supabase.js einbinden -->
+  <script type="module">
+    import { supabase, loginUser, registerUser } from "./supabase.js";
+
+    // Tabs zwischen Login und Registrierung umschalten
+    const tabLogin = document.getElementById("tabLogin");
+    const tabRegister = document.getElementById("tabRegister");
+    const loginForm = document.getElementById("loginForm");
+    const regForm = document.getElementById("registerForm");
+
+    tabLogin.addEventListener("click", () => {
+      tabLogin.classList.add("active");
+      tabRegister.classList.remove("active");
+      loginForm.style.display = "flex";
+      regForm.style.display = "none";
+    });
+
+    tabRegister.addEventListener("click", () => {
+      tabRegister.classList.add("active");
+      tabLogin.classList.remove("active");
+      regForm.style.display = "flex";
+      loginForm.style.display = "none";
+    });
+
+    // Login-Handler
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = loginName.value.trim();
+      const pass = loginPass.value.trim();
+      if (!user || !pass) return alert("Bitte alle Felder ausfüllen.");
+      await loginUser(user, pass);
+    });
+
+    // Registrierung-Handler
+    regForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = regName.value.trim();
+      const pass = regPass.value.trim();
+      if (!user || !pass) return alert("Bitte alle Felder ausfüllen.");
+      await registerUser(user, pass);
+    });
+
+    // Wenn bereits eingeloggt, automatisch weiterleiten
+    (async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session) {
+        window.location.href = "dashboard.html";
+      }
+    })();
+  </script>
+</body>
+</html>
