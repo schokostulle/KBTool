@@ -24,22 +24,29 @@
     <section class="main-content">
       <header>
         <h1>Mitgliederverwaltung</h1>
-        <p class="subtitle">Admins können Anwärter freischalten.</p>
+        <p class="subtitle">Admins können Anwärter freischalten, Rollen ändern und Benutzer deaktivieren.</p>
       </header>
-      <div id="member-list">Lade Mitgliederliste …</div>
+      <div id="member-list" class="member-list">Lade Mitglieder …</div>
     </section>
   </main>
 
   <script>
-    const supabase = window.supabase.createClient("https://YOUR-PROJECT-ref.supabase.co","YOUR-ANON-KEY");
+    const SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function checkAdmin() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return (window.location.href = "index.html");
 
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
       if (!profile || profile.role !== "admin") {
-        document.body.innerHTML = "<main class='notice'><h1>⚠️ Kein Zugriff</h1><p>Nur Admins dürfen diese Seite sehen.</p></main>";
+        document.body.innerHTML = "<main class='notice'><h1>⚠️ Kein Zugriff</h1><p>Nur Admins dürfen Mitglieder verwalten.</p></main>";
         return false;
       }
       return true;
@@ -47,27 +54,77 @@
 
     async function loadMembers() {
       const list = document.getElementById("member-list");
-      const { data, error } = await supabase.from("profiles").select("*").order("created_at");
-      if (error) return (list.innerHTML = "<p>Fehler beim Laden.</p>");
+      list.innerHTML = "<p>Lade Mitglieder …</p>";
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, nickname, role, approved, active, created_at")
+        .order("created_at");
+
+      if (error) {
+        list.innerHTML = "<p>Fehler: " + error.message + "</p>";
+        return;
+      }
+
+      const visible = data.filter(u => u.active !== false);
+      const hidden = data.filter(u => u.active === false);
 
       list.innerHTML = `
+        <h2>⚓ Aktive Mitglieder</h2>
+        ${renderTable(visible, false)}
+        <h2 style="margin-top:2rem;">🪦 Deaktivierte Benutzer</h2>
+        ${hidden.length ? renderTable(hidden, true) : "<p>Keine deaktivierten Benutzer.</p>"}
+      `;
+    }
+
+    function renderTable(users, inactive) {
+      if (!users.length) return "<p>Keine Benutzer.</p>";
+      return `
         <table class='crew-table'>
-          <thead><tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Aktion</th></tr></thead>
+          <thead>
+            <tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Aktionen</th></tr>
+          </thead>
           <tbody>
-            ${data.map(u => `
+            ${users.map(u => `
               <tr>
                 <td>${u.nickname}</td>
-                <td>${u.role}</td>
+                <td>
+                  <select onchange="changeRole('${u.id}', this.value)" ${inactive ? "disabled" : ""}>
+                    <option value="anwärter" ${u.role === "anwärter" ? "selected" : ""}>Anwärter</option>
+                    <option value="member" ${u.role === "member" ? "selected" : ""}>Member</option>
+                    <option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>
+                  </select>
+                </td>
                 <td>${u.approved ? "✅" : "❌"}</td>
-                <td>${!u.approved ? `<button onclick=\"approveUser('${u.id}')\">Freischalten</button>` : ""}</td>
+                <td>
+                  ${
+                    inactive
+                      ? `<button onclick=\"restoreUser('${u.id}')\">Wiederherstellen</button>`
+                      : `<button onclick=\"softDeleteUser('${u.id}')\">Deaktivieren</button>`
+                  }
+                </td>
               </tr>
             `).join("")}
           </tbody>
-        </table>`;
+        </table>
+      `;
     }
 
-    async function approveUser(id) {
-      const { error } = await supabase.from("profiles").update({ approved: true, role: "member" }).eq("id", id);
+    async function changeRole(id, role) {
+      const { error } = await supabase.from("profiles").update({ role, approved: role !== "anwärter" }).eq("id", id);
+      if (error) alert("Fehler: " + error.message);
+      loadMembers();
+    }
+
+    async function softDeleteUser(id) {
+      if (!confirm("Benutzer wirklich deaktivieren?")) return;
+      const { error } = await supabase.from("profiles").update({ active: false }).eq("id", id);
+      if (error) alert("Fehler: " + error.message);
+      loadMembers();
+    }
+
+    async function restoreUser(id) {
+      const { error } = await supabase.from("profiles").update({ active: true }).eq("id", id);
       if (error) alert("Fehler: " + error.message);
       loadMembers();
     }
