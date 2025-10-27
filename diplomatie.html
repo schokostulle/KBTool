@@ -1,35 +1,245 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>🤝 Diplomatie – Orden der Ersten Seefahrt</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diplomatie | Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body onload="protectPage(['admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="admin">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr />
+      <a href="mitglieder.html">👥 Mitglieder</a>
+      <a href="diplomatie.html" class="active">🕊️ Diplomatie</a>
+      <a href="csv.html">📂 CSV-Daten</a>
+      <hr />
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>🕊️ Diplomatieverwaltung</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>🤝 Diplomatie</h1>
-        <p id="welcome"></p>
-      </header>
+      <div class="card">
+        <h2>Allianz hinzufügen oder bearbeiten</h2>
+        <form id="allyForm">
+          <div class="form-grid" style="display:grid; grid-template-columns:repeat(2,minmax(200px,1fr)); gap:1rem;">
+            <label>Allianz-Kürzel
+              <input type="text" id="allyTag" placeholder="z. B. WAR" required>
+            </label>
+            <label>Allianz-Name
+              <input type="text" id="allyName" placeholder="z. B. Warriors of the Sea" required>
+            </label>
+            <label>Beziehung
+              <select id="allyStatus">
+                <option value="neutral">Neutral</option>
+                <option value="krieg">Krieg</option>
+                <option value="bündnis">Bündnis</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" style="margin-top:.8rem;">Speichern</button>
+        </form>
+      </div>
 
       <div class="card">
-        <h3>Allianzen & Verträge</h3>
-        <table class="table">
-          <tr><th>Fraktion</th><th>Status</th><th>Aktion</th></tr>
-          <tr><td>Nordmeer-Bund</td><td>🕊️ Frieden</td><td><button>Ändern</button></td></tr>
-          <tr><td>Ostflotte</td><td>⚔️ Krieg</td><td><button>Ändern</button></td></tr>
+        <h2>Bestehende Allianzen</h2>
+        <table id="allyTable">
+          <thead>
+            <tr>
+              <th>Kürzel</th>
+              <th>Name</th>
+              <th>Beziehung</th>
+              <th>Zuletzt geändert</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="5">Lade Allianzen...</td></tr></tbody>
         </table>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- LOGIK -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let currentUser = null;
+
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+      currentUser = user;
+    }
+
+    /* === Diplomatie laden === */
+    async function loadAlliances() {
+      const tbody = document.querySelector("#allyTable tbody");
+      tbody.innerHTML = "<tr><td colspan='5'>Lade...</td></tr>";
+
+      const { data, error } = await supabase
+        .from("diplomatie")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="5">Fehler: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5'>Noch keine Einträge.</td></tr>";
+        return;
+      }
+
+      tbody.innerHTML = "";
+      for (const d of data) {
+        const dateStr = d.updated_at
+          ? new Date(d.updated_at).toLocaleString("de-DE")
+          : "-";
+
+        let colorClass = "";
+        if (d.beziehung === "krieg") colorClass = "red";
+        else if (d.beziehung === "bündnis") colorClass = "green";
+        else colorClass = "blue";
+
+        tbody.insertAdjacentHTML("beforeend", `
+          <tr data-id="${d.id}">
+            <td>${d.allianzkürzel}</td>
+            <td>${d.allianzname}</td>
+            <td><span class="relation ${colorClass}">${d.beziehung}</span></td>
+            <td>${dateStr}</td>
+            <td>
+              <button class="editBtn" data-id="${d.id}">✏️</button>
+              <button class="deleteBtn" data-id="${d.id}">🗑️</button>
+            </td>
+          </tr>
+        `);
+      }
+
+      bindButtons();
+    }
+
+    /* === Neue Allianz speichern / bearbeiten === */
+    document.getElementById("allyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const kürzel = document.getElementById("allyTag").value.trim();
+      const name = document.getElementById("allyName").value.trim();
+      const beziehung = document.getElementById("allyStatus").value;
+
+      if (!kürzel || !name) {
+        alert("Bitte Kürzel und Namen angeben.");
+        return;
+      }
+
+      const existingId = document.getElementById("allyForm").dataset.editId;
+
+      if (existingId) {
+        const { error } = await supabase
+          .from("diplomatie")
+          .update({ allianzkürzel: kürzel, allianzname: name, beziehung })
+          .eq("id", existingId);
+        if (error) alert("Fehler beim Aktualisieren: " + error.message);
+        else {
+          alert("Eintrag aktualisiert.");
+          document.getElementById("allyForm").reset();
+          delete document.getElementById("allyForm").dataset.editId;
+          loadAlliances();
+        }
+      } else {
+        const { error } = await supabase
+          .from("diplomatie")
+          .insert([{ allianzkürzel: kürzel, allianzname: name, beziehung }]);
+        if (error) alert("Fehler beim Speichern: " + error.message);
+        else {
+          alert("Allianz hinzugefügt.");
+          document.getElementById("allyForm").reset();
+          loadAlliances();
+        }
+      }
+    });
+
+    /* === Buttons === */
+    function bindButtons() {
+      document.querySelectorAll(".editBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const { data } = await supabase
+            .from("diplomatie")
+            .select("*")
+            .eq("id", id)
+            .single();
+          if (!data) return;
+          document.getElementById("allyTag").value = data.allianzkürzel;
+          document.getElementById("allyName").value = data.allianzname;
+          document.getElementById("allyStatus").value = data.beziehung;
+          document.getElementById("allyForm").dataset.editId = data.id;
+        });
+      });
+
+      document.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Diesen Eintrag löschen?")) return;
+          const id = btn.dataset.id;
+          const { error } = await supabase.from("diplomatie").delete().eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadAlliances();
+        });
+      });
+    }
+
+    /* === Init === */
+    await getCurrentUser();
+    await loadAlliances();
+  </script>
+
+  <style>
+    .relation {
+      font-weight: bold;
+      text-transform: capitalize;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #B08B4F;
+    }
+    .relation.red { background-color: #FAD1D1; color: #8B1E1E; }
+    .relation.green { background-color: #C2E7C5; color: #1C2C3C; }
+    .relation.blue { background-color: #E8E0C0; color: #1C2C3C; }
+    button.editBtn, button.deleteBtn {
+      background: none;
+      border: 1px solid #B08B4F;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+    button.editBtn:hover { background-color: #EEE0B5; }
+    button.deleteBtn:hover { background-color: #FAD1D1; }
+  </style>
 </body>
 </html>
