@@ -1,32 +1,195 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>👥 Mitgliederverwaltung</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitgliederverwaltung | Allianz-Tool</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
 </head>
 
-<body onload="protectPage(['admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+<body data-role="admin">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr>
+      <a href="mitglieder.html" class="active">👥 Mitglieder</a>
+      <a href="diplomatie.html">🕊️ Diplomatie</a>
+      <a href="csv.html">📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>👥 Mitgliederverwaltung</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>👥 Mitgliederverwaltung</h1>
-        <p id="welcome"></p>
-      </header>
-
       <div class="card">
-        <p>Hier kann der Admin Benutzer freischalten, sperren oder Rollen ändern.</p>
-        <p><em>(Datenzugriff siehe bestehendes mitglieder.html-Skript aus vorheriger Version.)</em></p>
+        <h2>Registrierte Nutzer</h2>
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th>Ingame-Name</th>
+              <th>Email</th>
+              <th>Rolle</th>
+              <th>Status</th>
+              <th>Registriert</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6">Lade Mitglieder...</td></tr></tbody>
+        </table>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- LOGIK -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let currentUser = null;
+
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+      currentUser = user;
+    }
+
+    async function loadUsers() {
+      const tbody = document.querySelector("#userTable tbody");
+      tbody.innerHTML = "<tr><td colspan='6'>Lade...</td></tr>";
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="6">Fehler: ${error.message}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+
+      for (const u of data) {
+        if (u.deleted_at) continue; // Soft-Delete verstecken
+
+        const statusLabel = u.status === "aktiv"
+          ? `<span class="status aktiv">Aktiv</span>`
+          : `<span class="status blockiert">Blockiert</span>`;
+
+        const dateStr = new Date(u.created_at).toLocaleDateString("de-DE");
+
+        tbody.insertAdjacentHTML("beforeend", `
+          <tr data-id="${u.id}">
+            <td>${u.username}</td>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            <td>${statusLabel}</td>
+            <td>${dateStr}</td>
+            <td>
+              <button class="toggleBtn" data-id="${u.id}" data-status="${u.status}">
+                ${u.status === "aktiv" ? "🔒 Sperren" : "✅ Freischalten"}
+              </button>
+              <button class="deleteBtn" data-id="${u.id}">🗑️ Löschen</button>
+            </td>
+          </tr>
+        `);
+      }
+
+      bindButtons();
+    }
+
+    function bindButtons() {
+      // Aktiv / Blockieren
+      document.querySelectorAll(".toggleBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const newStatus = btn.dataset.status === "aktiv" ? "blockiert" : "aktiv";
+          const { error } = await supabase
+            .from("users")
+            .update({ status: newStatus })
+            .eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadUsers();
+        });
+      });
+
+      // Soft-Delete
+      document.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Diesen Nutzer wirklich löschen (soft-delete)?")) return;
+          const id = btn.dataset.id;
+          const now = new Date().toISOString();
+          const { error } = await supabase
+            .from("users")
+            .update({ deleted_at: now, status: "blockiert" })
+            .eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadUsers();
+        });
+      });
+    }
+
+    await getCurrentUser();
+    loadUsers();
+  </script>
+
+  <style>
+    .status {
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .status.aktiv {
+      color: #1C2C3C;
+      background: #C2E7C5;
+      border: 1px solid #2A783D;
+    }
+    .status.blockiert {
+      color: #8B1E1E;
+      background: #FAD1D1;
+      border: 1px solid #B33A3A;
+    }
+
+    button.toggleBtn, button.deleteBtn {
+      background: none;
+      border: 1px solid #B08B4F;
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+
+    button.toggleBtn:hover {
+      background-color: #EEE0B5;
+    }
+
+    button.deleteBtn:hover {
+      background-color: #FAD1D1;
+    }
+  </style>
 </body>
 </html>
