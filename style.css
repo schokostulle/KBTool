@@ -1,266 +1,213 @@
-/* ============================================
-   ⚓ Allianz Tool — Maritimes Haupt-Layout
-   ============================================ */
+/* ===========================================================
+   ⚓ Allianz-Tool Style (Maritim & Minimalistisch)
+   =========================================================== */
 
-/* === Basis === */
-:root {
-  --marine-blue: #1C2C3C;
-  --sand: #F9F7E8;
-  --brass: #B08B4F;
-  --dark-brass: #7C622B;
-  --red: #B33A3A;
-  --green: #2A783D;
-}
-
-* {
-  box-sizing: border-box;
-}
-
+/* Grundlayout */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  background-color: var(--sand);
-  color: var(--marine-blue);
+  background-color: #1b1f23; /* dunkles Marinegrau */
+  color: #d9cba3;           /* sandfarben */
+  font-family: 'Courier New', monospace;
 }
 
-/* === Seitenlayout === */
-body {
-  display: flex;
-  flex-direction: row;
-  min-height: 100vh;
-}
-
-/* === Seitenleiste === */
-.sidebar {
-  width: 240px;
-  background-color: var(--marine-blue);
-  color: var(--sand);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-right: 3px solid var(--brass);
-  padding: 1rem 0;
-}
-
-.sidebar .logo {
-  font-size: 1.4rem;
-  font-weight: bold;
-  text-align: center;
-  padding: 1rem;
-  border-bottom: 1px solid var(--brass);
-  color: var(--sand);
+/* Allgemeine Typografie */
+h1, h2, h3 {
+  color: #e8e0c5;
+  margin-top: 0;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0 1rem;
-}
-
-.sidebar nav a {
-  color: var(--sand);
+a {
+  color: #d9cba3;
   text-decoration: none;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  display: block;
+}
+a:hover {
+  text-decoration: underline;
 }
 
-.sidebar nav a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+/* Layout: Seitenstruktur */
+body {
+  display: flex;
+  flex-direction: row;
 }
 
-.sidebar nav a.active {
-  background-color: var(--brass);
-  color: var(--marine-blue);
-  font-weight: bold;
-}
-
-.sidebar hr {
-  border: none;
-  border-top: 1px solid var(--brass);
-  margin: 0.6rem 0;
-}
-
-.sidebar button {
-  background: var(--brass);
-  color: var(--marine-blue);
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.sidebar button:hover {
-  background-color: var(--dark-brass);
-  color: var(--sand);
-}
-
-/* === Hauptinhalt === */
 main {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-/* === Kopfzeile === */
-.topbar {
-  background-color: var(--brass);
-  color: var(--marine-blue);
-  padding: 0.8rem 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 2px solid var(--dark-brass);
-}
-
-#user-info {
-  font-weight: bold;
-  color: var(--marine-blue);
-}
-
-/* === Inhalt === */
-.content {
-  flex: 1;
-  padding: 1.5rem;
-  background: var(--sand);
+  padding: 2rem;
   overflow-y: auto;
 }
 
-/* === Karten, Tabellen, Layout === */
-.card {
-  background: #fffdf5;
-  border: 1px solid var(--brass);
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-bottom: 1.2rem;
-  padding: 1rem 1.5rem;
+/* Seitenmenü (linke Navigation) */
+aside.menu {
+  width: 200px;
+  background-color: #2a2e32;
+  border-right: 2px solid #3a4045;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
 }
 
-.card h2 {
-  border-bottom: 1px solid var(--brass);
-  padding-bottom: 0.4rem;
-  margin-top: 0;
+aside.menu a {
+  display: block;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+  background-color: #2e3439;
+  text-align: left;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out;
+}
+aside.menu a:hover {
+  background-color: #3a4045;
 }
 
-/* === Tabellen === */
-table {
+/* Tabellen */
+table.data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.6rem;
-  font-size: 0.95rem;
+  margin-top: 1rem;
+  background-color: #24282c;
 }
 
-th, td {
-  border: 1px solid var(--brass);
-  padding: 0.4rem 0.6rem;
+table.data-table th,
+table.data-table td {
+  border: 1px solid #3a4045;
+  padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
-th {
-  background-color: var(--brass);
-  color: var(--marine-blue);
-  font-weight: bold;
+table.data-table th {
+  background-color: #2e3439;
+  color: #f0e9cf;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
-tr:nth-child(even) {
-  background-color: #f2efdf;
+table.data-table tr:nth-child(even) {
+  background-color: #2a2e32;
 }
 
-/* === Buttons & Inputs === */
-button {
-  background: var(--brass);
-  color: var(--marine-blue);
-  border: none;
-  border-radius: 6px;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  font-weight: bold;
+table.data-table tr:hover {
+  background-color: #383d42;
 }
 
-button:hover {
-  background: var(--dark-brass);
-  color: var(--sand);
+/* Formulare */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 400px;
 }
 
-input, select, textarea {
-  width: 100%;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--brass);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--marine-blue);
+input, textarea, button {
   font-family: inherit;
-}
-
-/* === Scrollbar Stil === */
-::-webkit-scrollbar {
-  width: 10px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--brass);
-  border-radius: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #eae5c5;
-}
-
-/* === Responsive Design === */
-@media (max-width: 800px) {
-  body {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    flex-direction: row;
-    width: 100%;
-    border-right: none;
-    border-bottom: 3px solid var(--brass);
-    overflow-x: auto;
-  }
-
-  .sidebar nav {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-
-  .sidebar nav a {
-    padding: 0.5rem;
-    white-space: nowrap;
-  }
-
-  main {
-    padding: 0;
-  }
-
-  .content {
-    padding: 1rem;
-  }
-}
-
-/* === Utility === */
-em {
-  color: var(--dark-brass);
-}
-
-pre {
-  font-family: "Courier New", monospace;
-  background-color: #f9f7e8;
-  border: 1px solid var(--brass);
+  font-size: 1rem;
+  border: 1px solid #3a4045;
   border-radius: 4px;
   padding: 0.5rem;
-  color: var(--marine-blue);
-  white-space: pre-wrap;
+  background-color: #24282c;
+  color: #d9cba3;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  cursor: pointer;
+  background-color: #3a4045;
+  color: #f0e9cf;
+  border: 1px solid #51565a;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+button:hover {
+  background-color: #51565a;
+}
+
+/* Nachrichten (Dashboard-News) */
+.news-item {
+  background-color: #2e3439;
+  border: 1px solid #3a4045;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.news-item h3 {
+  margin: 0 0 0.5rem 0;
+  color: #e8e0c5;
+}
+.news-item p {
+  margin: 0.25rem 0 0.5rem 0;
+}
+.news-item small {
+  color: #9a9485;
+}
+
+/* Kampfberichte */
+.report {
+  background-color: #24282c;
+  border: 1px solid #3a4045;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.report h3 {
+  margin: 0 0 0.5rem 0;
+}
+.report pre {
+  background: #1b1f23;
+  border: 1px solid #3a4045;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+/* Login & Register (zentriert) */
+.centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 2rem;
+}
+
+.login-section, .register-section {
+  background-color: #2a2e32;
+  padding: 1.5rem 2rem;
+  border: 1px solid #3a4045;
+  border-radius: 6px;
+  width: 300px;
 }
 
 hr {
-  border: none;
-  border-top: 1px solid var(--brass);
-  margin: 1rem 0;
+  width: 50%;
+  border: 1px solid #3a4045;
+}
+
+/* Scrollbar (dezent) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #3a4045;
+  border-radius: 4px;
+}
+
+/* Hilfsklassen */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.small {
+  font-size: 0.85rem;
+  color: #aaa;
 }
