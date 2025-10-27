@@ -2,70 +2,31 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Mitgliederverwaltung</title>
+  <title>👥 Mitgliederverwaltung</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
 
-<body>
+<body onload="protectPage(['admin'])">
   <main class="grid">
     <aside class="sidebar">
       <h2>⚓ Menü</h2>
-      <nav>
-        <a href="dashboard.html">🧭 Dashboard</a>
-        <a href="mitglieder.html" class="active">👥 Mitglieder</a>
-        <button onclick="logout()">🚪 Logout</button>
-      </nav>
+      <nav id="menu"></nav>
     </aside>
 
     <section class="content">
       <header>
         <h1>👥 Mitgliederverwaltung</h1>
-        <p>Rollen ändern & Freischalten</p>
+        <p id="welcome"></p>
       </header>
-      <div id="list" class="card">Lade Mitglieder …</div>
+
+      <div class="card">
+        <p>Hier kann der Admin Benutzer freischalten, sperren oder Rollen ändern.</p>
+        <p><em>(Datenzugriff siehe bestehendes mitglieder.html-Skript aus vorheriger Version.)</em></p>
+      </div>
     </section>
   </main>
-
-  <script>
-    const nick = localStorage.getItem("nickname");
-    const role = localStorage.getItem("role");
-    if (role !== "admin") document.body.innerHTML = "<h2>⛔ Kein Zugriff</h2>";
-
-    async function loadMembers() {
-      const { data } = await supabase.from("profiles").select("*").order("created_at");
-      $("#list").innerHTML = `
-        <table class="table">
-          <thead><tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Aktionen</th></tr></thead>
-          <tbody>
-          ${data.map(u=>`
-            <tr>
-              <td>${u.nickname}</td>
-              <td>
-                <select onchange="updateRole('${u.id}',this.value)">
-                  <option ${u.role==='anwärter'?'selected':''}>anwärter</option>
-                  <option ${u.role==='member'?'selected':''}>member</option>
-                  <option ${u.role==='admin'?'selected':''}>admin</option>
-                </select>
-              </td>
-              <td>${u.approved?'✅':'❌'}</td>
-              <td><button onclick="toggle('${u.id}',${u.approved})">${u.approved?'Sperren':'Freischalten'}</button></td>
-            </tr>`).join("")}
-          </tbody></table>`;
-    }
-
-    async function updateRole(id,role){
-      await supabase.from("profiles").update({role,approved:(role!=="anwärter")}).eq("id",id);
-      loadMembers();
-    }
-    async function toggle(id,approved){
-      await supabase.from("profiles").update({approved:!approved}).eq("id",id);
-      loadMembers();
-    }
-
-    loadMembers();
-  </script>
 </body>
 </html>
