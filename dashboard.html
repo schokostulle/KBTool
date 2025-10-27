@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard – Orden der Ersten Seefahrt</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,38 +24,28 @@
     <section class="main-content">
       <header>
         <h1>Willkommen an Bord!</h1>
-        <p class="subtitle">Neuigkeiten und Ankündigungen der Flotte</p>
+        <p class="subtitle">Nachrichten und Ankündigungen der Flotte</p>
       </header>
-
-      <article class="news">
-        <h2>⚔️ Ankündigungen</h2>
-        <ul id="announcements">
-          <li><strong>27. Oktober 2025:</strong> Die neue Navigationskarte wurde veröffentlicht.</li>
-        </ul>
-      </article>
-
-      <article class="quick">
-        <h2>Dein Nickname</h2>
-        <p id="display-nick">Lade …</p>
-      </article>
+      <article id="status"></article>
     </section>
   </main>
 
   <script>
-    const SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co";
-    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient("https://YOUR-PROJECT-ref.supabase.co","YOUR-ANON-KEY");
 
-    // Safety: ensure logged in
     async function init() {
       const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      if (!user) return window.location.href = "index.html";
+      if (!data.user) return (window.location.href = "index.html");
 
-      // Try to read nickname from metadata, otherwise derive from email local-part
-      const metaNick = user.user_metadata?.nickname;
-      let shown = metaNick || (user.email ? user.email.split("@")[0] : "Crewmate");
-      document.getElementById("display-nick").textContent = shown;
+      const { data: profile } = await supabase.from("profiles").select("nickname, role, approved").eq("id", data.user.id).maybeSingle();
+      const status = document.getElementById("status");
+
+      if (!profile.approved) {
+        status.innerHTML = "<h2>⏳ Wartestatus</h2><p>Dein Zugang ist noch nicht freigeschaltet.</p>";
+        return;
+      }
+
+      status.innerHTML = `<h2>⚔️ Willkommen ${profile.nickname}!</h2><p>Rolle: ${profile.role}</p>`;
     }
 
     document.getElementById("logout-btn").addEventListener("click", async () => {
