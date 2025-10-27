@@ -1,51 +1,15 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <title>⚓ Orden der Ersten Seefahrt</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
-</head>
+<script type="module">
+import { registerUser, loginUser } from "./supabase.js";
 
-<body>
-  <main class="shell">
-    <header>
-      <h1>⚓ Orden der Ersten Seefahrt</h1>
-      <p class="subtitle">Anmeldung & Registrierung</p>
-    </header>
+document.getElementById("registerBtn").onclick = async () => {
+  const user = document.getElementById("regName").value;
+  const pass = document.getElementById("regPass").value;
+  await registerUser(user, pass);
+};
 
-    <section class="card">
-      <h2>Anmeldung</h2>
-      <form id="login">
-        <input name="nick" placeholder="Nickname" required><br>
-        <input name="pass" type="password" placeholder="Passwort" required><br>
-        <button>Anmelden</button>
-      </form>
-    </section>
-
-    <section class="card">
-      <h2>Registrierung</h2>
-      <form id="register">
-        <input name="nick" placeholder="Neuer Nickname" required><br>
-        <input name="pass" type="password" placeholder="Passwort" required><br>
-        <button>Registrieren</button>
-      </form>
-    </section>
-
-    <p id="msg"></p>
-  </main>
-
-  <script>
-    $("#login").addEventListener("submit", async e=>{
-      e.preventDefault();
-      try{ await login(e.target.nick.value, e.target.pass.value);}catch(err){msg(err.message,"err");}
-    });
-    $("#register").addEventListener("submit", async e=>{
-      e.preventDefault();
-      try{ await register(e.target.nick.value, e.target.pass.value);}catch(err){msg(err.message,"err");}
-    });
-  </script>
-</body>
-</html>
+document.getElementById("loginBtn").onclick = async () => {
+  const user = document.getElementById("loginName").value;
+  const pass = document.getElementById("loginPass").value;
+  await loginUser(user, pass);
+};
+</script>
