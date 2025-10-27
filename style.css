@@ -1,169 +1,266 @@
-/* === Grundlayout === */
+/* ============================================
+   ⚓ Allianz Tool — Maritimes Haupt-Layout
+   ============================================ */
+
+/* === Basis === */
+:root {
+  --marine-blue: #1C2C3C;
+  --sand: #F9F7E8;
+  --brass: #B08B4F;
+  --dark-brass: #7C622B;
+  --red: #B33A3A;
+  --green: #2A783D;
+}
+
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body {
+  margin: 0;
+  padding: 0;
   height: 100%;
-  font-family: "IM Fell English SC", "Georgia", serif;
-  background-color: #1C2C3C;     /* Marineblau */
-  color: #E8E0C0;               /* Pergament */
+  font-family: "Cormorant Garamond", Georgia, serif;
+  background-color: var(--sand);
+  color: var(--marine-blue);
 }
 
+/* === Seitenlayout === */
 body {
   display: flex;
+  flex-direction: row;
+  min-height: 100vh;
 }
 
 /* === Seitenleiste === */
 .sidebar {
-  width: 260px;
-  background-color: #14202B;    /* dunkleres Blau */
-  border-right: 2px solid #B08B4F; /* Messingkante */
+  width: 240px;
+  background-color: var(--marine-blue);
+  color: var(--sand);
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  justify-content: space-between;
+  border-right: 3px solid var(--brass);
+  padding: 1rem 0;
 }
 
-.logo {
+.sidebar .logo {
   font-size: 1.4rem;
   font-weight: bold;
-  color: #B08B4F;
   text-align: center;
-  margin-bottom: 1.2rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--brass);
+  color: var(--sand);
   letter-spacing: 1px;
 }
 
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  flex-grow: 1;
+  gap: 0.3rem;
+  padding: 0 1rem;
 }
 
-.sidebar a, .sidebar button {
+.sidebar nav a {
+  color: var(--sand);
   text-decoration: none;
-  color: #E8E0C0;
-  background: none;
-  border: none;
-  text-align: left;
-  padding: 0.5rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  display: block;
 }
 
-.sidebar a:hover, .sidebar button:hover {
-  background-color: rgba(176, 139, 79, 0.2); /* Messing-Schimmer */
+.sidebar nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar nav a.active {
+  background-color: var(--brass);
+  color: var(--marine-blue);
+  font-weight: bold;
 }
 
 .sidebar hr {
   border: none;
-  border-top: 1px solid #3C4B58;
-  margin: 0.8rem 0;
+  border-top: 1px solid var(--brass);
+  margin: 0.6rem 0;
 }
 
-/* === Hauptbereich === */
+.sidebar button {
+  background: var(--brass);
+  color: var(--marine-blue);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.sidebar button:hover {
+  background-color: var(--dark-brass);
+  color: var(--sand);
+}
+
+/* === Hauptinhalt === */
 main {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 0;
 }
 
+/* === Kopfzeile === */
 .topbar {
-  background-color: #223447;
-  border-bottom: 2px solid #B08B4F;
+  background-color: var(--brass);
+  color: var(--marine-blue);
   padding: 0.8rem 1.2rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.topbar h1 {
-  font-size: 1.6rem;
-  color: #E8E0C0;
-  letter-spacing: 1px;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--dark-brass);
 }
 
 #user-info {
-  font-size: 0.9rem;
-  color: #B08B4F;
+  font-weight: bold;
+  color: var(--marine-blue);
 }
 
+/* === Inhalt === */
 .content {
-  flex-grow: 1;
+  flex: 1;
   padding: 1.5rem;
-  background-color: #E8E0C0;
-  color: #1C2C3C;
+  background: var(--sand);
   overflow-y: auto;
 }
 
-/* === Tabellenstil === */
+/* === Karten, Tabellen, Layout === */
+.card {
+  background: #fffdf5;
+  border: 1px solid var(--brass);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 1.2rem;
+  padding: 1rem 1.5rem;
+}
+
+.card h2 {
+  border-bottom: 1px solid var(--brass);
+  padding-bottom: 0.4rem;
+  margin-top: 0;
+}
+
+/* === Tabellen === */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
 }
 
 th, td {
-  border: 1px solid #B08B4F;
-  padding: 0.5rem;
+  border: 1px solid var(--brass);
+  padding: 0.4rem 0.6rem;
   text-align: left;
 }
 
 th {
-  background-color: #B08B4F;
-  color: #1C2C3C;
+  background-color: var(--brass);
+  color: var(--marine-blue);
+  font-weight: bold;
 }
 
 tr:nth-child(even) {
-  background-color: #f6f2e8;
+  background-color: #f2efdf;
 }
 
 /* === Buttons & Inputs === */
-button, input[type="file"], input[type="text"], input[type="password"] {
-  background-color: #B08B4F;
-  color: #1C2C3C;
+button {
+  background: var(--brass);
+  color: var(--marine-blue);
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
-  margin-top: 0.5rem;
-  font-family: inherit;
+  font-weight: bold;
 }
 
 button:hover {
-  background-color: #cda866;
+  background: var(--dark-brass);
+  color: var(--sand);
 }
 
-/* === Scrollbar (Seekarten-Look) === */
+input, select, textarea {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--brass);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--marine-blue);
+  font-family: inherit;
+}
+
+/* === Scrollbar Stil === */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #B08B4F;
-  border-radius: 4px;
+  background: var(--brass);
+  border-radius: 6px;
 }
 ::-webkit-scrollbar-track {
-  background-color: #E8E0C0;
+  background: #eae5c5;
 }
 
-/* === Responsiv === */
+/* === Responsive Design === */
 @media (max-width: 800px) {
   body {
     flex-direction: column;
   }
+
   .sidebar {
     flex-direction: row;
     width: 100%;
-    overflow-x: auto;
     border-right: none;
-    border-bottom: 2px solid #B08B4F;
+    border-bottom: 3px solid var(--brass);
+    overflow-x: auto;
   }
+
   .sidebar nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
+
+  .sidebar nav a {
+    padding: 0.5rem;
+    white-space: nowrap;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+}
+
+/* === Utility === */
+em {
+  color: var(--dark-brass);
+}
+
+pre {
+  font-family: "Courier New", monospace;
+  background-color: #f9f7e8;
+  border: 1px solid var(--brass);
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: var(--marine-blue);
+  white-space: pre-wrap;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--brass);
+  margin: 1rem 0;
 }
