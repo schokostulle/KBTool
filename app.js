@@ -128,5 +128,14 @@ $("#login-form").addEventListener("submit", async (e) => {
   }
 
   feedback("Willkommen zurück, " + profile.nickname + "!", "success");
-  setTimeout(() => (window.location.href = "dashboard.html"), 800);
+
+// Warte, bis Supabase die Session wirklich gespeichert hat
+const { data: sessionData } = await supabase.auth.getSession();
+if (sessionData.session) {
+  // erst dann weiterleiten
+  window.location.href = "dashboard.html";
+} else {
+  // wenn Session noch nicht da, kurz warten
+  setTimeout(() => (window.location.href = "dashboard.html"), 1500);
+}
 });
