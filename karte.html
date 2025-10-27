@@ -1,31 +1,220 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>🗺️ Karte</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Karte | Allianz-Tool</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html" class="active">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr />
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr />
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>🗺️ Allianzkarte</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>🗺️ Seekarte</h1>
-        <p id="welcome"></p>
-      </header>
-
       <div class="card">
-        <p>Hier könnte eine interaktive Karte oder Positionsübersicht erscheinen.</p>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Old_world_map.jpg" alt="Karte" style="width:100%;border-radius:10px;">
+        <h2>Kartenübersicht</h2>
+        <canvas id="mapCanvas" width="800" height="600"></canvas>
+
+        <div class="legend">
+          <h3>Legende</h3>
+          <ul>
+            <li><span class="dot self"></span> Eigene Allianz</li>
+            <li><span class="dot ally"></span> Bündnis</li>
+            <li><span class="dot enemy"></span> Feind</li>
+            <li><span class="dot reserved"></span> Reserviertes Ziel</li>
+          </ul>
+        </div>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- Kartenlogik -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    const canvas = document.getElementById("mapCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let currentUser = null;
+    let allZiele = [];
+    let reservierungen = [];
+    let diplomatie = [];
+
+    /* === User laden === */
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+      currentUser = user;
+    }
+
+    /* === Daten aus Supabase === */
+    async function loadData() {
+      const { data: z } = await supabase.from("ziele").select("*").limit(500);
+      const { data: r } = await supabase.from("reservierungen").select("*");
+      const { data: d } = await supabase.from("diplomatie").select("*");
+
+      allZiele = z || [];
+      reservierungen = r || [];
+      diplomatie = d || [];
+    }
+
+    /* === Karte zeichnen === */
+    function drawMap() {
+      ctx.fillStyle = "#E8E0C0"; // Pergament Hintergrund
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "#B08B4F";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+      // Gitterlinien (Seekartenoptik)
+      ctx.strokeStyle = "rgba(176,139,79,0.3)";
+      for (let x = 50; x < canvas.width; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 50; y < canvas.height; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Ziele plotten
+      allZiele.forEach((ziel) => {
+        const x = (ziel.ig || 0) * 8 + 20;
+        const y = (ziel.i || 0) * 8 + 20;
+
+        // Diplomatie-Status
+        let color = "#2b4a6f"; // neutral
+        const rel = diplomatie.find(
+          (d) =>
+            d.allianzname === ziel.allianzname ||
+            d.allianzkürzel === ziel.allianzkürzel
+        );
+
+        if (rel?.beziehung === "krieg") color = "#b33a3a"; // Rot
+        if (rel?.beziehung === "bündnis") color = "#2a783d"; // Grün
+
+        // Reservierung?
+        const res = reservierungen.find((r) => r.ziel_id === ziel.id);
+        if (res) color = "#B08B4F"; // Messing = reserviert
+
+        // Eigene Allianz?
+        if (ziel.allianzkürzel?.toLowerCase() === "eigene") {
+          color = "#1C2C3C"; // Dunkelblau = eigene
+        }
+
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+    }
+
+    /* === Init === */
+    await getCurrentUser();
+    await loadData();
+    drawMap();
+
+    /* === Admin-Links ausblenden === */
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach((el) => (el.style.display = "none"));
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+  </script>
+
+  <style>
+    .card {
+      background-color: #fff;
+      color: #1C2C3C;
+      border: 1px solid #B08B4F;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    canvas {
+      border: 1px solid #B08B4F;
+      background-color: #E8E0C0;
+      display: block;
+      margin: 1rem auto;
+      border-radius: 6px;
+    }
+
+    .legend {
+      background-color: #F7F3E0;
+      border: 1px solid #B08B4F;
+      border-radius: 6px;
+      padding: 0.6rem;
+      width: fit-content;
+      margin-top: 1rem;
+    }
+
+    .legend ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .legend li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.2rem 0;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot.self { background-color: #1C2C3C; }
+    .dot.ally { background-color: #2a783d; }
+    .dot.enemy { background-color: #b33a3a; }
+    .dot.reserved { background-color: #B08B4F; }
+  </style>
 </body>
 </html>
