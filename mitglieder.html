@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mitgliederverwaltung – Orden der Ersten Seefahrt</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,78 +24,52 @@
     <section class="main-content">
       <header>
         <h1>Mitgliederverwaltung</h1>
-        <p class="subtitle">Alle registrierten Crewmitglieder im Überblick.</p>
+        <p class="subtitle">Admins können Anwärter freischalten.</p>
       </header>
-
-      <div id="member-list" class="member-list">
-        <p>Lade Mitgliederliste …</p>
-      </div>
+      <div id="member-list">Lade Mitgliederliste …</div>
     </section>
   </main>
 
   <script>
-    const SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co";
-    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient("https://YOUR-PROJECT-ref.supabase.co","YOUR-ANON-KEY");
 
-    async function checkAuth() {
+    async function checkAdmin() {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) window.location.href = "index.html";
+      if (!data.user) return (window.location.href = "index.html");
+
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      if (!profile || profile.role !== "admin") {
+        document.body.innerHTML = "<main class='notice'><h1>⚠️ Kein Zugriff</h1><p>Nur Admins dürfen diese Seite sehen.</p></main>";
+        return false;
+      }
+      return true;
     }
 
-    // Load users from auth.users — zeige nickname (raw_user_meta_data.nickname) wenn vorhanden
     async function loadMembers() {
       const list = document.getElementById("member-list");
-      list.innerHTML = "<p>Lädt …</p>";
+      const { data, error } = await supabase.from("profiles").select("*").order("created_at");
+      if (error) return (list.innerHTML = "<p>Fehler beim Laden.</p>");
 
-      try {
-        // Beachte: Zugriff auf auth.users setzt entsprechende DB-Rechte voraus (wie in deiner Vorgabe).
-        const { data, error } = await supabase
-          .from("auth.users")
-          .select("id, email, raw_user_meta_data, created_at")
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          list.innerHTML = `<p class='error'>Fehler beim Laden: ${error.message}</p>`;
-          return;
-        }
-        if (!data || data.length === 0) {
-          list.innerHTML = "<p>Keine Mitglieder gefunden.</p>";
-          return;
-        }
-
-        const rows = data.map(u => {
-          const meta = u.raw_user_meta_data || {};
-          const nickname = meta.nickname || (u.email ? u.email.split("@")[0] : "–");
-          const created = u.created_at ? new Date(u.created_at).toLocaleString("de-DE") : "-";
-          return `
-            <tr>
-              <td>${escapeHtml(nickname)}</td>
-              <td>${escapeHtml(u.email || "")}</td>
-              <td>${escapeHtml(created)}</td>
-              <td><code>${escapeHtml(u.id)}</code></td>
-            </tr>
-          `;
-        }).join("");
-
-        list.innerHTML = `
-          <table class="crew-table">
-            <thead><tr><th>Nickname</th><th>Interne E-Mail</th><th>Beigetreten</th><th>ID</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        `;
-      } catch (err) {
-        list.innerHTML = `<p class='error'>Fehler: ${err.message}</p>`;
-      }
+      list.innerHTML = `
+        <table class='crew-table'>
+          <thead><tr><th>Nickname</th><th>Rolle</th><th>Freigeschaltet</th><th>Aktion</th></tr></thead>
+          <tbody>
+            ${data.map(u => `
+              <tr>
+                <td>${u.nickname}</td>
+                <td>${u.role}</td>
+                <td>${u.approved ? "✅" : "❌"}</td>
+                <td>${!u.approved ? `<button onclick=\"approveUser('${u.id}')\">Freischalten</button>` : ""}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`;
     }
 
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+    async function approveUser(id) {
+      const { error } = await supabase.from("profiles").update({ approved: true, role: "member" }).eq("id", id);
+      if (error) alert("Fehler: " + error.message);
+      loadMembers();
     }
 
     document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -103,9 +77,10 @@
       window.location.href = "index.html";
     });
 
-    // Start
-    checkAuth();
-    loadMembers();
+    (async () => {
+      const ok = await checkAdmin();
+      if (ok) loadMembers();
+    })();
   </script>
 </body>
 </html>
