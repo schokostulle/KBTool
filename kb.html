@@ -1,35 +1,220 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>📚 KB-Datenbank</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kriegsberichte | Allianz-Tool</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
 </head>
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html" class="active">📜 Kriegsberichte</a>
+      <a href="flotten.html">🚢 Flotten</a>
+      <hr>
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>📜 Kriegsberichte</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>📚 Kampfdatenbank</h1>
-        <p id="welcome"></p>
-      </header>
-
+      <!-- Formular -->
       <div class="card">
-        <p>Hier könnten Berichte, Statistiken und Kampfanalysen gespeichert werden.</p>
-        <table class="table">
-          <tr><th>Datum</th><th>Ort</th><th>Ergebnis</th></tr>
-          <tr><td>27.10.2025</td><td>Nordmeer</td><td>🏆 Sieg</td></tr>
-          <tr><td>22.10.2025</td><td>Falkenbucht</td><td>⚔️ Unentschieden</td></tr>
-        </table>
+        <h2>Neuen Kriegsbericht eintragen</h2>
+        <form id="kbForm">
+          <label>Titel
+            <input type="text" id="kbTitle" placeholder="z. B. Spionage bei C-201-16" required>
+          </label>
+          <label>Datum & Uhrzeit
+            <input type="datetime-local" id="kbDate" required>
+          </label>
+          <label>Kampfbericht (Text)
+            <textarea id="kbText" rows="12" placeholder="Bericht hier einfügen..." required></textarea>
+          </label>
+          <button type="submit">Speichern</button>
+        </form>
+      </div>
+
+      <!-- Anzeige -->
+      <div class="card">
+        <h2>Alle Berichte</h2>
+        <div id="kbList">Lade Berichte...</div>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- LOGIK -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let currentUser = null;
+
+    /* === User laden === */
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+      currentUser = user;
+    }
+
+    /* === Kampfberichte laden === */
+    async function loadKBs() {
+      const container = document.getElementById("kbList");
+      container.innerHTML = "Lade Berichte...";
+
+      const { data, error } = await supabase
+        .from("kb")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        container.textContent = "Fehler beim Laden.";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        container.textContent = "Noch keine Kriegsberichte vorhanden.";
+        return;
+      }
+
+      container.innerHTML = "";
+
+      for (const kb of data) {
+        const date = new Date(kb.kb_datum || kb.created_at);
+        const dateStr = date.toLocaleString("de-DE");
+
+        container.insertAdjacentHTML(
+          "beforeend",
+          `
+          <article class="kb-entry">
+            <header>
+              <h3>${kb.titel || "Kampfbericht"}</h3>
+              <span>${dateStr}</span>
+              <small>Eingetragen von ${kb.verfasser_name || "Unbekannt"}</small>
+            </header>
+            <pre class="kb-text">${kb.text}</pre>
+          </article>
+        `
+        );
+      }
+    }
+
+    /* === KB speichern === */
+    document.getElementById("kbForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const titel = document.getElementById("kbTitle").value.trim();
+      const datum = document.getElementById("kbDate").value;
+      const text = document.getElementById("kbText").value.trim();
+
+      if (!titel || !datum || !text) {
+        alert("Bitte alle Felder ausfüllen.");
+        return;
+      }
+
+      const { error } = await supabase.from("kb").insert({
+        titel,
+        kb_datum: datum,
+        text,
+        verfasser_id: currentUser.id,
+        verfasser_name: currentUser.username,
+      });
+
+      if (error) {
+        alert("Fehler beim Speichern: " + error.message);
+      } else {
+        alert("Kriegsbericht gespeichert!");
+        document.getElementById("kbForm").reset();
+        loadKBs();
+      }
+    });
+
+    /* === Init === */
+    await getCurrentUser();
+    loadKBs();
+
+    /* === Admin-Links ausblenden für Member === */
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+  </script>
+
+  <style>
+    textarea {
+      font-family: "Courier New", monospace;
+      border: 1px solid #B08B4F;
+      border-radius: 6px;
+      background: #fff;
+      color: #1C2C3C;
+      padding: 0.6rem;
+      resize: vertical;
+    }
+
+    .kb-entry {
+      border-top: 1px solid #B08B4F;
+      padding: 0.8rem 0;
+    }
+
+    .kb-entry header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .kb-entry h3 {
+      color: #1C2C3C;
+      margin: 0;
+    }
+
+    .kb-entry pre.kb-text {
+      white-space: pre-wrap;
+      background-color: #F9F7E8;
+      border: 1px solid #B08B4F;
+      padding: 0.6rem;
+      border-radius: 4px;
+      color: #1C2C3C;
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+      line-height: 1.3;
+    }
+
+    .kb-entry small {
+      color: #555;
+    }
+  </style>
 </body>
 </html>
