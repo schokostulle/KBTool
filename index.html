@@ -3,58 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Orden der Ersten Seefahrt – Anmeldung & Registrierung</title>
+  <title>Orden der Ersten Seefahrt</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <div class="ocean-bg" aria-hidden="true"></div>
-  <main class="auth-shell">
-    <header class="brand">
+  <main class="shell">
+    <header>
       <h1>⚓ Orden der Ersten Seefahrt</h1>
-      <p class="tagline">Melde dich mit deinem Nickname an oder heuere an.</p>
+      <p class="subtitle">Maritime Übersicht – ohne Anmeldung</p>
     </header>
 
-    <section class="tabs">
-      <button class="tab active" id="tab-login">Anmelden</button>
-      <button class="tab" id="tab-register">Registrieren</button>
-    </section>
+    <nav class="nav">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="mitglieder.html">👥 Mitglieder</a>
+    </nav>
 
-    <!-- Login -->
-    <section class="panel active" id="panel-login">
-      <form id="login-form" class="form-card">
-        <label>Nickname
-          <input type="text" name="nickname" required />
-        </label>
-        <label>Passwort
-          <input type="password" name="password" required />
-        </label>
-        <button type="submit" class="btn primary">Anmelden</button>
-      </form>
+    <section>
+      <h2>Willkommen</h2>
+      <p>Dies ist die Startseite. Die Anmeldung wurde bewusst entfernt. Navigiere über das Menü.</p>
     </section>
-
-    <!-- Registrierung -->
-    <section class="panel" id="panel-register" hidden>
-      <form id="register-form" class="form-card">
-        <label>Nickname
-          <input type="text" name="nickname" minlength="3" required />
-        </label>
-        <div class="grid-2">
-          <label>Passwort
-            <input type="password" name="password" minlength="8" required />
-          </label>
-          <label>Passwort bestätigen
-            <input type="password" name="password_confirm" minlength="8" required />
-          </label>
-        </div>
-        <button type="submit" class="btn accent">Heuern</button>
-      </form>
-      <p class="note">Deine E-Mail wird nicht benötigt – intern wird eine Fake-Adresse erstellt.</p>
-    </section>
-
-    <div id="feedback" class="feedback"></div>
   </main>
-
-  <script src="app.js"></script>
 </body>
 </html>
