@@ -55,6 +55,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     await checkAccess(["admin"]);
   } else if (bodyRole === "member") {
     await checkAccess(["member"]);
+  } else if (bodyRole === "shared") {
+    await checkAccess(["member", "admin"]);
   } else {
     await checkAccess(["member", "admin"]);
   }
