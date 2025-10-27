@@ -1,35 +1,249 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <title>🚢 Flottenstärke</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flotten | Allianz-Tool</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="app.js"></script>
 </head>
-<body onload="protectPage(['member','admin'])">
-  <main class="grid">
-    <aside class="sidebar">
-      <h2>⚓ Menü</h2>
-      <nav id="menu"></nav>
-    </aside>
+
+<body data-role="member">
+  <!-- Seitenleiste -->
+  <aside class="sidebar">
+    <div class="logo">⚓ Allianz-Tool</div>
+
+    <nav>
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservierungen.html">🎯 Reservierungen</a>
+      <a href="karte.html">🗺️ Karte</a>
+      <a href="angriffe.html">⚔️ Angriffe</a>
+      <a href="kb.html">📜 Kriegsberichte</a>
+      <a href="flotten.html" class="active">🚢 Flotten</a>
+      <hr>
+      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptinhalt -->
+  <main>
+    <header class="topbar">
+      <div id="user-info"></div>
+      <h1>🚢 Flottenübersicht</h1>
+    </header>
 
     <section class="content">
-      <header>
-        <h1>🚢 Flottenstärke</h1>
-        <p id="welcome"></p>
-      </header>
-
+      <!-- Formular für neuen Flotteneintrag -->
       <div class="card">
-        <table class="table">
-          <tr><th>Schiffstyp</th><th>Anzahl</th><th>Status</th></tr>
-          <tr><td>Fregatten</td><td>12</td><td>🟢 Einsatzbereit</td></tr>
-          <tr><td>Galeeren</td><td>8</td><td>🟡 Wartung</td></tr>
-          <tr><td>Handelsschiffe</td><td>4</td><td>🟢 Aktiv</td></tr>
-        </table>
+        <h2>Flottenbericht eintragen</h2>
+        <form id="flotteForm">
+          <label>Berichtstyp
+            <select id="reportType">
+              <option value="insel">Inselweise</option>
+              <option value="gesamt">Gesamt</option>
+            </select>
+          </label>
+
+          <label>Ort / Insel (z. B. A-046-04 (4:46:4))
+            <input type="text" id="flotteOrt" placeholder="z. B. A-046-04 (4:46:4)" required>
+          </label>
+
+          <label>Bericht (Text oder Tabelle)
+            <textarea id="flotteText" rows="10" placeholder="Flottenbericht hier einfügen…" required></textarea>
+          </label>
+
+          <button type="submit">Speichern</button>
+        </form>
+      </div>
+
+      <!-- Anzeige der gespeicherten Flotten -->
+      <div class="card">
+        <h2>Gespeicherte Flottenberichte</h2>
+        <div id="flottenList">Lade Flotten...</div>
       </div>
     </section>
   </main>
+
+  <script type="module" src="authguard.js"></script>
+
+  <!-- LOGIK -->
+  <script type="module">
+    import { supabase } from "./supabase.js";
+
+    let currentUser = null;
+
+    /* === User laden === */
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+      currentUser = user;
+    }
+
+    /* === Flottenberichte laden === */
+    async function loadFlotten() {
+      const container = document.getElementById("flottenList");
+      container.innerHTML = "Lade Daten...";
+
+      let query = supabase
+        .from("flotte")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (currentUser.role !== "admin") {
+        query = query.eq("user_id", currentUser.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        container.textContent = "Fehler beim Laden der Daten.";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        container.textContent = "Noch keine Flottenberichte vorhanden.";
+        return;
+      }
+
+      container.innerHTML = "";
+
+      for (const f of data) {
+        const typeLabel = f.typ === "gesamt" ? "Gesamtbericht" : "Inselbericht";
+        const dateStr = new Date(f.created_at).toLocaleString("de-DE");
+
+        container.insertAdjacentHTML(
+          "beforeend",
+          `
+          <article class="flotte-entry">
+            <header>
+              <h3>${typeLabel}: ${f.ort || "Unbekannt"}</h3>
+              <span>${dateStr}</span>
+              <small>von ${f.verfasser_name || "Unbekannt"}</small>
+            </header>
+            <pre>${f.text}</pre>
+            ${(currentUser.role === "admin" || f.user_id === currentUser.id)
+              ? `<button class="deleteBtn" data-id="${f.id}">🗑️ Löschen</button>`
+              : ""}
+          </article>
+        `
+        );
+      }
+
+      document.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          if (!confirm("Diesen Bericht löschen?")) return;
+          const { error } = await supabase.from("flotte").delete().eq("id", id);
+          if (error) alert("Fehler: " + error.message);
+          else loadFlotten();
+        });
+      });
+    }
+
+    /* === Bericht speichern === */
+    document.getElementById("flotteForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const typ = document.getElementById("reportType").value;
+      const ort = document.getElementById("flotteOrt").value.trim();
+      const text = document.getElementById("flotteText").value.trim();
+
+      if (!ort || !text) {
+        alert("Bitte alle Felder ausfüllen.");
+        return;
+      }
+
+      const { error } = await supabase.from("flotte").insert({
+        user_id: currentUser.id,
+        verfasser_name: currentUser.username,
+        typ,
+        ort,
+        text,
+      });
+
+      if (error) {
+        alert("Fehler beim Speichern: " + error.message);
+      } else {
+        alert("Flottenbericht gespeichert!");
+        document.getElementById("flotteForm").reset();
+        loadFlotten();
+      }
+    });
+
+    /* === Init === */
+    await getCurrentUser();
+    await loadFlotten();
+
+    /* === Admin-Links ausblenden für Member === */
+    document.addEventListener("DOMContentLoaded", () => {
+      const roleInfo = document.getElementById("user-info");
+      const observer = new MutationObserver(() => {
+        if (roleInfo.textContent.includes("(member)")) {
+          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
+        }
+      });
+      observer.observe(roleInfo, { childList: true });
+    });
+  </script>
+
+  <style>
+    textarea {
+      font-family: "Courier New", monospace;
+      border: 1px solid #B08B4F;
+      border-radius: 6px;
+      background: #fff;
+      color: #1C2C3C;
+      padding: 0.6rem;
+      resize: vertical;
+    }
+
+    .flotte-entry {
+      border-top: 1px solid #B08B4F;
+      padding: 0.8rem 0;
+      position: relative;
+    }
+
+    .flotte-entry pre {
+      background-color: #F9F7E8;
+      border: 1px solid #B08B4F;
+      padding: 0.6rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      color: #1C2C3C;
+    }
+
+    .flotte-entry header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .flotte-entry button.deleteBtn {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.4rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #b33a3a;
+    }
+
+    .flotte-entry button.deleteBtn:hover {
+      color: red;
+    }
+  </style>
 </body>
 </html>
