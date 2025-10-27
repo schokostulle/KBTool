@@ -1,125 +1,88 @@
-<!-- ========================================================= -->
-<!-- FILE: index.html                                          -->
-<!-- DESCRIPTION: Anmeldung & Registrierung – kompatibel mit style.css -->
-<!-- ========================================================= -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚓ Anmeldung – Seefahrer Kommando</title>
-  <link rel="stylesheet" href="./CSS/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seefahrt – Anmeldung & Registrierung</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Supabase v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
-  <!-- ========================================================= -->
-  <!-- SEGMENT 1: HEADER                                         -->
-  <!-- ========================================================= -->
-  <header>
-    <h1>⚓ Seefahrer-Kommando</h1>
-  </header>
+  <div class="ocean-bg" aria-hidden="true"></div>
+  <main class="auth-shell">
+    <header class="brand">
+      <div class="crest" aria-hidden="true">
+        <!-- Schiffskiel & Speere (SVG Emblem) -->
+        <svg viewBox="0 0 64 64" class="crest-svg" role="img" aria-label="Seefahrer-Wappen">
+          <defs>
+            <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e6c45b"/>
+              <stop offset="100%" stop-color="#9a7b2f"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="30" fill="url(#gold)" opacity="0.25"/>
+          <!-- Gekreuzte Speere -->
+          <path d="M10 8 L14 12 L30 28 L28 30 L12 14 L8 10 Z" fill="#c7a34a"/>
+          <path d="M54 8 L50 12 L34 28 L36 30 L52 14 L56 10 Z" fill="#c7a34a"/>
+          <!-- Rumpf -->
+          <path d="M18 42 C22 50, 42 50, 46 42 L32 46 Z" fill="#6b4f2c"/>
+          <!-- Segel -->
+          <path d="M31 18 L31 40 L22 34 Q30 28 31 18 Z" fill="#e9e0c5"/>
+          <path d="M33 18 L33 40 L42 34 Q34 28 33 18 Z" fill="#e9e0c5"/>
+          <rect x="31" y="16" width="2" height="28" fill="#6b4f2c"/>
+        </svg>
+      </div>
+      <h1>Orden der Ersten Seefahrt</h1>
+      <p class="tagline">Betritt das Deck – melde dich an oder heuere an.</p>
+    </header>
 
-  <!-- ========================================================= -->
-  <!-- SEGMENT 2: LOGIN-FORMULAR                                 -->
-  <!-- ========================================================= -->
-  <main>
-    <section id="login-section">
-      <h2>Anmeldung</h2>
-      <input type="email" id="login-email" placeholder="E-Mail-Adresse" />
-      <input type="password" id="login-password" placeholder="Passwort" />
-      <button id="login-button">Einloggen</button>
-
-      <p>
-        Noch kein Konto?
-        <span id="show-register" class="link">Jetzt registrieren ⚔️</span>
-      </p>
-
-      <div id="login-message"></div>
+    <section class="tabs" role="tablist" aria-label="Anmeldung und Registrierung">
+      <button class="tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Anmelden</button>
+      <button class="tab" id="tab-register" role="tab" aria-selected="false" aria-controls="panel-register">Registrieren</button>
     </section>
 
-    <!-- ========================================================= -->
-    <!-- SEGMENT 3: REGISTRIERUNG-FORMULAR                         -->
-    <!-- ========================================================= -->
-    <section id="register-section" class="hidden">
-      <h2>Registrierung</h2>
-      <input type="email" id="register-email" placeholder="E-Mail-Adresse" />
-      <input type="password" id="register-password" placeholder="Passwort" />
-      <button id="register-button">Registrieren</button>
-
-      <p>
-        Bereits registriert?
-        <span id="show-login" class="link">Zum Login ⚓</span>
-      </p>
-
-      <div id="register-message"></div>
+    <section class="panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+      <form id="login-form" class="form-card">
+        <label class="field">
+          <span>E‑Mail</span>
+          <input type="email" name="email" placeholder="kapitän@flotte.sea" required />
+        </label>
+        <label class="field">
+          <span>Passwort</span>
+          <input type="password" name="password" placeholder="••••••••" required />
+        </label>
+        <button type="submit" class="btn primary">Anmelden</button>
+      </form>
     </section>
+
+    <section class="panel" id="panel-register" role="tabpanel" aria-labelledby="tab-register" hidden>
+      <form id="register-form" class="form-card">
+        <label class="field">
+          <span>E‑Mail</span>
+          <input type="email" name="email" placeholder="smutje@crew.sea" required />
+        </label>
+        <div class="grid-2">
+          <label class="field">
+            <span>Passwort</span>
+            <input type="password" name="password" minlength="8" placeholder="Mind. 8 Zeichen" required />
+          </label>
+          <label class="field">
+            <span>Passwort bestätigen</span>
+            <input type="password" name="password_confirm" minlength="8" placeholder="Noch mal" required />
+          </label>
+        </div>
+        <button type="submit" class="btn accent">Heuern</button>
+      </form>
+    </section>
+
+    <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+    <footer class="legal">
+      <small>Mit der Registrierung akzeptierst du die Seefahrtsregeln (AGB) und unsere Flaschenpost‑Politik (Datenschutz).</small>
+    </footer>
   </main>
 
-  <footer>
-    <p>⚓ Seefahrer-Kommando © 2025</p>
-  </footer>
-
-  <!-- ========================================================= -->
-  <!-- SEGMENT 4: SCRIPT-BEREICH (Supabase + Logik)              -->
-  <!-- ========================================================= -->
-  <script type="module">
-    /* ---------- SEGMENT 4.1: Supabase Initialisierung ---------- */
-    import { supabase } from './JS/supabase.js';
-    console.log("✅ Supabase Script geladen");
-
-    /* ---------- SEGMENT 4.2: Umschalten Login ↔ Registrierung ---------- */
-    const loginSection = document.getElementById('login-section');
-    const registerSection = document.getElementById('register-section');
-
-    const showRegister = document.getElementById('show-register');
-    const showLogin = document.getElementById('show-login');
-
-    showRegister.addEventListener('click', () => {
-      loginSection.classList.add('hidden');
-      registerSection.classList.remove('hidden');
-    });
-
-    showLogin.addEventListener('click', () => {
-      registerSection.classList.add('hidden');
-      loginSection.classList.remove('hidden');
-    });
-
-    /* ---------- SEGMENT 4.3: Login ---------- */
-    document.getElementById('login-button').addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      const msg = document.getElementById('login-message');
-      msg.textContent = "⏳ Anmeldung läuft...";
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        msg.textContent = "❌ Fehler: " + error.message;
-      } else {
-        msg.textContent = "✅ Willkommen!";
-        setTimeout(() => window.location.href = "./dashboard.html", 800);
-      }
-    });
-
-    /* ---------- SEGMENT 4.4: Registrierung ---------- */
-    document.getElementById('register-button').addEventListener('click', async () => {
-      const email = document.getElementById('register-email').value;
-      const password = document.getElementById('register-password').value;
-      const msg = document.getElementById('register-message');
-      msg.textContent = "⚓ Registrierung läuft...";
-
-      const { data, error } = await supabase.auth.signUp({ email, password });
-
-      if (error) {
-        msg.textContent = "❌ Fehler: " + error.message;
-      } else {
-        msg.textContent = "✅ Konto erstellt!";
-        setTimeout(() => {
-          registerSection.classList.add('hidden');
-          loginSection.classList.remove('hidden');
-        }, 1200);
-      }
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
