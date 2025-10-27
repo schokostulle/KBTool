@@ -1,191 +1,20 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV-Verwaltung | Allianz-Tool</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>CSV Upload</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="csv.js"></script>
 </head>
-
-<body data-role="admin">
-  <!-- Seitenleiste -->
-  <aside class="sidebar">
-    <div class="logo">⚓ Allianz-Tool</div>
-
-    <nav>
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="reservierungen.html">🎯 Reservierungen</a>
-      <a href="karte.html">🗺️ Karte</a>
-      <a href="angriffe.html">⚔️ Angriffe</a>
-      <a href="kb.html">📜 Kriegsberichte</a>
-      <a href="flotten.html">🚢 Flotten</a>
-      <hr />
-      <a href="mitglieder.html">👥 Mitglieder</a>
-      <a href="diplomatie.html">🕊️ Diplomatie</a>
-      <a href="csv.html" class="active">📂 CSV-Daten</a>
-      <hr />
-      <button id="logoutBtn">Logout</button>
-    </nav>
+<body>
+  <aside class="menu">
+    <a href="dashboard.html">🏠 Dashboard</a>
   </aside>
 
-  <!-- Hauptinhalt -->
   <main>
-    <header class="topbar">
-      <div id="user-info"></div>
-      <h1>📂 CSV-Verwaltung</h1>
-    </header>
-
-    <section class="content">
-      <div class="card">
-        <h2>CSV-Datei hochladen</h2>
-        <p>
-          Erwartetes Format (Semikolon-getrennt, ohne Kopfzeile):<br>
-          <em>Oz;IG;I;Inselname;Spieler-ID;Spielername;Allianz-ID;Allianzkürzel;Allianzname;Punkte</em>
-        </p>
-
-        <form id="csvForm">
-          <input type="file" id="csvFile" accept=".csv" required />
-          <button type="submit">Hochladen & Ersetzen</button>
-        </form>
-
-        <div id="uploadStatus" style="margin-top:1rem;"></div>
-      </div>
-
-      <div class="card">
-        <h2>Letzter Import</h2>
-        <div id="csvInfo">Lade Informationen...</div>
-      </div>
-    </section>
+    <h1>CSV Upload (nur Admin)</h1>
+    <input type="file" id="csvUpload" accept=".csv">
+    <p>Die Datei wird nach dem Upload automatisch in <code>targets</code> eingetragen.</p>
   </main>
-
-  <script type="module" src="authguard.js"></script>
-
-  <!-- LOGIK -->
-  <script type="module">
-    import { supabase } from "./supabase.js";
-
-    let currentUser = null;
-
-    async function getCurrentUser() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        window.location.href = "index.html";
-        return;
-      }
-      const { data: user } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-      currentUser = user;
-    }
-
-    /* === Letzten Import anzeigen === */
-    async function loadCsvInfo() {
-      const infoDiv = document.getElementById("csvInfo");
-      const { count, error } = await supabase
-        .from("ziele")
-        .select("*", { count: "exact", head: true });
-
-      if (error) {
-        infoDiv.textContent = "Fehler beim Laden der Informationen.";
-        return;
-      }
-
-      const { data: last } = await supabase
-        .from("ziele")
-        .select("updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      const lastUpdate = last ? new Date(last.updated_at).toLocaleString("de-DE") : "unbekannt";
-      infoDiv.innerHTML = `
-        <p><strong>Einträge:</strong> ${count}</p>
-        <p><strong>Letztes Update:</strong> ${lastUpdate}</p>
-      `;
-    }
-
-    /* === CSV einlesen & speichern === */
-    document.getElementById("csvForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fileInput = document.getElementById("csvFile");
-      const statusDiv = document.getElementById("uploadStatus");
-
-      if (!fileInput.files.length) {
-        alert("Bitte eine CSV-Datei auswählen.");
-        return;
-      }
-
-      const file = fileInput.files[0];
-      statusDiv.textContent = "Lese Datei...";
-      const text = await file.text();
-
-      // CSV parsen
-      const rows = text.trim().split("\n").map(line => line.split(";"));
-      const mapped = rows.map(r => ({
-        oz: r[0]?.trim(),
-        ig: parseInt(r[1]) || null,
-        i: parseInt(r[2]) || null,
-        inselname: r[3]?.trim(),
-        spieler_id: r[4]?.trim(),
-        spielername: r[5]?.trim(),
-        allianz_id: r[6]?.trim(),
-        allianzkürzel: r[7]?.trim(),
-        allianzname: r[8]?.trim(),
-        punkte: parseInt(r[9]) || 0,
-        updated_at: new Date().toISOString(),
-      }));
-
-      statusDiv.textContent = `Lese ${mapped.length} Zeilen...`;
-
-      // Alte Daten löschen
-      const del = await supabase.from("ziele").delete().neq("id", 0);
-      if (del.error) {
-        alert("Fehler beim Löschen: " + del.error.message);
-        return;
-      }
-
-      // Chunked Insert (Supabase Limit ~1000 Rows/Batch)
-      const chunkSize = 500;
-      for (let i = 0; i < mapped.length; i += chunkSize) {
-        const chunk = mapped.slice(i, i + chunkSize);
-        const { error } = await supabase.from("ziele").insert(chunk);
-        if (error) {
-          alert("Fehler beim Speichern: " + error.message);
-          console.error(error);
-          return;
-        }
-        statusDiv.textContent = `Importiere... (${i + chunk.length}/${mapped.length})`;
-      }
-
-      statusDiv.innerHTML = `<strong>✅ Import abgeschlossen!</strong> (${mapped.length} Zeilen aktualisiert)`;
-      loadCsvInfo();
-      fileInput.value = "";
-    });
-
-    await getCurrentUser();
-    await loadCsvInfo();
-  </script>
-
-  <style>
-    input[type="file"] {
-      display: block;
-      padding: .4rem;
-      border: 1px solid #B08B4F;
-      border-radius: 6px;
-      background-color: #fff;
-      color: #1C2C3C;
-      margin-bottom: .6rem;
-    }
-
-    #uploadStatus {
-      background-color: #F9F7E8;
-      border: 1px solid #B08B4F;
-      border-radius: 4px;
-      padding: .6rem;
-      color: #1C2C3C;
-    }
-  </style>
 </body>
 </html>
