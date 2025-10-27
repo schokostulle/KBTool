@@ -1,38 +1,46 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
   <title>Dashboard – Orden der Ersten Seefahrt</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=Noto+Sans&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
 </head>
+
 <body>
-  <main class="shell grid">
+  <main class="grid">
     <aside class="sidebar">
       <h2>⚓ Menü</h2>
       <nav>
-        <a href="dashboard.html" class="active">🏠 Übersicht</a>
+        <a href="dashboard.html" class="active">🧭 Dashboard</a>
         <a href="mitglieder.html">👥 Mitglieder</a>
-        <a href="index.html">⛵ Start</a>
+        <button onclick="logout()">🚪 Logout</button>
       </nav>
     </aside>
 
     <section class="content">
       <header>
-        <h1>Übersicht & Ankündigungen</h1>
-        <p class="subtitle">Öffentliche Anzeige – keine Anmeldung erforderlich</p>
+        <h1>🧭 Dashboard</h1>
+        <p id="welcome"></p>
       </header>
 
       <article class="card">
         <h3>⚔️ Ankündigungen</h3>
-        <ul id="news">
-          <li><strong>27. Oktober 2025:</strong> Navigationskarte aktualisiert.</li>
-          <li><strong>20. Oktober 2025:</strong> Hafenarbeiten abgeschlossen.</li>
+        <ul>
+          <li><strong>27. Okt 2025:</strong> Schiffswerft fertiggestellt.</li>
+          <li><strong>20. Okt 2025:</strong> Neue Route zum Nordmeer entdeckt.</li>
         </ul>
       </article>
     </section>
   </main>
+
+  <script>
+    const nick = localStorage.getItem("nickname");
+    const role = localStorage.getItem("role");
+    if (!nick) location.href="index.html";
+    $("#welcome").textContent = `Willkommen ${nick} (${role})`;
+  </script>
 </body>
 </html>
