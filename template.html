@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- ⚓ WARTEBILDSCHIRM -->
   <div id="loadingScreen">
     <main style="text-align:center; padding:3rem;">
       <h1>⚓ Lade Allianz-Daten...</h1>
@@ -13,29 +14,31 @@
     </main>
   </div>
 
+  <!-- ⚓ SEITENINHALT -->
   <div id="pageContent" style="display:none; height:100%;">
     <div class="container">
-      <!-- Linkes Menü (identisch, bleibt fix) -->
+
+      <!-- Linkes Menü -->
       <aside class="menu">
         <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="reservierungen.html">🎯 Reservierungen</a>
-        <a href="karte.html">🗺️ Karte</a>
-        <a href="angriffe.html">⚔️ Angriffe</a>
-        <a href="kb.html">📜 Kriegsberichte</a>
-        <a href="flotten.html">🚢 Flotten</a>
+        <a href="reservations.html">🎯 Reservierungen</a>
+        <a href="map.html">🗺️ Karte</a>
+        <a href="attacks.html">⚔️ Angriffe</a>
+        <a href="battle-reports.html">📜 Kriegsberichte</a>
+        <a href="fleet.html">🚢 Flotten</a>
         <hr>
-        <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
-        <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+        <a href="members.html" data-admin>👥 Mitglieder</a>
+        <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
         <a href="csv.html" data-admin>📂 CSV-Daten</a>
         <hr>
         <button id="logoutBtn">Logout</button>
       </aside>
 
-      <!-- Hauptinhalt -->
+      <!-- Hauptbereich -->
       <main>
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
           <div>
-            Eingeloggt als: <strong id="userName">–</strong> 
+            Eingeloggt als: <strong id="userName">–</strong>
             (<span id="userRole">–</span>)
           </div>
         </header>
@@ -43,7 +46,6 @@
         <h1 class="text-left"><!-- Seitentitel hier --></h1>
 
         <section id="contentArea" style="margin-top:2rem;">
-          <!-- Platzhalter für Seitenspezifischen Inhalt -->
           <p>⚙️ Inhalt wird hier geladen...</p>
         </section>
       </main>
