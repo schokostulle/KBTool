@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const logoutBtn = document.getElementById("logoutBtn");
   const tableArea = document.getElementById("memberTableArea");
 
-  logoutBtn?.addEventListener("click", logout);
+  logoutBtn?.addEventListener('click', () => logout());
 
   // === Auth prüfen ===
   const user = await getCurrentUser();
