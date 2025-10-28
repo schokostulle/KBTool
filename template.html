@@ -6,41 +6,49 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ====== LINKSMENÜ ====== -->
-  <aside class="menu">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="reservierungen.html">🎯 Reservierungen</a>
-      <a href="karte.html">🗺️ Karte</a>
-      <a href="angriffe.html">⚔️ Angriffe</a>
-      <a href="kb.html">📜 Kriegsberichte</a>
-      <a href="flotten.html">🚢 Flotten</a>
-      <hr>
-      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
-      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
-      <a href="csv.html" data-admin>📂 CSV-Daten</a>
-      <hr>
-      <button id="logoutBtn">Logout</button>
-  </aside>
+  <div id="loadingScreen">
+    <main style="text-align:center; padding:3rem;">
+      <h1>⚓ Lade Allianz-Daten...</h1>
+      <p>Bitte einen Moment Geduld.</p>
+    </main>
+  </div>
 
-  <!-- ====== HAUPTINHALT ====== -->
-  <main>
-    <!-- Header: Userinfo + Logout -->
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-      <div>
-        Eingeloggt als: <strong id="userName">–</strong> 
-        (<span id="userRole">–</span>)
-      </div>
-      <button id="logoutBtn">Abmelden</button>
-    </header>
+  <div id="pageContent" style="display:none; height:100%;">
+    <div class="container">
+      <!-- Linkes Menü (identisch, bleibt fix) -->
+      <aside class="menu">
+        <a href="dashboard.html">🏠 Dashboard</a>
+        <a href="reservierungen.html">🎯 Reservierungen</a>
+        <a href="karte.html">🗺️ Karte</a>
+        <a href="angriffe.html">⚔️ Angriffe</a>
+        <a href="kb.html">📜 Kriegsberichte</a>
+        <a href="flotten.html">🚢 Flotten</a>
+        <hr>
+        <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+        <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+        <a href="csv.html" data-admin>📂 CSV-Daten</a>
+        <hr>
+        <button id="logoutBtn">Logout</button>
+      </aside>
 
-    <!-- Zentrale Überschrift -->
-    <h1 class="text-left"><!-- Überschrift hier --></h1>
+      <!-- Hauptinhalt -->
+      <main>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
+            Eingeloggt als: <strong id="userName">–</strong> 
+            (<span id="userRole">–</span>)
+          </div>
+        </header>
 
-    <!-- Seiteninhalt -->
-    <section id="pageContent" style="margin-top:2rem;">
-      <!-- Hier kommt der individuelle Seiteninhalt rein -->
-    </section>
-  </main>
+        <h1 class="text-left"><!-- Seitentitel hier --></h1>
+
+        <section id="contentArea" style="margin-top:2rem;">
+          <!-- Platzhalter für Seitenspezifischen Inhalt -->
+          <p>⚙️ Inhalt wird hier geladen...</p>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <script type="module" src="page_template.js"></script>
 </body>
