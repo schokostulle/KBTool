@@ -20,6 +20,11 @@
   <main>
     <h1>Allianz-Dashboard</h1>
 
+    <header class="topbar">
+  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+  <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
+</header>
+
     <section>
       <h2>Aktuelle Ankündigungen</h2>
       <div id="newsList">Lade Ankündigungen...</div>
