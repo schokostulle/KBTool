@@ -24,10 +24,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("userRole").textContent = member.role;
 
   document.getElementById("logoutBtn").addEventListener("click", logout);
-  document.getElementById("logoutBtnTop").addEventListener("click", logout);
 
   const form = document.getElementById("csvUploadForm");
   const status = document.getElementById("uploadStatus");
+  const tableContainer = document.getElementById("csvTableContainer");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -37,22 +37,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!file) return alert("Bitte eine CSV-Datei auswählen.");
 
     status.textContent = "⏳ Upload läuft...";
+    tableContainer.innerHTML = "";
 
     try {
-      // Dateiinhalt lesen
+      // Datei lesen
       const text = await file.text();
-
-      // CSV parsen
       const rows = text
         .trim()
         .split("\n")
         .map((r) => r.split(";"));
 
-      // Tabelle 'targets' leeren
+      // Bestehende Daten löschen
       const { error: delError } = await supabase.from("targets").delete().neq("id", 0);
       if (delError) throw delError;
 
-      // Neue Daten einfügen
+      // Neue Daten vorbereiten
       const insertData = rows.map((r) => ({
         oz: parseInt(r[0]) || null,
         ig: parseInt(r[1]) || null,
@@ -69,7 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const { error: insertError } = await supabase.from("targets").insert(insertData);
       if (insertError) throw insertError;
 
-      // Upload-Log speichern
       await supabase.from("uploads").insert({
         dateiname: file.name,
         uploader_id: user.id,
@@ -77,9 +75,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       status.textContent = `✅ Upload erfolgreich: ${insertData.length} Datensätze importiert.`;
+
+      // Tabelle anzeigen
+      renderTable(insertData);
     } catch (err) {
       console.error("Uploadfehler:", err);
       status.textContent = "❌ Fehler beim Upload: " + err.message;
     }
   });
+
+  function renderTable(data) {
+    if (!data.length) {
+      tableContainer.innerHTML = "<p>Keine Daten verfügbar.</p>";
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    let html = "<table><thead><tr>";
+
+    headers.forEach((h) => (html += `<th>${h}</th>`));
+    html += "</tr></thead><tbody>";
+
+    data.slice(0, 50).forEach((row) => {
+      html += "<tr>";
+      headers.forEach((h) => (html += `<td>${row[h] ?? ""}</td>`));
+      html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+    tableContainer.innerHTML = html + "<p><i>Nur erste 50 Zeilen angezeigt.</i></p>";
+  }
 });
