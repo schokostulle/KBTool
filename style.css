@@ -281,10 +281,10 @@ aside.menu a.active {
 
 .btn-back {
   margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  border: 1px solid #ccc;
-  background-color: #002b36; /* maritimes Dunkelblau */
-  color: #fff;
+  padding: 0.6rem 1rem;
+  border: 1px solid #51565a;
+  background-color: #3a4045;
+  color: #f0e9cf;
   font-family: inherit;
   border-radius: 0.4rem;
   cursor: pointer;
@@ -292,5 +292,5 @@ aside.menu a.active {
 }
 
 .btn-back:hover {
-  background-color: #004d66; /* etwas helleres Blau beim Hover */
+  background-color: #51565a;
 }
