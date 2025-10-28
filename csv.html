@@ -6,41 +6,65 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Linkes Menü -->
-  <aside class="menu">
-    <a href="dashboard.html">🏠 Dashboard</a>
-    <a href="reservations.html">🎯 Reservierungen</a>
-    <a href="map.html">🗺️ Karte</a>
-    <a href="attacks.html">⚔️ Angriffe</a>
-    <a href="battle-reports.html">📜 Kriegsberichte</a>
-    <a href="fleet.html">🚢 Flotten</a>
-    <hr>
-    <a href="members.html" data-admin>👥 Mitglieder</a>
-    <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
-    <a href="csv.html" data-admin class="active">📂 CSV-Daten</a>
-    <hr>
-    <button id="logoutBtn">Logout</button>
-  </aside>
+  <div class="container">
+    <!-- Linkes Menü -->
+    <aside class="menu">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservations.html">🎯 Reservierungen</a>
+      <a href="map.html">🗺️ Karte</a>
+      <a href="attacks.html">⚔️ Angriffe</a>
+      <a href="battle-reports.html">📜 Kriegsberichte</a>
+      <a href="fleet.html">🚢 Flotten</a>
+      <hr>
+      <a href="members.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin class="active">📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </aside>
 
-  <!-- Hauptbereich -->
-  <div class="main-content">
-    <header class="top-header">
-      <span id="userName"></span> (<span id="userRole"></span>)
-    </header>
+    <!-- Hauptbereich -->
+    <main>
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          Eingeloggt als: <strong id="userName">–</strong>
+          (<span id="userRole">–</span>)
+        </div>
+      </header>
 
-    <h1>📂 CSV-Upload</h1>
-    <p>Hier kannst du die aktuelle Insel-/Allianzliste hochladen.<br>
-    Die bestehende Datenbasis wird vollständig ersetzt.</p>
+      <h1 class="text-left">CSV-Upload</h1>
 
-    <form id="csvUploadForm">
-      <input type="file" id="csvFile" accept=".csv" required />
-      <button type="submit">Upload starten</button>
-    </form>
+      <section style="margin-top:1rem;">
+        <p>Die bestehende Datenbasis in <code>targets</code> wird beim Upload vollständig ersetzt.</p>
+        <form id="csvUploadForm" style="margin: 1rem 0;">
+          <input type="file" id="csvFile" accept=".csv" required />
+          <button type="submit">Upload starten</button>
+        </form>
+        <div id="uploadStatus" style="margin-top:0.5rem;">Noch kein Upload gestartet.</div>
+      </section>
 
-    <div id="uploadStatus" style="margin-top:1rem;">Noch kein Upload gestartet.</div>
+      <section style="margin-top:2rem;">
+        <h2>Targets – Datenbestand</h2>
 
-    <!-- Hier erscheint später die Tabelle -->
-    <div id="csvTableContainer" style="margin-top:2rem;"></div>
+        <!-- Filterleiste -->
+        <div id="filters" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:0.5rem 0;">
+          <input class="filter-input" data-col="oz" placeholder="OZ" />
+          <input class="filter-input" data-col="ig" placeholder="IG" />
+          <input class="filter-input" data-col="i" placeholder="I" />
+          <input class="filter-input" data-col="inselname" placeholder="Inselname" />
+          <input class="filter-input" data-col="spieler_id" placeholder="Spieler-ID" />
+          <input class="filter-input" data-col="spielername" placeholder="Spielername" />
+          <input class="filter-input" data-col="allianz_id" placeholder="Allianz-ID" />
+          <input class="filter-input" data-col="allianzkürzel" placeholder="Kürzel" />
+          <input class="filter-input" data-col="allianzname" placeholder="Allianzname" />
+          <input class="filter-input" data-col="punkte" placeholder="Punkte" />
+          <button id="clearFilters" type="button" class="btn-action">Filter löschen</button>
+        </div>
+
+        <div id="tableMeta" style="margin:0.5rem 0;">–</div>
+        <div id="csvTableContainer" style="overflow:auto; max-height:65vh;"></div>
+      </section>
+    </main>
   </div>
 
   <script type="module" src="./csv.js"></script>
