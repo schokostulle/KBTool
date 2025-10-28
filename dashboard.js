@@ -1,10 +1,9 @@
-import { supabase, getCurrentUser } from './supabase.js';
+import { supabase, getCurrentUser, logout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const loading = document.getElementById("loadingScreen");
-  const content = document.getElementById("dashboardContent");
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
 
-  // 1️⃣ User-Session prüfen
   const user = await getCurrentUser();
   if (!user) {
     alert("❌ Keine aktive Sitzung. Bitte melde dich erneut an.");
@@ -12,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 2️⃣ Member-Eintrag abrufen
+  // Member-Daten laden
   const { data: member, error } = await supabase
     .from("members")
     .select("username, role, status")
@@ -20,32 +19,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     .single();
 
   if (error || !member) {
-    alert("Fehler beim Laden deines Profils.");
+    alert("Fehler beim Laden deiner Mitgliedsdaten.");
     window.location.href = "index.html";
     return;
   }
 
-  // 3️⃣ Zugriff prüfen
-  if (member.status !== "active" && member.role !== "admin") {
-    loading.innerHTML = `
-      <main style="text-align:center; padding:3rem;">
-        <h1>⚓ Zugriff verweigert</h1>
-        <p>Dein Konto ist noch nicht freigeschaltet.<br>
-        Bitte warte auf die Bestätigung durch einen Admin.</p>
-        <button onclick="window.location.href='index.html'">Zurück zum Login</button>
-      </main>
-    `;
-    return;
-  }
-
-  // 4️⃣ Zugriff erlaubt → Dashboard anzeigen
-  loading.style.display = "none";
-  content.style.display = "block";
-
   document.getElementById("userName").textContent = member.username;
   document.getElementById("userRole").textContent = member.role;
 
-  await loadNews(member);
+  // Zugriff prüfen
+  if (member.status !== "active" && member.role !== "admin") {
+    document.querySelector(".content").innerHTML = `
+      <main style="text-align:center; padding:3rem;">
+        <h1>⚓ Zugriff verweigert</h1>
+        <p>Dein Konto ist noch nicht freigeschaltet.<br>
+        Bitte warte auf Freischaltung durch einen Admin.</p>
+      </main>`;
+    return;
+  }
+
+  loadNews(member);
 });
 
 async function loadNews(member) {
@@ -54,39 +47,52 @@ async function loadNews(member) {
     .select("id, title, content, author_name, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) return (document.getElementById("newsList").textContent = "Fehler beim Laden der Ankündigungen.");
+  const list = document.getElementById("newsList");
+  if (error) {
+    list.textContent = "Fehler beim Laden der Ankündigungen.";
+    return;
+  }
 
-  document.getElementById("newsList").innerHTML = data.length
-    ? data.map(n => `
-      <div class="news-item">
-        <h3>${n.title}</h3>
-        <p>${n.content}</p>
-        <small>von ${n.author_name || "unbekannt"} – ${new Date(n.created_at).toLocaleString()}</small>
-      </div>
-    `).join("")
+  list.innerHTML = data.length
+    ? data
+        .map(
+          (n) => `
+        <div class="news-item">
+          <h3>${n.title}</h3>
+          <p>${n.content}</p>
+          <small>von ${n.author_name || "unbekannt"} – ${new Date(
+            n.created_at
+          ).toLocaleString()}</small>
+        </div>`
+        )
+        .join("")
     : "<p>Keine Ankündigungen vorhanden.</p>";
 
+  // Admin Formular
   if (member.role === "admin") {
-    document.getElementById("adminNewsForm").style.display = "block";
-    const newsForm = document.getElementById("newsForm");
-    newsForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("title").value.trim();
-      const content = document.getElementById("content").value.trim();
-      if (!title || !content) return alert("Bitte Titel und Inhalt angeben.");
+    const form = document.getElementById("adminNewsForm");
+    form.style.display = "block";
 
-      const { error: insertError } = await supabase.from("news").insert({
-        title,
-        content,
-        author_name: member.username,
+    document
+      .getElementById("newsForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const content = document.getElementById("content").value.trim();
+        if (!title || !content) return alert("Titel und Inhalt angeben.");
+
+        const { error: insertError } = await supabase.from("news").insert({
+          title,
+          content,
+          author_name: member.username,
+        });
+
+        if (insertError) alert("Fehler beim Erstellen der Ankündigung.");
+        else {
+          alert("✅ Ankündigung veröffentlicht.");
+          e.target.reset();
+          loadNews(member);
+        }
       });
-
-      if (insertError) alert("Fehler beim Erstellen der Ankündigung.");
-      else {
-        alert("✅ Ankündigung veröffentlicht.");
-        await loadNews(member);
-        newsForm.reset();
-      }
-    });
   }
 }
