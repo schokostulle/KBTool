@@ -268,3 +268,13 @@ aside.menu a.active {
   padding: 1.5rem 2rem;
   overflow-y: auto;
 }
+
+/* ===========================================================
+   ⚓ Textausrichtung – kompatibel mit Style v1 (fixiert)
+   =========================================================== */
+
+/* Links ausgerichtete Überschriften oder Absätze */
+.text-left {
+  text-align: left;
+  margin-left: 0;
+}
