@@ -33,6 +33,15 @@
     <header class="topbar">
   <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
   <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
+
+  <div class="topbar-left">
+    ⚓ Allianz-Tool
+  </div>
+  <div class="topbar-right">
+    <span id="userInfo"></span>
+    <button id="logoutBtn">Abmelden</button>
+  </div>
+
 </header>
 
     <section>
