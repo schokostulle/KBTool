@@ -1,234 +1,149 @@
-/* ===========================
-   ⚓ ALLGEMEIN
-=========================== */
-:root {
-  --marine-dark: #001f3f;
-  --marine-mid: #003366;
-  --marine-light: #004b99;
-  --sand: #f8f9fa;
-  --text: #111;
-}
+/* ======================================================
+   ⚓ DASHBOARD LAYOUT ERGÄNZUNG – Kompatibel mit altem Stil
+   ====================================================== */
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: "Trebuchet MS", sans-serif;
-  background: var(--sand);
-  color: var(--text);
-}
-
-/* ===========================
-   ⚓ HEADER / TOPBAR
-=========================== */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--marine-dark);
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-bottom: 3px solid var(--marine-light);
-}
-
-.topbar .page-title {
-  flex: 1;
-  text-align: center;
-  font-size: 1.5rem;
-  margin: 0;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.user-info {
-  font-size: 0.9rem;
-}
-
-.logout-area button {
-  background: var(--marine-light);
-  border: none;
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.4rem;
-  cursor: pointer;
-}
-
-.logout-area button:hover {
-  background: var(--marine-mid);
-}
-
-/* ===========================
-   ⚓ LAYOUT: SIDEBAR + CONTENT
-=========================== */
+/* Gesamtlayout: Header + Sidebar + Hauptbereich */
 .container {
   display: flex;
   height: calc(100vh - 60px);
 }
 
-/* Sidebar */
+/* ===== HEADER OBEN ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #001f3f; /* passt zu alter Marine-Farbwelt */
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid #004b99;
+  font-weight: bold;
+}
+
+.topbar .page-title {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+}
+
+.user-info {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.logout-area button {
+  background: #003366;
+  color: #fff;
+  border: 1px solid #004b99;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.logout-area button:hover {
+  background: #004b99;
+}
+
+/* ===== LINKES MENÜ ===== */
 .sidebar {
-  width: 220px;
-  background: var(--marine-mid);
+  width: 200px;
+  background-color: #002b5c;
   color: #fff;
   padding-top: 1rem;
+  border-right: 2px solid #004b99;
 }
 
 .sidebar ul {
   list-style: none;
-  margin: 0;
   padding: 0;
-}
-
-.sidebar li {
   margin: 0;
 }
 
-.sidebar a {
+.sidebar li a {
   display: block;
   color: #fff;
   text-decoration: none;
-  padding: 0.7rem 1rem;
-  transition: background 0.2s;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #003b7a;
 }
 
-.sidebar a:hover,
-.sidebar a.active {
-  background: var(--marine-light);
+.sidebar li a:hover,
+.sidebar li a.active {
+  background: #004b99;
 }
 
-/* Hauptinhalt */
+/* ===== HAUPTBEREICH ===== */
 .content {
   flex: 1;
-  padding: 1rem 2rem;
+  padding: 1.5rem 2rem;
   overflow-y: auto;
-  background: #fdfdfd;
+  background-color: #f8f9fa; /* heller Kartenhintergrund */
 }
 
-/* ===========================
-   ⚓ NEWS / ANKÜNDIGUNGEN
-=========================== */
+/* ===== NEWS-BEREICH ===== */
 .news-section h2 {
+  color: #001f3f;
   margin-top: 0;
-  color: var(--marine-dark);
-  border-bottom: 2px solid var(--marine-light);
+  border-bottom: 1px solid #004b99;
   padding-bottom: 0.3rem;
 }
 
 .news-item {
   background: #ffffff;
-  border-left: 4px solid var(--marine-light);
+  border-left: 4px solid #004b99;
   padding: 0.8rem;
   margin-bottom: 1rem;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
 .news-item h3 {
-  margin: 0 0 0.3rem 0;
+  margin: 0 0 0.4rem 0;
+  color: #001f3f;
 }
 
 .news-item small {
   color: #555;
 }
 
-/* ===========================
-   ⚓ FORMULARE
-=========================== */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-form input,
-form textarea,
-form select {
+/* ===== ADMIN-NEWS FORM ===== */
+#newsForm input,
+#newsForm textarea {
+  width: 100%;
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-family: inherit;
+  background-color: #fff;
 }
 
-form button {
-  background: var(--marine-light);
-  color: white;
+#newsForm button {
+  background: #004b99;
+  color: #fff;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
 }
-
-form button:hover {
-  background: var(--marine-mid);
+#newsForm button:hover {
+  background: #0066cc;
 }
 
-/* ===========================
-   ⚓ TABELLEN (z. B. Reservierungen, Flotten, Diplomatie)
-=========================== */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  font-size: 0.95rem;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-  text-align: left;
-}
-
-th {
-  background: var(--marine-mid);
-  color: #fff;
-}
-
-tr:nth-child(even) {
-  background: #f0f4f8;
-}
-
-tr:hover {
-  background: #e2ecf5;
-}
-
-/* ===========================
-   ⚓ BUTTONS & ELEMENTE
-=========================== */
-button {
-  font-family: inherit;
-}
-
-a.button {
-  display: inline-block;
-  background: var(--marine-light);
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  text-decoration: none;
-}
-
-a.button:hover {
-  background: var(--marine-mid);
-}
-
-/* ===========================
-   ⚓ RESPONSIVE DESIGN
-=========================== */
+/* ===== RESPONSIV ===== */
 @media (max-width: 900px) {
   .container {
     flex-direction: column;
   }
-
   .sidebar {
     width: 100%;
     display: flex;
     overflow-x: auto;
   }
-
-  .sidebar a {
+  .sidebar li a {
     flex: 1;
     text-align: center;
+    border-right: 1px solid #004b99;
   }
 }
