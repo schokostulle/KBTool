@@ -1,149 +1,213 @@
-/* ======================================================
-   ⚓ DASHBOARD LAYOUT ERGÄNZUNG – Kompatibel mit altem Stil
-   ====================================================== */
+/* ===========================================================
+   ⚓ Allianz-Tool Style (Maritim & Minimalistisch)
+   =========================================================== */
 
-/* Gesamtlayout: Header + Sidebar + Hauptbereich */
-.container {
-  display: flex;
-  height: calc(100vh - 60px);
-}
-
-/* ===== HEADER OBEN ===== */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #001f3f; /* passt zu alter Marine-Farbwelt */
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-bottom: 2px solid #004b99;
-  font-weight: bold;
-}
-
-.topbar .page-title {
-  flex: 1;
-  text-align: center;
+/* Grundlayout */
+html, body {
   margin: 0;
-  font-size: 1.4rem;
+  padding: 0;
+  height: 100%;
+  background-color: #1b1f23; /* dunkles Marinegrau */
+  color: #d9cba3;           /* sandfarben */
+  font-family: 'Courier New', monospace;
+}
+
+/* Allgemeine Typografie */
+h1, h2, h3 {
+  color: #e8e0c5;
+  margin-top: 0;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.user-info {
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.logout-area button {
-  background: #003366;
-  color: #fff;
-  border: 1px solid #004b99;
-  padding: 0.3rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-}
-.logout-area button:hover {
-  background: #004b99;
-}
-
-/* ===== LINKES MENÜ ===== */
-.sidebar {
-  width: 200px;
-  background-color: #002b5c;
-  color: #fff;
-  padding-top: 1rem;
-  border-right: 2px solid #004b99;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar li a {
-  display: block;
-  color: #fff;
+a {
+  color: #d9cba3;
   text-decoration: none;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid #003b7a;
+}
+a:hover {
+  text-decoration: underline;
 }
 
-.sidebar li a:hover,
-.sidebar li a.active {
-  background: #004b99;
+/* Layout: Seitenstruktur */
+body {
+  display: flex;
+  flex-direction: row;
 }
 
-/* ===== HAUPTBEREICH ===== */
-.content {
+main {
   flex: 1;
-  padding: 1.5rem 2rem;
+  padding: 2rem;
   overflow-y: auto;
-  background-color: #f8f9fa; /* heller Kartenhintergrund */
 }
 
-/* ===== NEWS-BEREICH ===== */
-.news-section h2 {
-  color: #001f3f;
-  margin-top: 0;
-  border-bottom: 1px solid #004b99;
-  padding-bottom: 0.3rem;
+/* Seitenmenü (linke Navigation) */
+aside.menu {
+  width: 200px;
+  background-color: #2a2e32;
+  border-right: 2px solid #3a4045;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
 }
 
-.news-item {
-  background: #ffffff;
-  border-left: 4px solid #004b99;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+aside.menu a {
+  display: block;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+  background-color: #2e3439;
+  text-align: left;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out;
+}
+aside.menu a:hover {
+  background-color: #3a4045;
 }
 
-.news-item h3 {
-  margin: 0 0 0.4rem 0;
-  color: #001f3f;
-}
-
-.news-item small {
-  color: #555;
-}
-
-/* ===== ADMIN-NEWS FORM ===== */
-#newsForm input,
-#newsForm textarea {
+/* Tabellen */
+table.data-table {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: #24282c;
+}
+
+table.data-table th,
+table.data-table td {
+  border: 1px solid #3a4045;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+table.data-table th {
+  background-color: #2e3439;
+  color: #f0e9cf;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+table.data-table tr:nth-child(even) {
+  background-color: #2a2e32;
+}
+
+table.data-table tr:hover {
+  background-color: #383d42;
+}
+
+/* Formulare */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 400px;
+}
+
+input, textarea, button {
   font-family: inherit;
-  background-color: #fff;
-}
-
-#newsForm button {
-  background: #004b99;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #3a4045;
   border-radius: 4px;
-  cursor: pointer;
-}
-#newsForm button:hover {
-  background: #0066cc;
+  padding: 0.5rem;
+  background-color: #24282c;
+  color: #d9cba3;
 }
 
-/* ===== RESPONSIV ===== */
-@media (max-width: 900px) {
-  .container {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-    display: flex;
-    overflow-x: auto;
-  }
-  .sidebar li a {
-    flex: 1;
-    text-align: center;
-    border-right: 1px solid #004b99;
-  }
+textarea {
+  resize: vertical;
+}
+
+button {
+  cursor: pointer;
+  background-color: #3a4045;
+  color: #f0e9cf;
+  border: 1px solid #51565a;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+button:hover {
+  background-color: #51565a;
+}
+
+/* Nachrichten (Dashboard-News) */
+.news-item {
+  background-color: #2e3439;
+  border: 1px solid #3a4045;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.news-item h3 {
+  margin: 0 0 0.5rem 0;
+  color: #e8e0c5;
+}
+.news-item p {
+  margin: 0.25rem 0 0.5rem 0;
+}
+.news-item small {
+  color: #9a9485;
+}
+
+/* Kampfberichte */
+.report {
+  background-color: #24282c;
+  border: 1px solid #3a4045;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.report h3 {
+  margin: 0 0 0.5rem 0;
+}
+.report pre {
+  background: #1b1f23;
+  border: 1px solid #3a4045;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+/* Login & Register (zentriert) */
+.centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 2rem;
+}
+
+.login-section, .register-section {
+  background-color: #2a2e32;
+  padding: 1.5rem 2rem;
+  border: 1px solid #3a4045;
+  border-radius: 6px;
+  width: 300px;
+}
+
+hr {
+  width: 50%;
+  border: 1px solid #3a4045;
+}
+
+/* Scrollbar (dezent) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #3a4045;
+  border-radius: 4px;
+}
+
+/* Hilfsklassen */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.small {
+  font-size: 0.85rem;
+  color: #aaa;
 }
