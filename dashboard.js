@@ -1,7 +1,14 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const loadingScreen = document.getElementById("loadingScreen");
+  const dashboardContent = document.getElementById("dashboardContent");
   const logoutBtn = document.getElementById("logoutBtn");
+
+  // Start: Ladebildschirm anzeigen, Dashboard verstecken
+  loadingScreen.style.display = "block";
+  dashboardContent.style.display = "none";
+
   logoutBtn?.addEventListener("click", logout);
 
   // === User prüfen ===
@@ -12,61 +19,74 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Mitgliedsdaten abrufen
-  const { data: member, error } = await supabase
-    .from("members")
-    .select("username, role, status")
-    .eq("id", user.id)
-    .single();
+  try {
+    // Mitgliedsdaten abrufen
+    const { data: member, error } = await supabase
+      .from("members")
+      .select("username, role, status")
+      .eq("id", user.id)
+      .single();
 
-  if (error || !member) {
-    alert("Fehler beim Laden deiner Daten.");
-    window.location.href = "index.html";
-    return;
-  }
+    if (error || !member) {
+      alert("Fehler beim Laden deiner Daten.");
+      window.location.href = "index.html";
+      return;
+    }
 
-  document.getElementById("userName").textContent = member.username;
-  document.getElementById("userRole").textContent = member.role;
+    document.getElementById("userName").textContent = member.username;
+    document.getElementById("userRole").textContent = member.role;
 
-  if (member.status !== "active" && member.role !== "admin") {
-    document.querySelector("main").innerHTML = `
-      <div class="text-center" style="margin-top:5rem;">
-        <h2>⚓ Kein Zugriff</h2>
-        <p>Dein Konto ist noch nicht freigeschaltet.<br>
-        Bitte warte auf Freischaltung durch einen Admin.</p>
-      </div>`;
-    return;
-  }
+    // Zugriffskontrolle
+    if (member.status !== "active" && member.role !== "admin") {
+      dashboardContent.innerHTML = `
+        <main style="text-align:center; padding:3rem;">
+          <h1>⚓ Kein Zugriff</h1>
+          <p>Dein Konto ist noch nicht freigeschaltet.<br>
+          Bitte warte auf Freischaltung durch einen Admin.</p>
+        </main>`;
+      // Dashboard trotzdem einblenden (Ladebildschirm aus)
+      loadingScreen.style.display = "none";
+      dashboardContent.style.display = "block";
+      return;
+    }
 
-  // === News laden ===
-  await loadNews(member);
+    // === Alles erfolgreich: Dashboard laden ===
+    await loadNews(member);
 
-  // === Wenn Admin, Formular anzeigen ===
-  if (member.role === "admin") {
-    const formSection = document.getElementById("adminNewsForm");
-    formSection.classList.remove("hidden");
+    // Admin News-Formular anzeigen
+    if (member.role === "admin") {
+      const formSection = document.getElementById("adminNewsForm");
+      formSection.classList.remove("hidden");
+      const newsForm = document.getElementById("newsForm");
 
-    const newsForm = document.getElementById("newsForm");
-    newsForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("title").value.trim();
-      const content = document.getElementById("content").value.trim();
-      if (!title || !content) return alert("Bitte Titel und Inhalt angeben.");
+      newsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const content = document.getElementById("content").value.trim();
+        if (!title || !content) return alert("Bitte Titel und Inhalt angeben.");
 
-      const { error: insertError } = await supabase.from("news").insert({
-        title,
-        content,
-        author_name: member.username,
+        const { error: insertError } = await supabase.from("news").insert({
+          title,
+          content,
+          author_name: member.username,
+        });
+
+        if (insertError) {
+          alert("❌ Fehler beim Posten.");
+          console.error(insertError.message);
+        } else {
+          newsForm.reset();
+          await loadNews(member);
+        }
       });
+    }
 
-      if (insertError) {
-        alert("❌ Fehler beim Posten.");
-        console.error(insertError.message);
-      } else {
-        newsForm.reset();
-        await loadNews(member);
-      }
-    });
+    // Jetzt den Ladebildschirm ausblenden, Dashboard zeigen
+    loadingScreen.style.display = "none";
+    dashboardContent.style.display = "block";
+  } catch (err) {
+    console.error("Dashboard-Fehler:", err);
+    alert("❌ Fehler beim Laden des Dashboards.");
   }
 });
 
@@ -90,22 +110,23 @@ async function loadNews(member) {
   }
 
   list.innerHTML = data
-    .map((n) => `
-      <div class="news-item">
-        <h3>${n.title}</h3>
-        <p>${n.content}</p>
-        <small>von ${n.author_name || "unbekannt"} – 
-          ${new Date(n.created_at).toLocaleString()}</small>
-        ${
-          member.role === "admin"
-            ? `<br><button data-id="${n.id}" class="delete-btn">Löschen</button>`
-            : ""
-        }
-      </div>
-    `)
+    .map(
+      (n) => `
+        <div class="news-item">
+          <h3>${n.title}</h3>
+          <p>${n.content}</p>
+          <small>von ${n.author_name || "unbekannt"} – 
+            ${new Date(n.created_at).toLocaleString()}</small>
+          ${
+            member.role === "admin"
+              ? `<br><button data-id="${n.id}" class="delete-btn">Löschen</button>`
+              : ""
+          }
+        </div>`
+    )
     .join("");
 
-  // Löschen nur für Admins
+  // Nur Admin darf löschen
   if (member.role === "admin") {
     document.querySelectorAll(".delete-btn").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
