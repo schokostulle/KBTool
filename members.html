@@ -4,31 +4,60 @@
   <meta charset="UTF-8">
   <title>Mitgliederverwaltung</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="members.js"></script>
 </head>
 <body>
-  <aside class="menu">
-    <a href="dashboard.html">🏠 Dashboard</a>
-  </aside>
+  <!-- ⚓ WARTEBILDSCHIRM -->
+  <div id="loadingScreen">
+    <main style="text-align:center; padding:3rem;">
+      <h1>⚓ Lade Allianz-Daten...</h1>
+      <p>Bitte einen Moment Geduld.</p>
+    </main>
+  </div>
 
-  <main>
-    <h1>Mitglieder</h1>
-   <header class="topbar">
-  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+  <!-- ⚓ SEITENINHALT -->
+  <div id="pageContent" style="display:none; height:100%;">
+    <div class="container">
 
-  <button id="logoutBtn">Abmelden</button>
-</header>
-    <table id="membersTable" class="data-table">
-      <thead>
-        <tr>
-          <th>Benutzername</th>
-          <th>Rolle</th>
-          <th>Status</th>
-          <th>Beitritt</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
+      <!-- Linkes Menü -->
+      <aside class="menu">
+        <a href="dashboard.html">🏠 Dashboard</a>
+        <a href="reservierungen.html">🎯 Reservierungen</a>
+        <a href="karte.html">🗺️ Karte</a>
+        <a href="angriffe.html">⚔️ Angriffe</a>
+        <a href="kb.html">📜 Kriegsberichte</a>
+        <a href="flotten.html">🚢 Flotten</a>
+        <hr>
+        <a href="mitglieder.html" data-admin class="active">👥 Mitglieder</a>
+        <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+        <a href="csv.html" data-admin>📂 CSV-Daten</a>
+        <hr>
+        <button id="logoutBtn">Logout</button>
+      </aside>
+
+      <!-- Hauptbereich -->
+      <main>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
+            Eingeloggt als: <strong id="userName">–</strong> 
+            (<span id="userRole">–</span>)
+          </div>
+        </header>
+
+        <h1 class="text-left">Mitgliederverwaltung</h1>
+
+        <!-- ⚙️ Adminbereich -->
+        <section id="contentArea" style="margin-top:2rem;">
+          <h2>Allianz-Mitglieder</h2>
+          <p>Hier können Administratoren Mitglieder freischalten, blockieren oder Rollen anpassen.</p>
+
+          <div id="memberTableArea" style="margin-top:1.5rem;">
+            <p>Lade Mitgliederliste...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="member.js"></script>
 </body>
 </html>
