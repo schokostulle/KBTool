@@ -1,54 +1,59 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard – Allianz</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="dashboard.js"></script>
+  <meta charset="UTF-8" />
+  <title>Allianz-Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- ==================== HEADER ==================== -->
+  <header class="topbar">
+    <div class="user-info">
+      <span id="userName">–</span> (<span id="userRole">–</span>)
+    </div>
 
-  <div id="loadingScreen">
-    <main style="text-align:center; padding:3rem;">
-      <h1>⚓ Lade Allianz-Daten...</h1>
-      <p>Bitte einen Moment Geduld.</p>
+    <h1 class="page-title">⚓ Allianz-Dashboard ⚓</h1>
+
+    <div class="logout-area">
+      <button id="logoutBtn">Abmelden</button>
+    </div>
+  </header>
+
+  <!-- ==================== HAUPT-LAYOUT ==================== -->
+  <div class="container">
+    <!-- Linkes Menü -->
+    <nav class="sidebar">
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="reservations.html">Reservierungen</a></li>
+        <li><a href="fleet.html">Flotten</a></li>
+        <li><a href="battle_reports.html">Kampfberichte</a></li>
+        <li><a href="attacks.html">Angriffe</a></li>
+        <li><a href="map.html">Karte</a></li>
+        <li><a href="members.html">Mitglieder</a></li>
+        <li><a href="diplomacy.html">Diplomatie</a></li>
+        <li><a href="csv.html">CSV-Upload</a></li>
+      </ul>
+    </nav>
+
+    <!-- Hauptinhalt -->
+    <main class="content">
+      <section class="news-section">
+        <h2>Aktuelle Ankündigungen</h2>
+        <div id="newsList">Lade Ankündigungen...</div>
+      </section>
+
+      <section id="adminNewsForm" style="display:none;">
+        <h3>Neue Ankündigung (nur Admin)</h3>
+        <form id="newsForm">
+          <input id="title" type="text" placeholder="Titel" required />
+          <textarea id="content" placeholder="Nachricht an die Allianz..." required></textarea>
+          <button type="submit">Veröffentlichen</button>
+        </form>
+      </section>
     </main>
   </div>
 
-  <div id="dashboardContent" style="display:none;">
-
-  <aside class="menu">
-    <a href="dashboard.html">🏠 Dashboard</a>
-    <a href="reservations.html">📜 Reservierungen</a>
-    <a href="fleet.html">🚢 Flotte</a>
-    <a href="battle_reports.html">⚔️ Kampfberichte</a>
-    <a href="diplomacy.html">🕊️ Diplomatie</a>
-    <a href="members.html">👥 Mitglieder</a>
-    <a href="csv.html">📂 CSV Upload</a>
-  </aside>
-
-  <main>
-    <h1>Allianz-Dashboard</h1>
-
-    <header class="topbar">
-  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
-
-  <button id="logoutBtn">Abmelden</button>
-</header>
-
-    <section>
-      <h2>Aktuelle Ankündigungen</h2>
-      <div id="newsList">Lade Ankündigungen...</div>
-    </section>
-
-    <section id="adminNewsForm" style="display:none;">
-      <h3>Neue Ankündigung (nur Admin)</h3>
-      <form id="newsForm">
-        <input id="title" type="text" placeholder="Titel" required>
-        <textarea id="content" placeholder="Nachricht an die Allianz..." required></textarea>
-        <button type="submit">Veröffentlichen</button>
-      </form>
-    </section>
-  </main>
+  <script type="module" src="dashboard.js"></script>
 </body>
 </html>
