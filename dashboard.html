@@ -6,6 +6,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<div id="loadingScreen">
+    <main style="text-align:center; padding:3rem;">
+      <h1>⚓ Lade Allianz-Daten...</h1>
+      <p>Bitte einen Moment Geduld.</p>
+    </main>
+  </div>
+
+  <div id="dashboardContent" style="display:none;">
+
   <!-- ====== LINKSMENÜ ====== -->
   <aside class="menu">
     <a href="dashboard.html" class="active">🏠 Dashboard</a>
@@ -53,3 +62,44 @@
   <script type="module" src="dashboard.js"></script>
 </body>
 </html>
+
+
+
+
+
+<body>
+  <div id="loadingScreen">
+    <main style="text-align:center; padding:3rem;">
+      <h1>⚓ Lade Allianz-Daten...</h1>
+      <p>Bitte einen Moment Geduld.</p>
+    </main>
+  </div>
+
+  <div id="dashboardContent" style="display:none;">
+    <!-- dein bisheriger Dashboard-Inhalt -->
+    <header class="topbar">
+      <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+      <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
+    </header>
+
+    <main>
+      <h1>Allianz-Dashboard</h1>
+
+      <section>
+        <h2>Aktuelle Ankündigungen</h2>
+        <div id="newsList">Lade Ankündigungen...</div>
+      </section>
+
+      <section id="adminNewsForm" style="display:none;">
+        <h3>Neue Ankündigung (nur Admin)</h3>
+        <form id="newsForm">
+          <input id="title" type="text" placeholder="Titel" required>
+          <textarea id="content" placeholder="Nachricht an die Allianz..." required></textarea>
+          <button type="submit">Veröffentlichen</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
