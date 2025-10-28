@@ -19,15 +19,15 @@ registerForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { username } },
   });
 
   if (error) {
-    console.error("Fehler bei Registrierung:", error.message);
     alert("❌ Registrierung fehlgeschlagen:\n" + error.message);
+    console.error(error);
     return;
   }
 
@@ -57,28 +57,42 @@ loginForm?.addEventListener("submit", async (e) => {
   });
 
   if (error) {
-    console.error("Fehler beim Login:", error.message);
     alert("❌ Anmeldung fehlgeschlagen:\n" + error.message);
+    console.error(error);
     return;
   }
 
-  console.log("✅ Login erfolgreich. Weiterleitung zur Lade-Seite...");
-  // Verzögerung, damit Supabase-Session gesetzt wird, bevor redirect erfolgt
-  setTimeout(() => {
-    window.location.href = "loadingscreen.html";
-  }, 300);
+  console.log("✅ Login erfolgreich. Warte auf Session...");
+
+  // Warte aktiv, bis Supabase-Session wirklich existiert
+  let sessionReady = false;
+  for (let i = 0; i < 10; i++) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData?.session) {
+      sessionReady = true;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+
+  if (!sessionReady) {
+    alert("⚠️ Sitzung konnte nicht initialisiert werden. Bitte erneut versuchen.");
+    return;
+  }
+
+  console.log("✅ Session aktiv – weiter zur Lade-Seite.");
+  window.location.href = "loadingscreen.html";
 });
 
 // ===========================================================
-// ⚓ Automatische Session-Wiederherstellung
+// ⚓ Automatische Weiterleitung bei bestehender Session
 // ===========================================================
-// Wenn der Nutzer bereits eingeloggt ist → direkt weiterleiten
 (async () => {
-  const { data, error } = await supabase.auth.getSession();
+  const { data } = await supabase.auth.getSession();
   const session = data?.session;
 
   if (session && window.location.pathname.endsWith("index.html")) {
-    console.log("🔁 Benutzer bereits eingeloggt – Weiterleitung zur Lade-Seite.");
+    console.log("🔁 Benutzer bereits eingeloggt – Weiterleitung...");
     window.location.href = "loadingscreen.html";
   }
 })();
