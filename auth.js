@@ -7,32 +7,45 @@ const registerForm = document.getElementById("registerForm");
 // ===========================================================
 // ⚓ Registrierung
 // ===========================================================
-registerForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
+registerForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
   const email = `${username}@bullfrog.fake`;
 
-  if (!username || !password) {
-    alert("Bitte Benutzernamen und Passwort eingeben.");
-    return;
-  }
-
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    options: { data: { username } }
   });
+  if (error) return alert(error.message);
 
-  if (error) {
-    alert("❌ Registrierung fehlgeschlagen:\n" + error.message);
-    console.error(error);
-    return;
+  // Warten bis der User-Context da ist
+  let userId = null;
+  for (let i = 0; i < 20; i++) {
+    const { data: u } = await supabase.auth.getUser();
+    userId = u?.user?.id || null;
+    if (userId) break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  if (!userId) return alert('Registrierung ok, aber Session noch nicht verfügbar. Bitte erneut einloggen.');
+
+  // WICHTIG: eigenen members-Eintrag anlegen (RLS-Policy erlaubt das jetzt)
+  const { error: insErr } = await supabase.from('members').insert({
+    id: userId,
+    username: username,
+    role: 'member',
+    status: 'blocked'
+  });
+  if (insErr) {
+    console.warn('Hinweis: Konnte members-Eintrag nicht anlegen:', insErr.message);
+    // Nicht fatal für die Registrierung – Admin kann später freischalten
   }
 
-  alert("✅ Registrierung erfolgreich.\nBitte auf Freischaltung durch einen Admin warten.");
-  registerForm.reset();
+  alert('Registrierung erfolgreich – bitte auf Freischaltung warten.');
+  // optional: weiterleiten
+  window.location.href = 'loadingscreen.html';
 });
 
 // ===========================================================
