@@ -1,256 +1,234 @@
-/* ===========================================================
-   ⚓ Allianz-Tool Style (Maritim & Minimalistisch)
-   =========================================================== */
-
-/* Grundlayout */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background-color: #1b1f23; /* dunkles Marinegrau */
-  color: #d9cba3;           /* sandfarben */
-  font-family: 'Courier New', monospace;
+/* ===========================
+   ⚓ ALLGEMEIN
+=========================== */
+:root {
+  --marine-dark: #001f3f;
+  --marine-mid: #003366;
+  --marine-light: #004b99;
+  --sand: #f8f9fa;
+  --text: #111;
 }
 
-/* Allgemeine Typografie */
-h1, h2, h3 {
-  color: #e8e0c5;
-  margin-top: 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+* {
+  box-sizing: border-box;
 }
 
-a {
-  color: #d9cba3;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-
-/* Layout: Seitenstruktur */
 body {
-  display: flex;
-  flex-direction: row;
+  margin: 0;
+  font-family: "Trebuchet MS", sans-serif;
+  background: var(--sand);
+  color: var(--text);
 }
 
-main {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-/* Seitenmenü (linke Navigation) */
-aside.menu {
-  width: 200px;
-  background-color: #2a2e32;
-  border-right: 2px solid #3a4045;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-}
-
-aside.menu a {
-  display: block;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.25rem;
-  border-radius: 4px;
-  background-color: #2e3439;
-  text-align: left;
-  font-weight: bold;
-  transition: background-color 0.2s ease-in-out;
-}
-aside.menu a:hover {
-  background-color: #3a4045;
-}
-
-/* Tabellen */
-table.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  background-color: #24282c;
-}
-
-table.data-table th,
-table.data-table td {
-  border: 1px solid #3a4045;
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-}
-
-table.data-table th {
-  background-color: #2e3439;
-  color: #f0e9cf;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-}
-
-table.data-table tr:nth-child(even) {
-  background-color: #2a2e32;
-}
-
-table.data-table tr:hover {
-  background-color: #383d42;
-}
-
-/* Formulare */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 400px;
-}
-
-input, textarea, button {
-  font-family: inherit;
-  font-size: 1rem;
-  border: 1px solid #3a4045;
-  border-radius: 4px;
-  padding: 0.5rem;
-  background-color: #24282c;
-  color: #d9cba3;
-}
-
-textarea {
-  resize: vertical;
-}
-
-button {
-  cursor: pointer;
-  background-color: #3a4045;
-  color: #f0e9cf;
-  border: 1px solid #51565a;
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-button:hover {
-  background-color: #51565a;
-}
-
-/* Nachrichten (Dashboard-News) */
-.news-item {
-  background-color: #2e3439;
-  border: 1px solid #3a4045;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-.news-item h3 {
-  margin: 0 0 0.5rem 0;
-  color: #e8e0c5;
-}
-.news-item p {
-  margin: 0.25rem 0 0.5rem 0;
-}
-.news-item small {
-  color: #9a9485;
-}
-
-/* Kampfberichte */
-.report {
-  background-color: #24282c;
-  border: 1px solid #3a4045;
-  border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-.report h3 {
-  margin: 0 0 0.5rem 0;
-}
-.report pre {
-  background: #1b1f23;
-  border: 1px solid #3a4045;
-  padding: 0.75rem;
-  overflow-x: auto;
-}
-
-/* Login & Register (zentriert) */
-.centered {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 2rem;
-}
-
-.login-section, .register-section {
-  background-color: #2a2e32;
-  padding: 1.5rem 2rem;
-  border: 1px solid #3a4045;
-  border-radius: 6px;
-  width: 300px;
-}
-
-hr {
-  width: 50%;
-  border: 1px solid #3a4045;
-}
-
-/* Scrollbar (dezent) */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background-color: #3a4045;
-  border-radius: 4px;
-}
-
-/* Hilfsklassen */
-.hidden {
-  display: none !important;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.small {
-  font-size: 0.85rem;
-  color: #aaa;
-}
-.auth-box {
-  background-color: #2a2e32;
-  padding: 2rem;
-  border: 1px solid #3a4045;
-  border-radius: 6px;
-  width: 320px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-}
-
-.auth-box h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.auth-box .switch-link {
-  color: #d9cba3;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.auth-box .switch-link:hover {
-  color: #f0e9cf;
-}
+/* ===========================
+   ⚓ HEADER / TOPBAR
+=========================== */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #001f3f;
+  background: var(--marine-dark);
   color: #fff;
   padding: 0.5rem 1rem;
+  border-bottom: 3px solid var(--marine-light);
 }
 
-.topbar-right button {
-  background: #003366;
-  color: white;
+.topbar .page-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.user-info {
+  font-size: 0.9rem;
+}
+
+.logout-area button {
+  background: var(--marine-light);
   border: none;
+  color: white;
   padding: 0.4rem 0.8rem;
   border-radius: 0.4rem;
   cursor: pointer;
 }
 
-.topbar-right button:hover {
-  background: #004b99;
+.logout-area button:hover {
+  background: var(--marine-mid);
+}
+
+/* ===========================
+   ⚓ LAYOUT: SIDEBAR + CONTENT
+=========================== */
+.container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: var(--marine-mid);
+  color: #fff;
+  padding-top: 1rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar li {
+  margin: 0;
+}
+
+.sidebar a {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.7rem 1rem;
+  transition: background 0.2s;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: var(--marine-light);
+}
+
+/* Hauptinhalt */
+.content {
+  flex: 1;
+  padding: 1rem 2rem;
+  overflow-y: auto;
+  background: #fdfdfd;
+}
+
+/* ===========================
+   ⚓ NEWS / ANKÜNDIGUNGEN
+=========================== */
+.news-section h2 {
+  margin-top: 0;
+  color: var(--marine-dark);
+  border-bottom: 2px solid var(--marine-light);
+  padding-bottom: 0.3rem;
+}
+
+.news-item {
+  background: #ffffff;
+  border-left: 4px solid var(--marine-light);
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.news-item h3 {
+  margin: 0 0 0.3rem 0;
+}
+
+.news-item small {
+  color: #555;
+}
+
+/* ===========================
+   ⚓ FORMULARE
+=========================== */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+form input,
+form textarea,
+form select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+form button {
+  background: var(--marine-light);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+form button:hover {
+  background: var(--marine-mid);
+}
+
+/* ===========================
+   ⚓ TABELLEN (z. B. Reservierungen, Flotten, Diplomatie)
+=========================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+th {
+  background: var(--marine-mid);
+  color: #fff;
+}
+
+tr:nth-child(even) {
+  background: #f0f4f8;
+}
+
+tr:hover {
+  background: #e2ecf5;
+}
+
+/* ===========================
+   ⚓ BUTTONS & ELEMENTE
+=========================== */
+button {
+  font-family: inherit;
+}
+
+a.button {
+  display: inline-block;
+  background: var(--marine-light);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+a.button:hover {
+  background: var(--marine-mid);
+}
+
+/* ===========================
+   ⚓ RESPONSIVE DESIGN
+=========================== */
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .sidebar a {
+    flex: 1;
+    text-align: center;
+  }
 }
