@@ -31,12 +31,13 @@
 <script type="module">
   import { supabase } from "./supabase.js";
 
-  // Wartet zuverlässig auf eine Session (Event + Polling, max ~3s)
+  // Warten, bis Session vorhanden ist – entweder bereits da (getSession)
+  // oder kommt gleich rein (onAuthStateChange). Max. ~3s Geduld.
   function waitForSession({ maxMs = 3000, pollMs = 150 } = {}) {
     return new Promise(async (resolve) => {
       let resolved = false;
 
-      // 1) Live-Event: falls die Session gleich reinkommt
+      // 1) Live-Listener: feuert, wenn sich die Session ändert / ankommt
       const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!resolved && session) {
           resolved = true;
@@ -45,18 +46,17 @@
         }
       });
 
-      // 2) Polling: falls Session schon im Storage liegt
-      const start = Date.now();
+      // 2) Polling: falls Session schon existiert (z. B. aus localStorage)
+      const started = Date.now();
       (async function poll() {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) console.warn("getSession warn:", error.message);
+        const { data } = await supabase.auth.getSession();
         if (!resolved && data?.session) {
           resolved = true;
           sub.subscription.unsubscribe();
           resolve(data.session);
           return;
         }
-        if (Date.now() - start >= maxMs) {
+        if (Date.now() - started >= maxMs) {
           if (!resolved) {
             resolved = true;
             sub.subscription.unsubscribe();
@@ -75,10 +75,10 @@
 
     if (session) {
       console.log("✅ Session aktiv:", session.user?.id);
-      // replace vermeidet „Zurück“-Schleife zur Loading-Seite
+      // location.replace vermeidet „Zurück zur Load-Seite“ im Verlauf:
       location.replace("./dashboard.html");
     } else {
-      console.warn("⚠️ Keine Session – zurück zur Anmeldung.");
+      console.warn("⚠️ Keine Session gefunden – zurück zur Anmeldung.");
       location.replace("./index.html");
     }
   })();
