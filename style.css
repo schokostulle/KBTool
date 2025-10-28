@@ -302,22 +302,40 @@ aside.menu a.active {
   z-index: 1;
 }
 
+/* --- Kartenstil: News & Ankündigungen (Dashboard) --- */
 .card {
-  background-color: #e8e5d7 !important;   /* warmes Pergament-Beige */
-  border: 1px solid #9ba4a5 !important;   /* graublauer Rahmen */
-  border-radius: 0.5rem !important;
+  background-color: #f5f4ef !important;     /* leicht aufgehellt – wirkt wie Papier */
+  border: 1px solid #b6b8b1 !important;     /* sanfter graugrüner Rahmen */
+  border-radius: 0.6rem !important;
   padding: 1rem 1.2rem !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important; /* subtiler Schatten */
 }
 
+/* Überschriften im Karteninhalt */
 .card h3 {
-  color: #002c40 !important;              /* Marineblau wie Überschriften */
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+  color: inherit !important;                 /* gleiche Textfarbe wie restlicher Content */
+  font-weight: 600;
 }
 
+/* Metainfos (Autor, Datum) */
 .card .muted {
-  color: #555e60 !important;              /* gedämpftes Grau-Blau */
+  font-size: 0.85rem;
+  color: #4a4a4a !important;                 /* gedämpft, aber gut lesbar */
 }
 
+/* Nachrichtentext */
 .card p {
-  color: #222 !important;
+  color: inherit !important;                 /* exakt gleiche Farbe wie sonstiger Text */
+  line-height: 1.45;
+  margin: 0.3rem 0 0;
+}
+
+/* dezente Hervorhebung bei Hover (nur optisch) */
+.card:hover {
+  background-color: #faf9f6 !important;      /* leicht heller */
+  transform: translateY(-1px);
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
