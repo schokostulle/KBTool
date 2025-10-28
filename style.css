@@ -240,3 +240,31 @@ aside.menu a.active {
   background-color: #51565a;
   border-color: #6b7277;
 }
+
+/* ===========================================================
+   ⚓ Layout-Fix: Menü + Hauptinhalt nebeneinander
+   =========================================================== */
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Menü links – behält Stil, bekommt aber feste Spalte */
+.menu {
+  flex: 0 0 220px;          /* feste Breite */
+  height: 100vh;            /* gesamte Höhe */
+  overflow-y: auto;          /* scrollbar falls zu lang */
+  position: sticky;          /* bleibt beim Scrollen */
+  top: 0;
+  z-index: 10;
+}
+
+/* Hauptinhalt rechts – nimmt restlichen Platz ein */
+.container main {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+}
