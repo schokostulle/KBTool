@@ -278,3 +278,19 @@ aside.menu a.active {
   text-align: left;
   margin-left: 0;
 }
+
+.btn-back {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #ccc;
+  background-color: #002b36; /* maritimes Dunkelblau */
+  color: #fff;
+  font-family: inherit;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background-color: #004d66; /* etwas helleres Blau beim Hover */
+}
