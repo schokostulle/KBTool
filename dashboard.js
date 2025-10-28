@@ -3,6 +3,9 @@ import { supabase, getCurrentUser, logout } from "./supabase.js";
 document.addEventListener("DOMContentLoaded", async () => {
   const dashboardContent = document.getElementById("dashboardContent");
   const logoutBtn = document.getElementById("logoutBtn");
+  const loadingScreen = document.getElementById("loadingScreen");
+if (loadingScreen) loadingScreen.style.display = "none";
+if (dashboardContent) dashboardContent.style.display = "block";
 
   logoutBtn?.addEventListener("click", logout);
 
