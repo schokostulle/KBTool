@@ -23,10 +23,18 @@ export async function getCurrentUser() {
   return data?.user || null;
 }
 
-export async function logout(redirect = "index.html") {
+export async function logout(evOrUrl = 'index.html') {
+  // Falls als Event-Handler aufgerufen: Event stoppen und Default-URL nutzen
+  if (evOrUrl && typeof evOrUrl === 'object' && 'preventDefault' in evOrUrl) {
+    evOrUrl.preventDefault?.();
+    evOrUrl = 'index.html';
+  }
+  const redirect = typeof evOrUrl === 'string' ? evOrUrl : 'index.html';
+
   const { error } = await supabase.auth.signOut();
   if (error) console.error("Logout-Fehler:", error.message);
-  location.href = redirect;
+
+  location.assign(redirect);
 }
 
 // --- Auto-Logout bei Inaktivität ---
