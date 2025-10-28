@@ -1,58 +1,82 @@
-// auth.js
-import { supabase } from './supabase.js';
+import { supabase } from "./supabase.js";
 
-console.log("✅ auth.js loaded and active");
+// === Formular-Referenzen ===
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
 
-// Login & Registration forms
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-
-console.log("Login form found:", !!loginForm, "Register form found:", !!registerForm);
-
-// Registrierung
-registerForm?.addEventListener('submit', async (e) => {
+// ===========================================================
+// ⚓ Registrierung
+// ===========================================================
+registerForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  console.log("📦 Starting registration...");
 
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
   const email = `${username}@bullfrog.fake`;
 
-  console.log("→ User:", username, "| Email:", email);
+  if (!username || !password) {
+    alert("Bitte Benutzernamen und Passwort eingeben.");
+    return;
+  }
 
+  // Supabase Registrierung
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } }
+    options: { data: { username } },
   });
 
   if (error) {
-    console.error("❌ Registration failed:", error.message);
-    alert(error.message);
-  } else {
-    console.log("✅ Registration success:", data);
-    alert('Registrierung erfolgreich – bitte auf Freischaltung warten.');
+    console.error("Fehler bei Registrierung:", error.message);
+    alert("❌ Registrierung fehlgeschlagen:\n" + error.message);
+    return;
   }
+
+  alert("✅ Registrierung erfolgreich.\nBitte auf Freischaltung durch einen Admin warten.");
+  registerForm.reset();
 });
 
-// Login
-loginForm?.addEventListener('submit', async (e) => {
+// ===========================================================
+// ⚓ Login
+// ===========================================================
+loginForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  console.log("🔐 Starting login...");
 
-  const username = document.getElementById('loginName').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
+  const username = document.getElementById("loginName").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
   const email = `${username}@bullfrog.fake`;
 
-  console.log("→ Login attempt:", email);
+  if (!username || !password) {
+    alert("Bitte Benutzernamen und Passwort eingeben.");
+    return;
+  }
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  // Supabase Login
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    console.error("❌ Login error:", error.message);
-    alert(error.message);
-  } else {
-    console.log("✅ Login success:", data);
-    window.location.href = "dashboard.html";
+    console.error("Fehler beim Login:", error.message);
+    alert("❌ Anmeldung fehlgeschlagen:\n" + error.message);
+    return;
   }
+
+  // Erfolgreich -> weiter zum Ladebildschirm
+  window.location.href = "loadingscreen.html";
 });
+
+// ===========================================================
+// ⚓ Automatische Session-Wiederherstellung (optional)
+// ===========================================================
+// Diese Logik sorgt dafür, dass ein eingeloggter Nutzer, der zurück auf index.html geht,
+// automatisch wieder in loadingscreen.html weitergeleitet wird.
+(async () => {
+  const { data, error } = await supabase.auth.getSession();
+  const session = data?.session;
+  if (session) {
+    console.log("✅ Session aktiv – leite zum Dashboard weiter.");
+    window.location.href = "loadingscreen.html";
+  }
+})();
