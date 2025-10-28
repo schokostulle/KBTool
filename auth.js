@@ -19,7 +19,6 @@ registerForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Supabase Registrierung
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -51,7 +50,7 @@ loginForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Supabase Login
+  // Login-Versuch
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -63,20 +62,23 @@ loginForm?.addEventListener("submit", async (e) => {
     return;
   }
 
-  // Erfolgreich -> weiter zum Ladebildschirm
-  window.location.href = "loadingscreen.html";
+  console.log("✅ Login erfolgreich. Weiterleitung zur Lade-Seite...");
+  // Verzögerung, damit Supabase-Session gesetzt wird, bevor redirect erfolgt
+  setTimeout(() => {
+    window.location.href = "loadingscreen.html";
+  }, 300);
 });
 
 // ===========================================================
-// ⚓ Automatische Session-Wiederherstellung (optional)
+// ⚓ Automatische Session-Wiederherstellung
 // ===========================================================
-// Diese Logik sorgt dafür, dass ein eingeloggter Nutzer, der zurück auf index.html geht,
-// automatisch wieder in loadingscreen.html weitergeleitet wird.
+// Wenn der Nutzer bereits eingeloggt ist → direkt weiterleiten
 (async () => {
   const { data, error } = await supabase.auth.getSession();
   const session = data?.session;
-  if (session) {
-    console.log("✅ Session aktiv – leite zum Dashboard weiter.");
+
+  if (session && window.location.pathname.endsWith("index.html")) {
+    console.log("🔁 Benutzer bereits eingeloggt – Weiterleitung zur Lade-Seite.");
     window.location.href = "loadingscreen.html";
   }
 })();
