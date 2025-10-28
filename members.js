@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   logoutBtn?.addEventListener("click", logout);
 
-  // === Auth check ===
+  // === Auth prüfen ===
   const user = await getCurrentUser();
   if (!user) {
-    alert("❌ No active session. Please log in again.");
+    alert("❌ Keine aktive Sitzung. Bitte erneut anmelden.");
     window.location.href = "index.html";
     return;
   }
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     .single();
 
   if (error || !currentUser) {
-    alert("Error loading your member data.");
+    alert("Fehler beim Laden deiner Daten.");
     window.location.href = "index.html";
     return;
   }
@@ -29,62 +29,129 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("userName").textContent = currentUser.username;
   document.getElementById("userRole").textContent = currentUser.role;
 
-  // Admin-only access
+  // Adminpflicht
   if (currentUser.role !== "admin") {
     document.querySelector("main").innerHTML = `
       <main style="text-align:center; padding:3rem;">
-        <h1>⚓ No Access</h1>
-        <p>Only administrators can access this page.</p>
+        <h1>⚓ Kein Zugriff</h1>
+        <p>Nur Administratoren dürfen diese Seite aufrufen.</p>
       </main>`;
     return;
   }
 
-  // === Load all members ===
+  // === Mitgliederliste laden ===
   await loadMembers(tableArea);
 });
 
 // ===========================================================
-// ⚓ Load member list
+// ⚓ Mitgliederliste laden
 // ===========================================================
 async function loadMembers(container) {
   const { data, error } = await supabase
     .from("members")
-    .select("id, username, role, status, created_at")
+    .select("id, username, role, status, deleted_at, created_at")
     .order("created_at", { ascending: true });
 
   if (error) {
-    container.innerHTML = `<p>❌ Error loading members.</p>`;
+    container.innerHTML = `<p>❌ Fehler beim Laden der Mitglieder.</p>`;
     console.error(error.message);
     return;
   }
 
   if (!data || data.length === 0) {
-    container.innerHTML = `<p>No members found.</p>`;
+    container.innerHTML = `<p>Keine Mitglieder gefunden.</p>`;
     return;
   }
 
+  // Tabellenzeilen mit Buttons
   const rows = data
-    .map(
-      (m) => `
-        <tr>
-          <td>${m.username}</td>
+    .map((m) => {
+      const deleted = m.deleted_at !== null;
+      const isActive = m.status === "active";
+      const isAdmin = m.role === "admin";
+
+      return `
+        <tr ${deleted ? 'style="opacity:0.5;"' : ""}>
+          <td>${m.username}${deleted ? " (gelöscht)" : ""}</td>
           <td>${m.role}</td>
           <td>${m.status}</td>
           <td>${new Date(m.created_at).toLocaleDateString()}</td>
-        </tr>`
-    )
+          <td>
+            ${
+              deleted
+                ? "-"
+                : `
+              <button class="btn-action" data-action="activate" data-id="${m.id}">Aktivieren</button>
+              <button class="btn-action" data-action="block" data-id="${m.id}">Blockieren</button>
+              <button class="btn-action" data-action="role" data-id="${m.id}">${
+                    isAdmin ? "Zu Member" : "Zu Admin"
+                  }</button>
+              <button class="btn-action delete" data-action="delete" data-id="${m.id}">Löschen</button>
+              `
+            }
+          </td>
+        </tr>`;
+    })
     .join("");
 
   container.innerHTML = `
     <table class="data-table">
       <thead>
         <tr>
-          <th>Username</th>
-          <th>Role</th>
+          <th>Benutzername</th>
+          <th>Rolle</th>
           <th>Status</th>
-          <th>Registered</th>
+          <th>Registriert</th>
+          <th>Aktionen</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>`;
+
+  // Eventlistener für Buttons
+  document.querySelectorAll(".btn-action").forEach((btn) =>
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      const action = e.target.dataset.action;
+      await handleAction(id, action);
+      await loadMembers(container); // Tabelle neu laden
+    })
+  );
+}
+
+// ===========================================================
+// ⚙️ Aktionen: Aktivieren / Blockieren / Rolle ändern / Löschen
+// ===========================================================
+async function handleAction(id, action) {
+  let updateData = {};
+
+  switch (action) {
+    case "activate":
+      updateData = { status: "active" };
+      break;
+    case "block":
+      updateData = { status: "blocked" };
+      break;
+    case "role":
+      // aktuelle Rolle abfragen
+      const { data: member } = await supabase
+        .from("members")
+        .select("role")
+        .eq("id", id)
+        .single();
+      updateData = { role: member.role === "admin" ? "member" : "admin" };
+      break;
+    case "delete":
+      if (!confirm("Diesen Benutzer wirklich löschen (Soft-Delete)?")) return;
+      updateData = { deleted_at: new Date().toISOString() };
+      break;
+    default:
+      return;
+  }
+
+  const { error } = await supabase.from("members").update(updateData).eq("id", id);
+  if (error) {
+    console.error("❌ Fehler bei Aktion:", error.message);
+    alert("Aktion konnte nicht ausgeführt werden.");
+  }
 }
