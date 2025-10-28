@@ -52,9 +52,14 @@
 
       const user = session.user;
       console.log("✅ Session aktiv:", user.email);
+console.log("🔍 Suche Member mit ID:", user.id);
 
-      // Mitgliedsdaten abrufen
-      const { data: member, error } = await supabase
-        .from("members")
-        .select("status")
-        .eq("id", user
+const { data: member, error } = await supabase
+  .from("members")
+  .select("id, status")
+  .eq("id", user.id)
+  .maybeSingle();
+
+console.log("📦 Member Query Result:", member, "Error:", error);
+
+     
