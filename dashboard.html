@@ -15,54 +15,57 @@
   </div>
 
   <!-- ⚓ DASHBOARD-INHALT -->
-  <div id="dashboardContent" style="display:none;">
+  <div id="dashboardContent" style="display:none; height:100%;">
     
-    <!-- Linkes Menü -->
-    <aside class="menu">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="reservierungen.html">🎯 Reservierungen</a>
-      <a href="karte.html">🗺️ Karte</a>
-      <a href="angriffe.html">⚔️ Angriffe</a>
-      <a href="kb.html">📜 Kriegsberichte</a>
-      <a href="flotten.html">🚢 Flotten</a>
-      <hr>
-      <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
-      <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
-      <a href="csv.html" data-admin>📂 CSV-Daten</a>
-      <hr>
-      <button id="logoutBtn">Logout</button>
-    </aside>
+    <!-- Neuer flex-Container für Menü + Inhalt -->
+    <div class="container">
 
-    <!-- Hauptbereich -->
-    <main>
-      <!-- Header -->
-      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <div>
-          Eingeloggt als: <strong id="userName">–</strong> 
-          (<span id="userRole">–</span>)
-        </div>
-        <button id="logoutBtn">Abmelden</button>
-      </header>
+      <!-- Linkes Menü -->
+      <aside class="menu">
+        <a href="dashboard.html">🏠 Dashboard</a>
+        <a href="reservierungen.html">🎯 Reservierungen</a>
+        <a href="karte.html">🗺️ Karte</a>
+        <a href="angriffe.html">⚔️ Angriffe</a>
+        <a href="kb.html">📜 Kriegsberichte</a>
+        <a href="flotten.html">🚢 Flotten</a>
+        <hr>
+        <a href="mitglieder.html" data-admin>👥 Mitglieder</a>
+        <a href="diplomatie.html" data-admin>🕊️ Diplomatie</a>
+        <a href="csv.html" data-admin>📂 CSV-Daten</a>
+        <hr>
+        <button id="logoutBtn">Logout</button>
+      </aside>
 
-      <!-- Überschrift -->
-      <h1 class="text-left">Allianz-Dashboard</h1>
+      <!-- Hauptbereich -->
+      <main>
+        <!-- Header -->
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
+            Eingeloggt als: <strong id="userName">–</strong> 
+            (<span id="userRole">–</span>)
+          </div>
+        </header>
 
-      <!-- News -->
-      <section style="margin-top:2rem;">
-        <h2>Aktuelle News & Ankündigungen</h2>
-        <div id="newsList">Lade Ankündigungen...</div>
-      </section>
+        <!-- Überschrift -->
+        <h1 class="text-left">Allianz-Dashboard</h1>
 
-      <!-- Admin: News posten -->
-      <section id="adminNewsForm" class="hidden" style="margin-top:2rem;">
-        <h3>Neue Ankündigung posten</h3>
-        <form id="newsForm">
-          <input id="title" type="text" placeholder="Titel" required>
-          <textarea id="content" rows="4" placeholder="Nachricht an die Allianz..." required></textarea>
-          <button type="submit">Veröffentlichen</button>
-        </form>
-      </section>
-    </main>
+        <!-- News -->
+        <section style="margin-top:2rem;">
+          <h2>Aktuelle News & Ankündigungen</h2>
+          <div id="newsList">Lade Ankündigungen...</div>
+        </section>
+
+        <!-- Admin: News posten -->
+        <section id="adminNewsForm" class="hidden" style="margin-top:2rem;">
+          <h3>Neue Ankündigung posten</h3>
+          <form id="newsForm">
+            <input id="title" type="text" placeholder="Titel" required>
+            <textarea id="content" rows="4" placeholder="Nachricht an die Allianz..." required></textarea>
+            <button type="submit">Veröffentlichen</button>
+          </form>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script type="module" src="dashboard.js"></script>
