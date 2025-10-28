@@ -2,18 +2,12 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Allianz-Tool</title>
+  <title><!-- Seitentitel hier --></title>
   <link rel="stylesheet" href="style.css">
 </head>
-
-<body data-role="member"> <!-- oder data-role="admin" oder data-role=["member", "admin"] -->
-  <aside class="sidebar">
-    <div class="logo">
-      ⚓ <span>Allianz-Tool</span>
-    </div>
-
-    <nav>
+<body>
+  <!-- ====== LINKSMENÜ ====== -->
+  <aside class="menu">
       <a href="dashboard.html">🏠 Dashboard</a>
       <a href="reservierungen.html">🎯 Reservierungen</a>
       <a href="karte.html">🗺️ Karte</a>
@@ -26,32 +20,28 @@
       <a href="csv.html" data-admin>📂 CSV-Daten</a>
       <hr>
       <button id="logoutBtn">Logout</button>
-    </nav>
   </aside>
 
+  <!-- ====== HAUPTINHALT ====== -->
   <main>
-    <header class="topbar">
-      <div id="user-info"></div>
-      <h1>Dashboard</h1>
+    <!-- Header: Userinfo + Logout -->
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div>
+        Eingeloggt als: <strong id="userName">–</strong> 
+        (<span id="userRole">–</span>)
+      </div>
+      <button id="logoutBtn">Abmelden</button>
     </header>
 
-    <section class="content">
-      <p>Willkommen im Allianz-Tool.</p>
+    <!-- Zentrale Überschrift -->
+    <h1 class="text-center"><!-- Überschrift hier --></h1>
+
+    <!-- Seiteninhalt -->
+    <section id="pageContent" style="margin-top:2rem;">
+      <!-- Hier kommt der individuelle Seiteninhalt rein -->
     </section>
   </main>
 
-  <script type="module" src="authguard.js"></script>
-  <script>
-    // Admin-Links ausblenden, wenn User kein Admin ist
-    document.addEventListener("DOMContentLoaded", () => {
-      const roleInfo = document.getElementById("user-info");
-      const observer = new MutationObserver(() => {
-        if (roleInfo.textContent.includes("(member)")) {
-          document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
-        }
-      });
-      observer.observe(roleInfo, { childList: true });
-    });
-  </script>
+  <script type="module" src="page_template.js"></script>
 </body>
 </html>
