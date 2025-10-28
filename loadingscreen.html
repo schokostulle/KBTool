@@ -52,14 +52,15 @@
 
       const user = session.user;
       console.log("✅ Session aktiv:", user.email);
-console.log("🔍 Suche Member mit ID:", user.id);
-
-const { data: member, error } = await supabase
-  .from("members")
-  .select("id, status")
-  .eq("id", user.id)
-  .maybeSingle();
-
-console.log("📦 Member Query Result:", member, "Error:", error);
-
-     
+console.log("🧭 Debug: Starte Member-Abfrage...");
+try {
+  const { data: member, error } = await supabase
+    .from("members")
+    .select("id, status, username")
+    .eq("id", user.id)
+    .maybeSingle();
+  console.log("📦 Member Query Result:", member, "Error:", error);
+} catch (err) {
+  console.error("❌ Unhandled exception beim Abfragen:", err);
+}
+console.log("🧭 Debug: Nach Member-Abfrage angekommen");
