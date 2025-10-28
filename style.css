@@ -294,3 +294,10 @@ aside.menu a.active {
 .btn-back:hover {
   background-color: #51565a;
 }
+
+/* Optional, nur wenn du klebende Kopfzeile willst */
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
