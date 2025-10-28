@@ -16,7 +16,7 @@
    <header class="topbar">
   <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
 
-  <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
+  <button id="logoutBtn">Abmelden</button>
 </header>
     <h1>Flottenstatus</h1>
     <table id="fleetTable" class="data-table">
