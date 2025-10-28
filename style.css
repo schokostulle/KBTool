@@ -233,3 +233,24 @@ hr {
 .auth-box .switch-link:hover {
   color: #f0e9cf;
 }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #001f3f;
+  color: #fff;
+  padding: 0.5rem 1rem;
+}
+
+.topbar-right button {
+  background: #003366;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.topbar-right button:hover {
+  background: #004b99;
+}
