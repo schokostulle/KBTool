@@ -1,26 +1,46 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>CSV Upload</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="csv.js"></script>
+  <meta charset="UTF-8" />
+  <title>📂 CSV-Daten – Allianztool</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Linkes Menü -->
   <aside class="menu">
     <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="reservations.html">🎯 Reservierungen</a>
+    <a href="map.html">🗺️ Karte</a>
+    <a href="attacks.html">⚔️ Angriffe</a>
+    <a href="battle-reports.html">📜 Kriegsberichte</a>
+    <a href="fleet.html">🚢 Flotten</a>
+    <hr>
+    <a href="members.html" data-admin>👥 Mitglieder</a>
+    <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
+    <a href="csv.html" data-admin>📂 CSV-Daten</a>
+    <hr>
+    <button id="logoutBtn">Logout</button>
   </aside>
 
-  <main>
-    <h1>CSV Upload (nur Admin)</h1>
-    <input type="file" id="csvUpload" accept=".csv">
-    <p>Die Datei wird nach dem Upload automatisch in <code>targets</code> eingetragen.</p>
+  <!-- Hauptbereich -->
+  <div class="main-content">
+    <header class="top-header">
+      <span id="userName"></span> (<span id="userRole"></span>)
+      <button id="logoutBtnTop" class="btn">Logout</button>
+    </header>
 
-   <header class="topbar">
-  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+    <h1>📂 CSV-Upload</h1>
+    <p>Hier kannst du die aktuelle Insel-/Allianzliste hochladen.<br>
+    Die bestehende Datenbasis wird vollständig ersetzt.</p>
 
-  <button id="logoutBtn">Abmelden</button>
-</header>
-  </main>
+    <form id="csvUploadForm">
+      <input type="file" id="csvFile" accept=".csv" required />
+      <button type="submit">Upload starten</button>
+    </form>
+
+    <div id="uploadStatus" style="margin-top:1rem;">Noch kein Upload gestartet.</div>
+  </div>
+
+  <script type="module" src="./csv.js"></script>
 </body>
 </html>
