@@ -1,4 +1,4 @@
-import { supabase, getCurrentUser, logout } from "./supabase.js";
+import { supabase, getCurrentUser, logout, enableAutoLogout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const dashboardContent = document.getElementById("dashboardContent");
