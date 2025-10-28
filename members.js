@@ -1,55 +1,101 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Members Management</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <!-- ⚓ Page Content -->
-  <div id="pageContent" style="display:none; height:100%;">
-    <div class="container">
+import { supabase, getCurrentUser, logout } from "./supabase.js";
 
-      <!-- Sidebar Menu -->
-      <aside class="menu">
-        <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="reservations.html">🎯 Reservations</a>
-        <a href="map.html">🗺️ Map</a>
-        <a href="attacks.html">⚔️ Attacks</a>
-        <a href="battle-reports.html">📜 Battle Reports</a>
-        <a href="fleet.html">🚢 Fleet</a>
-        <hr>
-        <a href="members.html" data-admin class="active">👥 Members</a>
-        <a href="diplomacy.html" data-admin>🕊️ Diplomacy</a>
-        <a href="csv.html" data-admin>📂 CSV Data</a>
-        <hr>
-        <button id="logoutBtn">Logout</button>
-      </aside>
+document.addEventListener("DOMContentLoaded", async () => {
+  const loadingScreen = document.getElementById("loadingScreen");
+  const pageContent = document.getElementById("pageContent");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const tableArea = document.getElementById("memberTableArea");
 
-      <!-- Main Area -->
-      <main>
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <div>
-            Logged in as: <strong id="userName">–</strong>
-            (<span id="userRole">–</span>)
-          </div>
-        </header>
+  loadingScreen.style.display = "block";
+  pageContent.style.display = "none";
 
-        <h1 class="text-left">Members Management</h1>
+  logoutBtn?.addEventListener("click", logout);
 
-        <!-- ⚙️ Admin Section -->
-        <section id="contentArea" style="margin-top:2rem;">
-          <h2>Alliance Members</h2>
-          <p>Admins can activate, block, or change roles of registered users here.</p>
+  // === Auth check ===
+  const user = await getCurrentUser();
+  if (!user) {
+    alert("❌ No active session. Please log in again.");
+    window.location.href = "index.html";
+    return;
+  }
 
-          <div id="memberTableArea" style="margin-top:1.5rem;">
-            <p>Loading member list...</p>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
+  const { data: currentUser, error } = await supabase
+    .from("members")
+    .select("username, role, status")
+    .eq("id", user.id)
+    .single();
 
-  <script type="module" src="members.js"></script>
-</body>
-</html>
+  if (error || !currentUser) {
+    alert("Error loading your member data.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("userName").textContent = currentUser.username;
+  document.getElementById("userRole").textContent = currentUser.role;
+
+  // Admin check
+  if (currentUser.role !== "admin") {
+    pageContent.innerHTML = `
+      <main style="text-align:center; padding:3rem;">
+        <h1>⚓ No Access</h1>
+        <p>Only administrators can access this page.</p>
+      </main>`;
+    loadingScreen.style.display = "none";
+    pageContent.style.display = "block";
+    return;
+  }
+
+  loadingScreen.style.display = "none";
+  pageContent.style.display = "block";
+
+  // === Load all members ===
+  await loadMembers(tableArea);
+});
+
+// ===========================================================
+// ⚓ Load member list
+// ===========================================================
+async function loadMembers(container) {
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, username, role, status, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    container.innerHTML = `<p>❌ Error loading members.</p>`;
+    console.error(error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = `<p>No members found.</p>`;
+    return;
+  }
+
+  // Render table
+  const rows = data
+    .map(
+      (m) => `
+        <tr>
+          <td>${m.username}</td>
+          <td>${m.role}</td>
+          <td>${m.status}</td>
+          <td>${new Date(m.created_at).toLocaleDateString()}</td>
+        </tr>`
+    )
+    .join("");
+
+  container.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Registered</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
