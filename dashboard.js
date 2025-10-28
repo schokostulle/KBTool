@@ -1,19 +1,19 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Elemente vorbereiten
+  // Elemente referenzieren
   const loadingScreen = document.getElementById("loadingScreen");
   const dashboardContent = document.getElementById("dashboardContent");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  // Start: Ladebildschirm aktivieren
+  // Ladeanzeige aktivieren
   if (loadingScreen) loadingScreen.style.display = "block";
   if (dashboardContent) dashboardContent.style.display = "none";
 
-  // Logout-Button aktivieren
+  // Logout
   logoutBtn?.addEventListener("click", logout);
 
-  // === Sitzung prüfen ===
+  // === User prüfen ===
   const user = await getCurrentUser();
   if (!user) {
     alert("❌ Keine aktive Sitzung. Bitte erneut anmelden.");
@@ -36,20 +36,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Benutzerinfo anzeigen
+    // Benutzerinfo einfügen
     document.getElementById("userName").textContent = member.username;
     document.getElementById("userRole").textContent = member.role;
 
+    // Admin-Links ausblenden, falls kein Admin
+    if (member.role !== "admin") {
+      document
+        .querySelectorAll("[data-admin]")
+        .forEach((link) => (link.style.display = "none"));
+    }
+
     // Zugriff prüfen
     if (member.status !== "active" && member.role !== "admin") {
-      if (dashboardContent) {
-        dashboardContent.innerHTML = `
-          <main style="text-align:center; padding:3rem;">
-            <h1>⚓ Kein Zugriff</h1>
-            <p>Dein Konto ist noch nicht freigeschaltet.<br>
-            Bitte warte auf Freischaltung durch einen Admin.</p>
-          </main>`;
-      }
+      dashboardContent.innerHTML = `
+        <main style="text-align:center; padding:3rem;">
+          <h1>⚓ Kein Zugriff</h1>
+          <p>Dein Konto ist noch nicht freigeschaltet.<br>
+          Bitte warte auf Freischaltung durch einen Admin.</p>
+        </main>`;
       loadingScreen.style.display = "none";
       dashboardContent.style.display = "block";
       return;
@@ -58,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // === News laden ===
     await loadNews(member);
 
-    // === Admin: Formular aktivieren ===
+    // === Admin darf posten ===
     if (member.role === "admin") {
       const formSection = document.getElementById("adminNewsForm");
       formSection?.classList.remove("hidden");
@@ -70,7 +75,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const content = document.getElementById("content").value.trim();
         if (!title || !content) return alert("Bitte Titel und Inhalt angeben.");
 
-        // Insert in Tabelle "news"
         const { error: insertError } = await supabase.from("news").insert({
           title,
           content,
@@ -87,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // === Nach erfolgreichem Laden Dashboard anzeigen ===
+    // Ladeanzeige ausblenden
     loadingScreen.style.display = "none";
     dashboardContent.style.display = "block";
   } catch (err) {
@@ -98,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// === Funktion: News laden ===
+// === News laden ===
 async function loadNews(member) {
   const list = document.getElementById("newsList");
   list.textContent = "Lade Ankündigungen...";
@@ -136,7 +140,7 @@ async function loadNews(member) {
     )
     .join("");
 
-  // === Admin: Löschen aktivieren ===
+  // Admin darf löschen
   if (member.role === "admin") {
     document.querySelectorAll(".delete-btn").forEach((btn) =>
       btn.addEventListener("click", async (e) => {
