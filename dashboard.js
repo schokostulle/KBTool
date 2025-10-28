@@ -1,13 +1,8 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const loadingScreen = document.getElementById("loadingScreen");
   const dashboardContent = document.getElementById("dashboardContent");
   const logoutBtn = document.getElementById("logoutBtn");
-
-  // Zu Beginn: Inhalt verstecken, Ladeanzeige kurz aktiv
-  loadingScreen.style.display = "block";
-  dashboardContent.style.display = "none";
 
   logoutBtn?.addEventListener("click", logout);
 
