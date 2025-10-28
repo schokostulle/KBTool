@@ -1,11 +1,15 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Logout-Button aktivieren
+  const loadingScreen = document.getElementById("loadingScreen");
+  const pageContent = document.getElementById("pageContent");
   const logoutBtn = document.getElementById("logoutBtn");
+
+  loadingScreen.style.display = "block";
+  pageContent.style.display = "none";
+
   logoutBtn?.addEventListener("click", logout);
 
-  // Benutzer prüfen
   const user = await getCurrentUser();
   if (!user) {
     alert("❌ Keine aktive Sitzung. Bitte melde dich erneut an.");
@@ -13,7 +17,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Member-Infos laden
   const { data: member, error } = await supabase
     .from("members")
     .select("username, role, status")
@@ -21,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     .single();
 
   if (error || !member) {
-    alert("Fehler beim Laden deiner Mitgliedsdaten.");
+    alert("Fehler beim Laden der Mitgliedsdaten.");
     window.location.href = "index.html";
     return;
   }
@@ -29,18 +32,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("userName").textContent = member.username;
   document.getElementById("userRole").textContent = member.role;
 
+  // Admin-Links ausblenden
+  if (member.role !== "admin") {
+    document
+      .querySelectorAll("[data-admin]")
+      .forEach((link) => (link.style.display = "none"));
+  }
+
   // Zugriff prüfen
   if (member.status !== "active" && member.role !== "admin") {
-    document.querySelector("main").innerHTML = `
-      <div class="text-center" style="margin-top:5rem;">
-        <h2>⚓ Kein Zugriff</h2>
+    pageContent.innerHTML = `
+      <main style="text-align:center; padding:3rem;">
+        <h1>⚓ Kein Zugriff</h1>
         <p>Dein Konto ist noch nicht freigeschaltet.<br>
         Bitte warte auf Freischaltung durch einen Admin.</p>
-      </div>`;
+      </main>`;
+    loadingScreen.style.display = "none";
+    pageContent.style.display = "block";
     return;
   }
 
-  // ===== Hier kannst du individuellen Seiteninhalt laden =====
-  // Beispiel:
-  // loadReservations();
+  // Seite darf angezeigt werden
+  loadingScreen.style.display = "none";
+  pageContent.style.display = "block";
+
+  // Hier kannst du seitenabhängig Funktionen laden
+  console.log("✅ Seite geladen:", document.title, "für Benutzer:", member.username);
 });
