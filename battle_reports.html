@@ -15,14 +15,10 @@
     <h1>Kampfberichte</h1>
     <div id="reports">Lade Berichte...</div>
 
-<header class="topbar">
-  <div class="topbar-left">
-    ⚓ Allianz-Tool
-  </div>
-  <div class="topbar-right">
-    <span id="userInfo"></span>
-    <button id="logoutBtn">Abmelden</button>
-  </div>
+   <header class="topbar">
+  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+
+  <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
 </header>
 
   </main>
