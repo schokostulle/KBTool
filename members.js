@@ -1,7 +1,5 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const loadingScreen = document.getElementById("loadingScreen");
   const pageContent = document.getElementById("pageContent");
   const logoutBtn = document.getElementById("logoutBtn");
   const tableArea = document.getElementById("memberTableArea");
