@@ -1,11 +1,8 @@
 import { supabase, getCurrentUser, logout } from "./supabase.js";
 
-  const pageContent = document.getElementById("pageContent");
+document.addEventListener("DOMContentLoaded", async () => {
   const logoutBtn = document.getElementById("logoutBtn");
   const tableArea = document.getElementById("memberTableArea");
-
-  loadingScreen.style.display = "block";
-  pageContent.style.display = "none";
 
   logoutBtn?.addEventListener("click", logout);
 
@@ -32,20 +29,15 @@ import { supabase, getCurrentUser, logout } from "./supabase.js";
   document.getElementById("userName").textContent = currentUser.username;
   document.getElementById("userRole").textContent = currentUser.role;
 
-  // Admin check
+  // Admin-only access
   if (currentUser.role !== "admin") {
-    pageContent.innerHTML = `
+    document.querySelector("main").innerHTML = `
       <main style="text-align:center; padding:3rem;">
         <h1>⚓ No Access</h1>
         <p>Only administrators can access this page.</p>
       </main>`;
-    loadingScreen.style.display = "none";
-    pageContent.style.display = "block";
     return;
   }
-
-  loadingScreen.style.display = "none";
-  pageContent.style.display = "block";
 
   // === Load all members ===
   await loadMembers(tableArea);
@@ -71,7 +63,6 @@ async function loadMembers(container) {
     return;
   }
 
-  // Render table
   const rows = data
     .map(
       (m) => `
