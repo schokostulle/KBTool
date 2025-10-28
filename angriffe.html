@@ -29,19 +29,11 @@
 
   <!-- Hauptbereich -->
   <main>
-    <header class="topbar">
-      <div id="user-info"></div>
-      <h1>⚔️ Angriffsplanung</h1>
+       <header class="topbar">
+  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
 
-  <div class="topbar-left">
-    ⚓ Allianz-Tool
-  </div>
-  <div class="topbar-right">
-    <span id="userInfo"></span>
-    <button id="logoutBtn">Abmelden</button>
-  </div>
-
-    </header>
+  <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
+</header>
 
     <section class="content">
       <div class="card">
