@@ -1,23 +1,13 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>⚓ Lade Allianz-Daten...</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
     main {
       text-align: center;
       padding: 4rem;
-    }
-    .loading-symbol {
-      font-size: 3rem;
-      animation: rotate 2s linear infinite;
-      display: inline-block;
-      margin-bottom: 1rem;
-    }
-    @keyframes rotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -28,14 +18,15 @@
     <p>Bitte einen Moment Geduld.</p>
   </main>
 
+  <!-- ⚙️ Dein Modulskript beginnt hier -->
   <script type="module">
     import { supabase } from './supabase.js';
 
-    // Prüft, ob Session da ist
+    console.log("✅ loadingscreen Script gestartet");
+
     async function waitForSession(maxTries = 15, delayMs = 150) {
       for (let i = 0; i < maxTries; i++) {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) console.warn("getSession warn:", error.message);
+        const { data } = await supabase.auth.getSession();
         if (data?.session) return data.session;
         await new Promise(r => setTimeout(r, delayMs));
       }
@@ -52,15 +43,47 @@
 
       const user = session.user;
       console.log("✅ Session aktiv:", user.email);
-console.log("🧭 Debug: Starte Member-Abfrage...");
-try {
-  const { data: member, error } = await supabase
-    .from("members")
-    .select("id, status, username")
-    .eq("id", user.id)
-    .maybeSingle();
-  console.log("📦 Member Query Result:", member, "Error:", error);
-} catch (err) {
-  console.error("❌ Unhandled exception beim Abfragen:", err);
-}
-console.log("🧭 Debug: Nach Member-Abfrage angekommen");
+
+      const { data: member, error } = await supabase
+        .from("members")
+        .select("id, status")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      console.log("📦 Member Query Result:", member, "Error:", error);
+
+      if (error) {
+        document.getElementById("loadingArea").innerHTML = `
+          <h2>⚓ Fehler beim Laden</h2>
+          <p>${error.message}</p>
+        `;
+        return;
+      }
+
+      if (!member) {
+        document.getElementById("loadingArea").innerHTML = `
+          <h2>⚓ Kein Zugriff</h2>
+          <p>Dein Konto ist noch nicht freigeschaltet.<br>
+          Bitte warte auf Freischaltung durch einen Admin.</p>
+        `;
+        return;
+      }
+
+      if (member.status === "active") {
+        console.log("✅ Benutzer aktiv – weiter zum Dashboard.");
+        location.replace("./dashboard.html");
+      } else {
+        console.warn("⛔ Benutzer blockiert.");
+        document.getElementById("loadingArea").innerHTML = `
+          <h2>⚓ Kein Zugriff</h2>
+          <p>Dein Konto ist noch nicht freigeschaltet.<br>
+          Bitte warte auf Freischaltung durch einen Admin.</p>
+        `;
+      }
+    }
+
+    checkUserStatus();
+  </script>
+  <!-- ⚙️ Modulskript endet hier -->
+</body>
+</html>
