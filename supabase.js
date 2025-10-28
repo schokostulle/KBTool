@@ -1,37 +1,36 @@
-// supabase.js  (final robust)
+// supabase.js
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co"; // deine Supabase-URL
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo"; // 🔒 ersetze ggf. mit deinem tatsächlichen Public Key
 
-// Dein Projekt:
-const SUPABASE_URL = "https://xgdybrinpypeppdswheb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZHlicmlucHlwZXBwZHN3aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODEwOTUsImV4cCI6MjA3NjU1NzA5NX0.cphqzda66AqJEXzZ0c49PZFM8bZ_eJwjHaiyvIP_sPo"; // <- echten anon public key eintragen
+// Supabase Client erstellen mit Session-Persistenz
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,       // 🔹 hält User-Session im LocalStorage
+    autoRefreshToken: true,     // 🔹 erneuert Tokens automatisch
+    detectSessionInUrl: true,   // 🔹 erkennt Redirects (z. B. Magic Link)
+    storage: localStorage,      // 🔹 speichert Session im Browser
+  },
+});
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Hilfsfunktionen
 
+// Aktuell eingeloggten Benutzer abrufen
 export async function getCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
-    console.error("getCurrentUser error:", error.message);
+    console.warn("Fehler beim Abrufen des Benutzers:", error.message);
     return null;
   }
-  return data.user;
+  return data?.user || null;
 }
 
-export async function checkSession() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error("getSession error:", error.message);
-    return null;
-  }
-  return data.session?.user ?? null;
-}
-
+// Abmelden & zurück zur Startseite
 export async function logout() {
   const { error } = await supabase.auth.signOut();
   if (error) {
-    console.error("Logout error:", error.message);
-    alert("Fehler beim Abmelden.");
-    return;
+    console.error("Logout-Fehler:", error.message);
   }
-  window.location.href = "index.html";
+  location.href = "index.html";
 }
