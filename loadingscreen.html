@@ -2,33 +2,51 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Lade Allianzdaten...</title>
+  <title>⚓ Lade Allianz-Daten...</title>
   <link rel="stylesheet" href="style.css">
   <style>
     main {
       text-align: center;
       padding: 4rem;
     }
+    .loading-symbol {
+      font-size: 3rem;
+      animation: rotate 2s linear infinite;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>⚓ Lade Allianz-Daten...</h1>
+    <div class="loading-symbol">⚓</div>
+    <h1>Lade Allianz-Daten...</h1>
     <p>Bitte einen Moment Geduld.</p>
   </main>
 
   <script type="module">
     import { getCurrentUser } from './supabase.js';
 
-    // Prüfen ob bereits angemeldet
     (async () => {
+      console.log("⏳ Prüfe Supabase-Session...");
+
+      // Aktuellen Benutzer abrufen
       const user = await getCurrentUser();
+
       if (user) {
-        // Direkt zum Dashboard, keine Verzögerung
-        window.location.href = 'dashboard.html';
+        console.log("✅ Session aktiv");
+        console.log("🧭 Benutzer-ID:", user.id);
+        console.log("👤 Benutzer-Email:", user.email);
+        console.log("📅 Erstellt am:", user.created_at);
+        console.log("➡️ Weiterleitung zum Dashboard...");
+        window.location.href = "dashboard.html";
       } else {
-        // Keine aktive Sitzung – zurück zum Login
-        window.location.href = 'index.html';
+        console.warn("⚠️ Keine aktive Session gefunden. Weiterleitung zum Login...");
+        window.location.href = "index.html";
       }
     })();
   </script>
