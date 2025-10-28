@@ -29,26 +29,30 @@
   </main>
 
   <script type="module">
-    import { getCurrentUser } from './supabase.js';
+  import { supabase } from "./supabase.js";
 
-    (async () => {
-      console.log("⏳ Prüfe Supabase-Session...");
+  async function waitForSession(maxTries = 15, delayMs = 150) {
+    for (let i = 0; i < maxTries; i++) {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.warn("getSession warn:", error.message);
+      const session = data?.session;
+      if (session) return session;
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+    return null;
+  }
 
-      // Aktuellen Benutzer abrufen
-      const user = await getCurrentUser();
-
-      if (user) {
-        console.log("✅ Session aktiv");
-        console.log("🧭 Benutzer-ID:", user.id);
-        console.log("👤 Benutzer-Email:", user.email);
-        console.log("📅 Erstellt am:", user.created_at);
-        console.log("➡️ Weiterleitung zum Dashboard...");
-        window.location.href = "dashboard.html";
-      } else {
-        console.warn("⚠️ Keine aktive Session gefunden. Weiterleitung zum Login...");
-        window.location.href = "index.html";
-      }
-    })();
+  (async () => {
+    console.log("⏳ Prüfe Supabase-Session auf loadingscreen…");
+    const session = await waitForSession();
+    if (session) {
+      console.log("✅ Session aktiv:", session.user?.id);
+      window.location.href = "dashboard.html";
+    } else {
+      console.warn("⚠️ Keine Session gefunden – zurück zum Login.");
+      window.location.href = "index.html";
+    }
+  })();
   </script>
 </body>
 </html>
