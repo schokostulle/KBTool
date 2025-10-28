@@ -81,7 +81,10 @@ loginForm?.addEventListener("submit", async (e) => {
   }
 
   console.log("✅ Session aktiv – weiter zur Lade-Seite.");
+  // nach erfolgreichem Login
+setTimeout(() => {
   window.location.href = "loadingscreen.html";
+}, 200);
 });
 
 // ===========================================================
