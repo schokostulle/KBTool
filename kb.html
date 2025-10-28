@@ -30,8 +30,10 @@
 
   <!-- Hauptinhalt -->
   <main>
-    <header class="topbar">
-      <div id="user-info"></div>
+       <header class="topbar">
+  <span>⚓ Eingeloggt als: <strong id="userName">–</strong> (<span id="userRole">–</span>)</span>
+
+  <button onclick="supabase.auth.signOut().then(()=>window.location.href='index.html')">Abmelden</button>
       <h1>📜 Kriegsberichte</h1>
     </header>
 
