@@ -211,3 +211,32 @@ hr {
   font-size: 0.85rem;
   color: #aaa;
 }
+
+/* ===========================================================
+   ⚓ Ergänzung Style v1 – Button-Optik für Sidebar-Links
+   =========================================================== */
+
+aside.menu a {
+  display: block;
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.4rem;
+  background-color: #3a4045;   /* wie Button-Hintergrund */
+  color: #f0e9cf;              /* wie Button-Schrift */
+  border: 1px solid #51565a;   /* feine Kante wie bei Button */
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+aside.menu a:hover {
+  background-color: #51565a;   /* gleiche Hover-Farbe wie Buttons */
+  transform: scale(1.03);      /* minimaler Druckeffekt */
+}
+
+aside.menu a.active {
+  background-color: #51565a;
+  border-color: #6b7277;
+}
