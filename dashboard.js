@@ -1,142 +1,158 @@
+// ⬅️ Neu: enableAutoLogout mit importieren
 import { supabase, getCurrentUser, logout, enableAutoLogout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const dashboardContent = document.getElementById("dashboardContent");
-  const logoutBtn = document.getElementById("logoutBtn");
+  // ---- Auth & UI-Refs ----
   const loadingScreen = document.getElementById("loadingScreen");
-if (loadingScreen) loadingScreen.style.display = "none";
-if (dashboardContent) dashboardContent.style.display = "block";
+  const dashboardContent = document.getElementById("dashboardContent");
+  const userNameEl = document.getElementById("userName");
+  const userRoleEl = document.getElementById("userRole");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  logoutBtn?.addEventListener("click", logout);
+  // Admin-only Elemente
+  const adminOnlyEls = Array.from(document.querySelectorAll("[data-admin]"));
+  const newsForm = document.getElementById("newsForm");       // textarea + submit
+  const newsText = document.getElementById("newsText");       // textarea
+  const newsList = document.getElementById("newsList");       // container
 
-  // === Benutzer prüfen ===
+  logoutBtn?.addEventListener("click", () => logout());
+
+  // ---- Guard & User laden ----
   const user = await getCurrentUser();
-
-  // Kein User -> zurück zum Login
   if (!user) {
-    window.location.href = "index.html";
-    return;
+    // Keine Session → zurück
+    return (location.href = "index.html");
   }
 
-  // Mitgliedsdaten laden
-  const { data: member, error } = await supabase
+  // Memberdaten
+  const { data: member, error: memberErr } = await supabase
     .from("members")
-    .select("username, role, status")
+    .select("id, username, role, status")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  // Fehler oder kein Datensatz -> Logout
-  if (error || !member) {
-    console.error("Fehler beim Laden der Mitgliedsdaten:", error?.message);
-    await logout();
-    return;
+  if (memberErr || !member) {
+    console.warn("Member lookup failed:", memberErr?.message);
+    return (location.href = "index.html");
   }
 
-  // Benutzerdaten eintragen
-  document.getElementById("userName").textContent = member.username;
-  document.getElementById("userRole").textContent = member.role;
-
-  // Admin-Links ausblenden
-  if (member.role !== "admin") {
-    document.querySelectorAll("[data-admin]").forEach(link => (link.style.display = "none"));
+  // Blocked? → zur Lade-/Hinweis-Seite
+  if (member.status !== "active") {
+    return (location.href = "loadingscreen.html");
   }
 
-  // Zugriff prüfen
-  if (member.status !== "active" && member.role !== "admin") {
-    dashboardContent.innerHTML = `
-      <main style="text-align:center; padding:3rem;">
-        <h1>⚓ Kein Zugriff</h1>
-        <p>Dein Konto ist noch nicht freigeschaltet.<br>
-        Bitte warte auf Freischaltung durch einen Admin.</p>
-      </main>`;
-  } else {
-    // Nur wenn aktiv oder Admin → Dashboard zeigen
-    await loadNews(member);
-    if (member.role === "admin") enableAdminNews(member);
+  // UI befüllen
+  userNameEl.textContent = member.username;
+  userRoleEl.textContent = member.role;
+
+  // Admin-Controls ein-/ausblenden
+  const isAdmin = member.role === "admin";
+  adminOnlyEls.forEach(el => {
+    el.style.display = isAdmin ? "" : "none";
+  });
+  if (newsForm) newsForm.style.display = isAdmin ? "" : "none";
+
+  // ---- News laden ----
+  async function loadNews() {
+    if (!newsList) return;
+    newsList.textContent = "Lade Ankündigungen…";
+
+    const { data, error } = await supabase
+      .from("news")
+      .select("id, title, content, author_id, author_name, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Fehler beim Laden der Ankündigungen:", error.message);
+      newsList.textContent = "Fehler beim Laden der Ankündigungen.";
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      newsList.textContent = "Keine Ankündigungen vorhanden.";
+      return;
+    }
+
+    // Render
+    newsList.innerHTML = data.map(n => {
+      const d = new Date(n.created_at);
+      const dateStr = d.toLocaleString("de-DE");
+      const delBtn = isAdmin
+        ? `<button class="btn" data-del="${n.id}" style="margin-left:auto;">Löschen</button>`
+        : "";
+      return `
+        <article class="card" style="display:flex; gap:.6rem; align-items:flex-start;">
+          <div style="flex:1 1 auto;">
+            <h3 style="margin:0 0 .25rem 0;">${escapeHTML(n.title || "Ankündigung")}</h3>
+            <div class="muted" style="margin-bottom:.25rem;">
+              von ${escapeHTML(n.author_name || "Unbekannt")} – ${dateStr}
+            </div>
+            <p style="white-space:pre-wrap; margin:0;">${escapeHTML(n.content || "")}</p>
+          </div>
+          ${delBtn}
+        </article>
+      `;
+    }).join("");
+
+    // Delete-Handler nur für Admin
+    if (isAdmin) {
+      newsList.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.currentTarget.getAttribute("data-del");
+          if (!confirm("Diesen Post wirklich löschen?")) return;
+          const { error: delErr } = await supabase.from("news").delete().eq("id", id);
+          if (delErr) {
+            alert("Löschen fehlgeschlagen: " + delErr.message);
+          } else {
+            loadNews();
+          }
+        });
+      });
+    }
   }
 
-  // === Jetzt Ladebildschirm ausblenden ===
-  loadingScreen.style.display = "none";
-  dashboardContent.style.display = "block";
-});
-
-// ===========================================================
-// ⚓ News laden
-// ===========================================================
-async function loadNews(member) {
-  const list = document.getElementById("newsList");
-  list.textContent = "Lade Ankündigungen...";
-
-  const { data, error } = await supabase
-    .from("news")
-    .select("id, title, content, author_name, created_at")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    list.textContent = "Fehler beim Laden der Ankündigungen.";
-    console.error(error.message);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML = "<p>Keine Ankündigungen vorhanden.</p>";
-    return;
-  }
-
-  list.innerHTML = data
-    .map(
-      (n) => `
-      <div class="news-item">
-        <h3>${n.title}</h3>
-        <p>${n.content}</p>
-        <small>von ${n.author_name || "unbekannt"} – 
-          ${new Date(n.created_at).toLocaleString()}</small>
-        ${
-          member.role === "admin"
-            ? `<br><button data-id="${n.id}" class="delete-btn">Löschen</button>`
-            : ""
-        }
-      </div>`
-    )
-    .join("");
-
-  if (member.role === "admin") {
-    document.querySelectorAll(".delete-btn").forEach((btn) =>
-      btn.addEventListener("click", async (e) => {
-        const id = e.target.getAttribute("data-id");
-        if (!confirm("Diese Ankündigung wirklich löschen?")) return;
-        const { error: delError } = await supabase.from("news").delete().eq("id", id);
-        if (delError) alert("Fehler beim Löschen der Ankündigung.");
-        else await loadNews(member);
-      })
-    );
-  }
-}
-
-// ===========================================================
-// ⚓ Admin News Formular aktivieren
-// ===========================================================
-function enableAdminNews(member) {
-  const formSection = document.getElementById("adminNewsForm");
-  formSection?.classList.remove("hidden");
-
-  const newsForm = document.getElementById("newsForm");
+  // ---- News posten (nur Admin) ----
   newsForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const title = document.getElementById("title").value.trim();
-    const content = document.getElementById("content").value.trim();
-    if (!title || !content) return alert("Bitte Titel und Inhalt angeben.");
+    const text = newsText.value.trim();
+    if (!text) return;
 
-    const { error } = await supabase.from("news").insert({
-      title,
-      content,
-      author_name: member.username,
+    // Wir erlauben optional erste Zeile als Titel (Markdown-Style), sonst fester Titel
+    const lines = text.split("\n");
+    const maybeTitle = lines[0].length <= 80 ? lines[0] : "Ankündigung";
+    const body = lines.slice(1).join("\n") || text;
+
+    const { error: insErr } = await supabase.from("news").insert({
+      title: maybeTitle,
+      content: body,
+      author_id: user.id,
+      author_name: member.username
     });
-
-    if (error) alert("Fehler beim Erstellen der Ankündigung.");
-    else {
-      newsForm.reset();
-      await loadNews(member);
+    if (insErr) {
+      alert("Posten fehlgeschlagen: " + insErr.message);
+      return;
     }
+    newsText.value = "";
+    loadNews();
   });
+
+  // ---- Sicht umschalten: Loading weg, Content sichtbar ----
+  if (loadingScreen) loadingScreen.style.display = "none";
+  if (dashboardContent) dashboardContent.style.display = "";
+
+  // Initiale Daten
+  loadNews();
+
+  // ⏰ ⬅️ Neu: Auto-Logout nach 30 Minuten Inaktivität
+  enableAutoLogout(30);
+});
+
+// kleine Helper für sicheres Rendering
+function escapeHTML(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
