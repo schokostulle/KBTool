@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("userName").textContent = member.username;
   document.getElementById("userRole").textContent = member.role;
-  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("logoutBtn")?.addEventListener("click", () => logout());
 
   const form = document.getElementById("csvUploadForm");
   const statusEl = document.getElementById("uploadStatus");
