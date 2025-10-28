@@ -31,6 +31,7 @@
   <script type="module">
     import { supabase } from './supabase.js';
 
+    // 🔹 Wartet auf aktive Session
     async function waitForSession(maxTries = 15, delayMs = 150) {
       for (let i = 0; i < maxTries; i++) {
         const { data, error } = await supabase.auth.getSession();
@@ -41,6 +42,23 @@
       return null;
     }
 
+    // 🔹 Zeigt „Kein Zugriff“ + Logout-Button
+    function renderAccessDenied(message) {
+      const area = document.getElementById("loadingArea");
+      area.innerHTML = `
+        <h2>⚓ Kein Zugriff</h2>
+        <p>${message}</p>
+        <button id="backBtn" class="btn-back">⬅️ Zurück zur Anmeldung</button>
+      `;
+
+      document.getElementById("backBtn").addEventListener("click", async () => {
+        console.log("🚪 Logout & zurück zur Anmeldung");
+        await supabase.auth.signOut();
+        location.replace("./index.html");
+      });
+    }
+
+    // 🔹 Prüft Benutzerstatus
     async function checkUserStatus() {
       const session = await waitForSession();
       if (!session) {
@@ -60,36 +78,13 @@
 
       console.log("📦 Member Query Result:", member, "Error:", error);
 
-      const area = document.getElementById("loadingArea");
-
       if (error) {
-        area.innerHTML = `
-          <h2>⚓ Fehler beim Laden</h2>
-          <p>${error.message}</p>
-          area.innerHTML = `
-  <h2>⚓ Kein Zugriff</h2>
-  <p>Dein Konto ist ...</p>
-  <button onclick="location.href='index.html'" class="btn-back">
-    ⬅️ Zurück zur Anmeldung
-  </button>
-`;
-        `;
+        renderAccessDenied("Beim Laden deiner Mitgliedsdaten ist ein Fehler aufgetreten.");
         return;
       }
 
       if (!member) {
-        area.innerHTML = `
-          <h2>⚓ Kein Zugriff</h2>
-          <p>Dein Konto ist registriert, aber noch nicht freigeschaltet.<br>
-          Bitte warte auf Freischaltung durch einen Admin.</p>
-          area.innerHTML = `
-  <h2>⚓ Kein Zugriff</h2>
-  <p>Dein Konto ist ...</p>
-  <button onclick="location.href='index.html'" class="btn-back">
-    ⬅️ Zurück zur Anmeldung
-  </button>
-`;
-        `;
+        renderAccessDenied("Dein Konto ist registriert, aber noch nicht freigeschaltet.<br>Bitte warte auf Freischaltung durch einen Admin.");
         return;
       }
 
@@ -97,22 +92,11 @@
         console.log("✅ Benutzer aktiv – weiter zum Dashboard.");
         location.replace("./dashboard.html");
       } else {
-        console.warn("⛔ Benutzer blockiert – Anzeige Hinweis.");
-        area.innerHTML = `
-          <h2>⚓ Kein Zugriff</h2>
-          <p>Dein Konto ist noch nicht freigeschaltet.<br>
-          Bitte warte auf Freischaltung durch einen Admin.</p>
-          area.innerHTML = `
-  <h2>⚓ Kein Zugriff</h2>
-  <p>Dein Konto ist ...</p>
-  <button onclick="location.href='index.html'" class="btn-back">
-    ⬅️ Zurück zur Anmeldung
-  </button>
-`;
-        `;
+        renderAccessDenied("Dein Konto ist noch nicht freigeschaltet.<br>Bitte warte auf Freischaltung durch einen Admin.");
       }
     }
 
+    // 🔹 Start
     checkUserStatus();
   </script>
 </body>
