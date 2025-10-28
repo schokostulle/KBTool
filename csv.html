@@ -17,7 +17,7 @@
     <hr>
     <a href="members.html" data-admin>👥 Mitglieder</a>
     <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
-    <a href="csv.html" data-admin>📂 CSV-Daten</a>
+    <a href="csv.html" data-admin class="active">📂 CSV-Daten</a>
     <hr>
     <button id="logoutBtn">Logout</button>
   </aside>
@@ -26,7 +26,6 @@
   <div class="main-content">
     <header class="top-header">
       <span id="userName"></span> (<span id="userRole"></span>)
-      <button id="logoutBtnTop" class="btn">Logout</button>
     </header>
 
     <h1>📂 CSV-Upload</h1>
@@ -39,6 +38,9 @@
     </form>
 
     <div id="uploadStatus" style="margin-top:1rem;">Noch kein Upload gestartet.</div>
+
+    <!-- Hier erscheint später die Tabelle -->
+    <div id="csvTableContainer" style="margin-top:2rem;"></div>
   </div>
 
   <script type="module" src="./csv.js"></script>
