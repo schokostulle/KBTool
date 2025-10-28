@@ -37,48 +37,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     "allianz_id","allianzkürzel","allianzname","punkte"
   ];
 
-  let allRows = [];        // Originaldaten
+  let allRows = [];        // Originaldaten (alle)
   let currentRows = [];    // Gefiltert + sortiert
   let sortState = { col: null, dir: 1 }; // 1=ASC, -1=DESC
 
-  // ===== Bestehende Daten beim Laden anzeigen =====
+  // === Bestehende Daten beim Laden anzeigen ===
   await loadAllTargets();
 
-  // ===== Upload-Flow =====
+  // === Upload-Flow ===
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fileInput = document.getElementById("csvFile");
     const file = fileInput.files[0];
     if (!file) return alert("Bitte eine CSV-Datei auswählen.");
 
-    statusEl.textContent = "⏳ Upload läuft...";
-    try {
-      const text = await file.text();
-      const rows = text.trim().split("\n").map((r) => r.split(";"));
+    statusEl.textContent = "⏳ Upload läuft…";
+    tableContainer.innerHTML = "";
 
-      // Alles löschen
+    try {
+      const raw = await file.text();
+
+      // Robustes CSV-Parsing (Semikolon-Delimiter, Quotes, CRLF)
+      const parsed = parseCSVSemicolon(raw);
+
+      // Map & sanitize (Quotes entfernen, Zahlen parsen)
+      const mapped = parsed
+        .filter(row => row.length >= 10) // nur vollständige Zeilen
+        .map((r) => ({
+          oz: toInt(unquote(r[0])),
+          ig: toInt(unquote(r[1])),
+          i: toInt(unquote(r[2])),
+          inselname: cleanText(unquote(r[3])),
+          spieler_id: toInt(unquote(r[4])),
+          spielername: cleanText(unquote(r[5])),
+          allianz_id: toInt(unquote(r[6])),
+          allianzkürzel: cleanText(unquote(r[7])),
+          allianzname: cleanText(unquote(r[8])),
+          punkte: toInt(unquote(r[9])),
+        }));
+
+      // alles löschen (vollständiger Neuimport)
       const { error: delErr } = await supabase.from("targets").delete().neq("id", 0);
       if (delErr) throw delErr;
 
-      // In Batches einfügen (große CSVs vermeiden 1 großes Insert)
-      const mapped = rows.map((r) => ({
-        oz: toInt(r[0]), ig: toInt(r[1]), i: toInt(r[2]),
-        inselname: safeText(r[3]),
-        spieler_id: toInt(r[4]),
-        spielername: safeText(r[5]),
-        allianz_id: toInt(r[6]),
-        allianzkürzel: safeText(r[7]),
-        allianzname: safeText(r[8]),
-        punkte: toInt(r[9]),
-      }));
-
-      const BATCH = 2000;
+      // in Batches einfügen (Supabase-Limit: ~1000 Rows pro Request)
+      const BATCH = 1000;
       for (let offset = 0; offset < mapped.length; offset += BATCH) {
         const chunk = mapped.slice(offset, offset + BATCH);
         const { error: insErr } = await supabase.from("targets").insert(chunk);
         if (insErr) throw insErr;
       }
 
+      // Upload loggen
       await supabase.from("uploads").insert({
         dateiname: file.name,
         uploader_id: user.id,
@@ -87,30 +97,93 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       statusEl.textContent = `✅ Upload erfolgreich: ${mapped.length} Datensätze importiert.`;
 
-      // Neu laden & rendern
+      // Neu laden & rendern (aus DB, nicht aus mapped → „Quelle der Wahrheit“)
       await loadAllTargets();
     } catch (err) {
       console.error(err);
       statusEl.textContent = "❌ Fehler beim Upload: " + (err.message || err);
+      // Fallback: vorhandene anzeigen
+      await loadAllTargets();
     }
   });
 
-  // ===== Filter =====
-  filterInputs.forEach((inp) => {
-    inp.addEventListener("input", applyFiltersAndRender);
-  });
+  // === Filter ===
+  filterInputs.forEach((inp) => inp.addEventListener("input", applyFiltersAndRender));
   clearBtn.addEventListener("click", () => {
     filterInputs.forEach((i) => (i.value = ""));
     applyFiltersAndRender();
   });
 
   // ===== Helpers =====
-  function toInt(v) {
-    const n = parseInt(v, 10);
-    return Number.isFinite(n) ? n : null;
+
+  // CSV Parser für Semikolon, unterstützt "..." (mit ; oder , darin) & CRLF
+  function parseCSVSemicolon(text) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+
+    const s = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+
+      if (ch === '"') {
+        if (inQuotes && s[i + 1] === '"') {
+          field += '"'; // escaped quote
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+
+      if (ch === ';' && !inQuotes) {
+        row.push(field);
+        field = "";
+        continue;
+      }
+
+      if (ch === '\n' && !inQuotes) {
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = "";
+        continue;
+      }
+
+      field += ch;
+    }
+    // letztes Feld/Zeile
+    if (field.length > 0 || inQuotes || row.length > 0) {
+      row.push(field);
+      rows.push(row);
+    }
+
+    // Leere/Whitespace-Zeilen filtern
+    return rows.filter(r => r.some(cell => String(cell).trim() !== ""));
   }
-  function safeText(v) {
-    return v === undefined ? null : String(v).trim();
+
+  function unquote(v) {
+    if (v == null) return "";
+    let s = String(v).trim();
+    if (s.startsWith('"') && s.endsWith('"')) {
+      s = s.slice(1, -1);
+    }
+    return s.trim();
+  }
+
+  function cleanText(v) {
+    if (v == null) return null;
+    const s = String(v).trim();
+    return s === "" ? null : s;
+  }
+
+  function toInt(v) {
+    if (v == null) return null;
+    const s = String(v).trim().replace(/\s+/g, ""); // "1 234" -> "1234"
+    if (s === "" || s === "-") return null;
+    const n = parseInt(s, 10);
+    return Number.isFinite(n) ? n : null;
   }
 
   async function loadAllTargets() {
@@ -118,36 +191,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     allRows = [];
     currentRows = [];
 
-    // Gesamtanzahl holen (HEAD+count)
-    const head = await supabase.from("targets").select("*", { count: "exact", head: true });
-    if (head.error) {
-      tableMeta.textContent = "❌ Konnte Anzahl nicht ermitteln.";
-      console.error(head.error);
-      return;
-    }
-    const total = head.count || 0;
-    if (total === 0) {
-      tableContainer.innerHTML = "<p>Keine Daten vorhanden.</p>";
-      tableMeta.textContent = "0 Datensätze.";
-      return;
-    }
-
-    // In Batches laden
-    const BATCH = 2000;
-    for (let from = 0; from < total; from += BATCH) {
-      const to = Math.min(from + BATCH - 1, total - 1);
+    // In Batches laden, bis weniger als Batch zurückkommt
+    const BATCH = 1000;
+    let offset = 0;
+    while (true) {
       const { data, error } = await supabase
         .from("targets")
-        .select("oz,ig,i,inselname,spieler_id,spielername,allianz_id,allianzkürzel,allianzname,punkte,created_at,id")
+        .select("oz,ig,i,inselname,spieler_id,spielername,allianz_id,allianzkürzel,allianzname,punkte,id")
         .order("id", { ascending: true })
-        .range(from, to);
+        .range(offset, offset + BATCH - 1);
 
       if (error) {
-        console.error(error);
+        console.error("Ladefehler:", error);
         tableMeta.textContent = "❌ Fehler beim Laden.";
         return;
       }
-      allRows.push(...data);
+
+      const chunk = data ?? [];
+      allRows.push(...chunk);
+      offset += BATCH;
+
+      if (chunk.length < BATCH) break; // fertig
     }
 
     tableMeta.textContent = `📊 ${allRows.length} Datensätze geladen. Filter & Sortierung lokal.`;
@@ -155,12 +219,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function applyFiltersAndRender(resetSort = false) {
-    // 1) Filter anwenden (contains, case-insensitive)
     const filters = {};
-    filterInputs.forEach((inp) => {
+    for (const inp of filterInputs) {
       const val = inp.value.trim().toLowerCase();
       if (val) filters[inp.dataset.col] = val;
-    });
+    }
 
     currentRows = allRows.filter((row) => {
       for (const [col, needle] of Object.entries(filters)) {
@@ -175,7 +238,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return true;
     });
 
-    // 2) Sortierung
     if (resetSort) sortState = { col: null, dir: 1 };
     if (sortState.col) {
       const { col, dir } = sortState;
@@ -205,11 +267,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     html += `</tr></thead><tbody>`;
 
-    // Alle Zeilen rendern (excel-like, mit scrollbarem Container)
+    // Alle Zeilen rendern (scrollbarer Container per CSS)
     for (const row of currentRows) {
       html += "<tr>";
       for (const c of COLUMNS) {
-        html += `<td>${row[c] ?? ""}</td>`;
+        // 0 soll sichtbar sein!
+        const v = row[c];
+        html += `<td>${v === null || v === undefined ? "" : v}</td>`;
       }
       html += "</tr>";
     }
