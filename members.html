@@ -6,48 +6,44 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ⚓ Page Content -->
-  <div id="pageContent" style="display:none; height:100%;">
-    <div class="container">
+  <div class="container">
 
-      <!-- Sidebar Menu -->
-      <aside class="menu">
-        <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="reservations.html">🎯 Reservations</a>
-        <a href="map.html">🗺️ Map</a>
-        <a href="attacks.html">⚔️ Attacks</a>
-        <a href="battle-reports.html">📜 Battle Reports</a>
-        <a href="fleet.html">🚢 Fleet</a>
-        <hr>
-        <a href="members.html" data-admin class="active">👥 Members</a>
-        <a href="diplomacy.html" data-admin>🕊️ Diplomacy</a>
-        <a href="csv.html" data-admin>📂 CSV Data</a>
-        <hr>
-        <button id="logoutBtn">Logout</button>
-      </aside>
+    <!-- Sidebar Menu -->
+    <aside class="menu">
+      <a href="dashboard.html">🏠 Dashboard</a>
+      <a href="reservations.html">🎯 Reservations</a>
+      <a href="map.html">🗺️ Map</a>
+      <a href="attacks.html">⚔️ Attacks</a>
+      <a href="battle-reports.html">📜 Battle Reports</a>
+      <a href="fleet.html">🚢 Fleet</a>
+      <hr>
+      <a href="members.html" data-admin class="active">👥 Members</a>
+      <a href="diplomacy.html" data-admin>🕊️ Diplomacy</a>
+      <a href="csv.html" data-admin>📂 CSV Data</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </aside>
 
-      <!-- Main Area -->
-      <main>
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <div>
-            Logged in as: <strong id="userName">–</strong>
-            (<span id="userRole">–</span>)
-          </div>
-        </header>
+    <!-- Main Area -->
+    <main>
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          Logged in as: <strong id="userName">–</strong>
+          (<span id="userRole">–</span>)
+        </div>
+      </header>
 
-        <h1 class="text-left">Members Management</h1>
+      <h1 class="text-left">Members Management</h1>
 
-        <!-- ⚙️ Admin Section -->
-        <section id="contentArea" style="margin-top:2rem;">
-          <h2>Alliance Members</h2>
-          <p>Admins can activate, block, or change roles of registered users here.</p>
+      <section id="contentArea" style="margin-top:2rem;">
+        <h2>Alliance Members</h2>
+        <p>Admins can activate, block, or change roles of registered users here.</p>
 
-          <div id="memberTableArea" style="margin-top:1.5rem;">
-            <p>Loading member list...</p>
-          </div>
-        </section>
-      </main>
-    </div>
+        <div id="memberTableArea" style="margin-top:1.5rem;">
+          <p>Loading member list...</p>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script type="module" src="members.js"></script>
