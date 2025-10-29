@@ -46,7 +46,24 @@
         <h1 class="text-left"><!-- Seitentitel hier --></h1>
 
         <section id="contentArea" style="margin-top:2rem;">
-          <p>⚙️ Inhalt wird hier geladen...</p>
+                    <form id="newsForm" style="display:none; margin-bottom:1.5rem;">
+            <h3 style="margin-top:0;">Neue Ankündigung verfassen</h3>
+            <label for="newsText" style="display:block; margin-bottom:0.5rem;">
+              Nachricht an die Allianz:
+            </label>
+            <textarea
+              id="newsText"
+              rows="3"
+              placeholder="Mitteilung eingeben..."
+              style="width:100%; resize:vertical; padding:0.5rem; border-radius:0.3rem; border:1px solid #bbb;">
+            </textarea>
+            <button type="submit" class="btn" style="margin-top:0.5rem;">Veröffentlichen</button>
+          </form>
+
+          <!-- News-Liste -->
+          <div id="newsList" style="margin-top:1rem;">
+            Lade Ankündigungen...
+          </div>
         </section>
       </main>
     </div>
