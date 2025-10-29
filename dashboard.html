@@ -29,38 +29,48 @@
         <button id="logoutBtn" type="button">Logout</button>
       </aside>
 
-      <!-- Hauptbereich -->
-      <main>
-        <!-- Header -->
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <div>
-            Eingeloggt als: <strong id="userName">–</strong>
-            (<span id="userRole">–</span>)
-          </div>
-        </header>
-
-        <!-- Überschrift -->
-        <h1 class="text-left">Allianz-Dashboard</h1>
-
-        <!-- News -->
-        <section style="margin-top:2rem;">
-          <h2>Aktuelle News & Ankündigungen</h2>
-          <div id="newsList">Lade Ankündigungen...</div>
-        </section>
-
-        <!-- Admin: News posten -->
-        <section id="adminNewsForm" class="hidden" style="margin-top:2rem;">
-          <h3>Neue Ankündigung posten</h3>
-          <form id="newsForm">
-            <input id="title" type="text" placeholder="Titel" required>
-            <textarea id="content" rows="4" placeholder="Nachricht an die Allianz..." required></textarea>
-            <button type="submit">Veröffentlichen</button>
-          </form>
-        </section>
-      </main>
+<!-- ======================= HAUPTBEREICH ======================= -->
+<main>
+  <!-- Header -->
+  <header
+    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;"
+  >
+    <div>
+      Eingeloggt als: <strong id="userName">–</strong>
+      (<span id="userRole">–</span>)
     </div>
-  </div>
+    <button id="logoutBtn" type="button" class="btn">Logout</button>
+  </header>
 
-  <script type="module" src="dashboard.js"></script>
+  <!-- Überschrift -->
+  <h1 class="text-left" style="margin-top:0;">Allianz-Dashboard</h1>
+
+  <!-- =================== NEWS & ANKÜNDIGUNGEN =================== -->
+  <section id="newsSection" style="margin-top:2rem;">
+    <h2>Aktuelle News & Ankündigungen</h2>
+
+    <!-- Adminformular (wird durch JS sichtbar gemacht) -->
+    <form id="newsForm" style="display:none; margin-bottom:1.5rem;">
+      <label for="newsText" style="display:block; margin-bottom:0.5rem;">
+        Neue Ankündigung
+      </label>
+      <textarea
+        id="newsText"
+        rows="3"
+        placeholder="Mitteilung an die Allianz..."
+        style="width:100%; resize:vertical; padding:0.5rem; border-radius:0.3rem; border:1px solid #bbb;"
+      ></textarea>
+      <button type="submit" class="btn" style="margin-top:0.5rem;">Veröffentlichen</button>
+    </form>
+
+    <!-- News-Liste (wird dynamisch gefüllt) -->
+    <div id="newsList" style="margin-top:1rem;">
+      Lade Ankündigungen...
+    </div>
+  </section>
+</main>
+<!-- ============================================================= -->
+
+<script type="module" src="dashboard.js"></script>
 </body>
 </html>
