@@ -67,16 +67,22 @@ async function loadNews(role) {
   }
 
   newsList.innerHTML = news
-    .map(
-      (item) => `
-      <article class="card">
-        <h3>${item.title}</h3>
-        <p>${item.content}</p>
-        <small>Veröffentlicht am ${new Date(item.created_at).toLocaleString("de-DE")}</small>
-        ${role === "admin" ? `<button class="btn-delete" data-id="${item.id}">🗑️ Löschen</button>` : ""}
-      </article>`
-    )
-    .join("");
+  .map(
+    (item) => `
+      <div class="news-wrapper">
+        <article class="card">
+          <h3>${item.title}</h3>
+          <p>${item.content}</p>
+          <small>Veröffentlicht am ${new Date(item.created_at).toLocaleString("de-DE")}</small>
+        </article>
+        ${
+          role === "admin"
+            ? `<button class="btn-delete" data-id="${item.id}" title="Löschen">🗑️</button>`
+            : ""
+        }
+      </div>`
+  )
+  .join("");
 
   // Admin kann löschen
   if (role === "admin") {
