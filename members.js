@@ -15,10 +15,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!member || member.role !== "admin") {
-    document.body.innerHTML =
-      "<main style='text-align:center; padding:3rem;'><h1>⚓ Kein Zugriff</h1><p>Diese Seite ist nur für Administratoren zugänglich.</p></main>";
-    return;
+    if (mErr || !member || member.role !== "admin") {
+    document.body.innerHTML = `
+      <main style="text-align:center; padding:3rem;">
+        <h1>⚓ Kein Zugriff</h1>
+        <p>Nur Administratoren dürfen CSV-Daten verwalten.</p>
+        <button onclick="location.href='dashboard.html'" class="btn-back">Zurück</button>
   }
 
   // Userinfos anzeigen
