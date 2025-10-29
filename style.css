@@ -304,7 +304,7 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #e8e5d7 !important;   /* sandfarben / Pergamentoptik */
+  background-color: #faf8f2 !important;   /* sandfarben / Pergamentoptik */
   border: 1px solid #a3a59b !important;   /* graugrüner Rahmen, maritim dezent */
   border-radius: 0.6rem !important;
   padding: 1rem 1.2rem !important;
