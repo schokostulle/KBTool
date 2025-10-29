@@ -2,46 +2,43 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Mitgliederverwaltung ⚓ Allianz-Tool</title>
+  <title>👥 Mitgliederverwaltung – Allianz-Tool</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <!-- Linkes Menü -->
+  <aside class="menu">
+    <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="reservations.html">🎯 Reservierungen</a>
+    <a href="map.html">🗺️ Karte</a>
+    <a href="attacks.html">⚔️ Angriffe</a>
+    <a href="battle-reports.html">📜 Kriegsberichte</a>
+    <a href="fleet.html">🚢 Flotten</a>
+    <hr>
+    <a href="members.html" data-admin style="display:none;">👥 Mitglieder</a>
+    <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
+    <a href="csv.html" data-admin>📂 CSV-Daten</a>
+    <hr>
+    <button id="logoutBtn">Logout</button>
+  </aside>
 
-    <!-- Linkes Menü -->
-    <aside class="menu">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="reservations.html">🎯 Reservierungen</a>
-      <a href="map.html">🗺️ Karte</a>
-      <a href="attacks.html">⚔️ Angriffe</a>
-      <a href="battle-reports.html">📜 Kriegsberichte</a>
-      <a href="fleet.html">🚢 Flotten</a>
-      <hr>
-      <a href="members.html" data-admin>👥 Mitglieder</a>
-      <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
-      <a href="csv.html" data-admin>📂 CSV-Daten</a>
-      <hr>
-      <button id="logoutBtn">Logout</button>
-    </aside>
+  <!-- Hauptbereich -->
+  <main>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div>
+        Eingeloggt als: <strong id="userName">–</strong>
+        (<span id="userRole">–</span>)
+      </div>
+    </header>
 
-    <!-- Hauptbereich -->
-    <main>
-      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <div>
-          Eingeloggt als: <strong id="userName">–</strong>
-          (<span id="userRole">–</span>)
-        </div>
-      </header>
+    <h1 class="text-left">Mitgliederverwaltung</h1>
 
-      <h1 class="text-left">Mitgliederverwaltung</h1>
-
-      <section id="contentArea" style="margin-top:2rem;">
-        <div id="membersTable">
-          <p>Lade Mitglieder...</p>
-        </div>
-      </section>
-    </main>
-  </div>
+    <section id="contentArea" style="margin-top:2rem;">
+      <div id="membersTable">
+        <p>Lade Mitglieder...</p>
+      </div>
+    </section>
+  </main>
 
   <script type="module" src="members.js"></script>
 </body>
