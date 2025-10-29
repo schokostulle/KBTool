@@ -304,8 +304,8 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #ddd6ba; /* gedecktes Sandbeige – wie Seekartenpapier */
-  border: 1px solid #b4aa8d;
+  background-color: #e1ddd2; /* weiches Grau mit leichtem Sandton */
+  border: 1px solid #b8b1a3;
   border-radius: 0.5rem;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
@@ -316,20 +316,19 @@ aside.menu a.active {
 
 .card h3 {
   margin-top: 0;
-  color: #1a242f; /* kräftiger Kontrast für Headlines */
+  color: #1a242f;
 }
 
 .card small {
   display: block;
   margin-top: 0.5rem;
-  color: #444c56;
+  color: #4a5058;
 }
 
 .card:hover {
-  background-color: #d3c9ac; /* leicht dunkler bei Hover, maritime Tiefe */
-  transition: background-color 0.2s ease-in-out;
+  background-color: #d8d3c6; /* etwas wärmerer Sand-Grau-Ton bei Hover */
+  transition: background-color 0.25s ease-in-out;
 }
-
 .news-list {
   display: flex;
   flex-direction: column;
