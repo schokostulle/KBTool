@@ -1,3 +1,5 @@
+console.log("🚀 dashboard.js gestartet");
+
 import { supabase, getCurrentUser, logout, enableAutoLogout } from "./supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -141,3 +143,5 @@ function escapeHTML(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+
+console.log("🏁 dashboard.js vollständig geladen");
