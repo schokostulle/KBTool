@@ -339,6 +339,37 @@ aside.menu a.active {
   background-color: #32373c; /* leicht heller bei Hover */
   transition: background-color 0.25s ease-in-out;
 }
+
+.card {
+  position: relative;
+  background-color: #2a2e32;
+  border: 1px solid #3c4348;
+  border-left: 6px solid #c9b978; /* asymmetrischer, gold-sandfarbener Streifen */
+  border-radius: 0.5rem;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: #d9cba3;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+/* Optionaler dezenter Schimmer-Effekt für den Streifen */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 236, 184, 0.8),
+    rgba(201, 185, 120, 0.4)
+  );
+  pointer-events: none;
+}
+
 .news-list {
   display: flex;
   flex-direction: column;
