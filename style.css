@@ -304,43 +304,30 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #d9cba3;
-  border: 1px solid #51565a;
+  background-color: #ddd6ba; /* gedecktes Sandbeige – wie Seekartenpapier */
+  border: 1px solid #b4aa8d;
   border-radius: 0.5rem;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  color: #1b2732; /* kräftiges maritimes Dunkelblau */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  color: #1d2a35; /* maritim-dunkles Blaugrau */
   line-height: 1.5;
-  backdrop-filter: blur(1px); /* leichter „glasiger“ Effekt */
 }
 
-/* Hover-Effekt: leicht aufgehellt */
-.card:hover {
-  background-color: #ede9db !important;
-  transform: translateY(-1px);
-}
-
-/* Titel */
 .card h3 {
   margin-top: 0;
-  margin-bottom: 0.3rem;
-  font-size: 1.05rem;
-  color: #002c40 !important;              /* Marineblau wie Überschriften */
-  font-weight: 600;
+  color: #1a242f; /* kräftiger Kontrast für Headlines */
 }
 
-/* Untertitel (Autor, Datum) */
-.card .muted {
-  font-size: 0.85rem;
-  color: #4a4a4a !important;              /* gedämpftes Grau-Blau */
+.card small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #444c56;
 }
 
-/* Nachrichtentext */
-.card p {
-  color: #222 !important;
-  line-height: 1.45;
-  margin: 0.3rem 0 0;
+.card:hover {
+  background-color: #d3c9ac; /* leicht dunkler bei Hover, maritime Tiefe */
+  transition: background-color 0.2s ease-in-out;
 }
 
 .news-list {
