@@ -9,41 +9,50 @@ document.addEventListener("DOMContentLoaded", async () => {
   const newsList = document.getElementById("newsList");
   const adminOnlyEls = document.querySelectorAll("[data-admin]");
 
+  // Logout-Button
   logoutBtn?.addEventListener("click", () => logout());
 
-  // ---- Session prüfen ----
+  // Session prüfen
   const user = await getCurrentUser();
   if (!user) {
-    return (location.href = "index.html");
+    console.warn("❌ Keine aktive Session – zurück zum Login.");
+    location.href = "index.html";
+    return;
   }
 
-  // Memberdaten laden
+  // Member laden
   const { data: member, error: memberErr } = await supabase
     .from("members")
     .select("id, username, role, status")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (memberErr || !member) {
-    console.warn("Member lookup failed:", memberErr?.message);
+  if (memberErr) {
+    console.error("Fehler beim Laden der Mitgliedsdaten:", memberErr.message);
+    return (location.href = "index.html");
+  }
+
+  if (!member) {
+    console.warn("Kein Mitgliedseintrag gefunden.");
     return (location.href = "index.html");
   }
 
   if (member.status !== "active") {
+    console.warn("⚓ Benutzer ist blockiert – zurück zum Loadingscreen.");
     return (location.href = "loadingscreen.html");
   }
 
+  // Anzeige setzen
   userNameEl.textContent = member.username;
   userRoleEl.textContent = member.role;
 
   const isAdmin = member.role === "admin";
-  adminOnlyEls.forEach(el => el.style.display = isAdmin ? "" : "none");
-  if (newsForm) newsForm.style.display = isAdmin ? "" : "none";
+  adminOnlyEls.forEach(el => (el.style.display = isAdmin ? "" : "none"));
+  if (isAdmin) newsForm.style.display = "";
 
-  // ---- News laden ----
+  // --- News laden ---
   async function loadNews() {
-    if (!newsList) return;
-    newsList.textContent = "Lade Ankündigungen…";
+    newsList.textContent = "Lade Ankündigungen...";
 
     const { data, error } = await supabase
       .from("news")
@@ -51,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Fehler beim Laden der Ankündigungen:", error.message);
+      console.error("Fehler beim Laden der News:", error.message);
       newsList.textContent = "Fehler beim Laden der Ankündigungen.";
       return;
     }
@@ -61,6 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // Rendering
     newsList.innerHTML = data
       .map(n => {
         const d = new Date(n.created_at);
@@ -88,31 +98,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       newsList.querySelectorAll("[data-del]").forEach(btn => {
         btn.addEventListener("click", async e => {
           const id = e.currentTarget.getAttribute("data-del");
-          if (!confirm("Diesen Post wirklich löschen?")) return;
+          if (!confirm("Diesen Beitrag wirklich löschen?")) return;
           const { error: delErr } = await supabase.from("news").delete().eq("id", id);
-          if (delErr) {
-            alert("Löschen fehlgeschlagen: " + delErr.message);
-          } else {
-            loadNews();
-          }
+          if (delErr) alert("Löschen fehlgeschlagen: " + delErr.message);
+          else loadNews();
         });
       });
     }
   }
 
-  // ---- News posten ----
+  // --- News posten ---
   newsForm?.addEventListener("submit", async e => {
     e.preventDefault();
     const text = newsText.value.trim();
     if (!text) return;
 
     const lines = text.split("\n");
-    const maybeTitle = lines[0].length <= 80 ? lines[0] : "Ankündigung";
-    const body = lines.slice(1).join("\n") || text;
+    const title = lines[0].length <= 80 ? lines[0] : "Ankündigung";
+    const content = lines.slice(1).join("\n") || text;
 
     const { error: insErr } = await supabase.from("news").insert({
-      title: maybeTitle,
-      content: body,
+      title,
+      content,
       author_id: user.id,
       author_name: member.username
     });
@@ -121,20 +128,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Posten fehlgeschlagen: " + insErr.message);
       return;
     }
+
     newsText.value = "";
     loadNews();
   });
 
-  // ---- Initialer Ladevorgang ----
+  // --- Initial ---
   loadNews();
-
-  // ---- Auto-Logout aktivieren ----
   enableAutoLogout(30);
 });
 
-// HTML-escaping helper
-function escapeHTML(s) {
-  return String(s)
+// Sicherheitsfunktion für HTML
+function escapeHTML(str) {
+  return String(str)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
