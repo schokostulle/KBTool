@@ -1,42 +1,52 @@
 import { supabase } from "./supabase.js";
 
-// ⚓ Initiale Prüfung & Daten laden
+// ⚓ Starte nach DOM-Load
 document.addEventListener("DOMContentLoaded", async () => {
-  const { data, error } = await supabase.auth.getSession();
-  if (error || !data.session) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const session = sessionData?.session;
+
+  if (!session) {
     window.location.href = "index.html";
     return;
   }
 
-  const user = data.session.user;
-  const { data: member } = await supabase
+  const user = session.user;
+
+  // Hole Benutzerinformationen
+  const { data: currentUser, error } = await supabase
     .from("members")
-    .select("username, role, status")
+    .select("id, username, role, status")
     .eq("id", user.id)
     .maybeSingle();
 
-    if (mErr || !member || member.role !== "admin") {
-    document.body.innerHTML = `
-      <main style="text-align:center; padding:3rem;">
-        <h1>⚓ Kein Zugriff</h1>
-        <p>Nur Administratoren dürfen CSV-Daten verwalten.</p>
-        <button onclick="location.href='dashboard.html'" class="btn-back">Zurück</button>
+  if (error) {
+    console.error("Fehler beim Laden des aktuellen Benutzers:", error);
+    return;
   }
 
-  // Userinfos anzeigen
-  document.getElementById("userName").textContent = member.username;
-  document.getElementById("userRole").textContent = member.role;
+  // Setze Anzeige im Header
+  document.getElementById("userName").textContent = currentUser.username;
+  document.getElementById("userRole").textContent = currentUser.role;
 
-  // Mitglieder laden
-  await loadMembers();
+  // Zeige Menüeinträge für Admins
+  if (currentUser.role === "admin") {
+    document.querySelectorAll("[data-admin]").forEach(el => (el.style.display = "block"));
+  } else {
+    // keine Fehlermeldung, einfach Dashboard anzeigen
+    window.location.href = "dashboard.html";
+    return;
+  }
+
+  // Lade Mitgliederliste
+  await loadMembers(currentUser);
 });
 
-// ⚓ Mitgliederliste laden
-export async function loadMembers() {
+// ⚓ Lade Mitglieder
+async function loadMembers(currentUser) {
   const container = document.getElementById("membersTable");
   container.innerHTML = "<p>Lade Mitglieder...</p>";
 
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from("members")
     .select("id, username, role, status, deleted_at, created_at")
     .order("created_at", { ascending: true });
@@ -46,17 +56,12 @@ export async function loadMembers() {
     return;
   }
 
-  const session = (await supabase.auth.getSession()).data.session;
-  const selfId = session.user.id;
-  const founderId = "0d34739e-1719-4f19-b89d-25ffb8ea3bd3"; // Gründer-ID festgelegt
-
-  const rows = data
+  const rows = members
     .map((m) => {
       const deleted = m.deleted_at !== null;
+      const isSelf = m.id === currentUser.id;
       const isAdmin = m.role === "admin";
-      const isSelf = m.id === selfId;
-      const isFounder = m.id === founderId;
-      const canModify = !isSelf && !isFounder && !deleted;
+      const disabled = deleted || isSelf ? "disabled" : "";
 
       return `
         <tr ${deleted ? 'style="opacity:0.5;"' : ""}>
@@ -66,15 +71,15 @@ export async function loadMembers() {
           <td>${new Date(m.created_at).toLocaleDateString()}</td>
           <td>
             ${
-              !canModify
-                ? `<span style="color:#777;">—</span>`
+              deleted
+                ? "-"
                 : `
-              <button class="btn-action" data-action="activate" data-id="${m.id}">Aktivieren</button>
-              <button class="btn-action" data-action="block" data-id="${m.id}">Blockieren</button>
-              <button class="btn-action" data-action="role" data-id="${m.id}">
+              <button class="btn-action" data-action="activate" data-id="${m.id}" ${disabled}>Aktivieren</button>
+              <button class="btn-action" data-action="block" data-id="${m.id}" ${disabled}>Blockieren</button>
+              <button class="btn-action" data-action="role" data-id="${m.id}" ${disabled}>
                 ${isAdmin ? "Zu Member" : "Zu Admin"}
               </button>
-              <button class="btn-action delete" data-action="delete" data-id="${m.id}">Löschen</button>
+              <button class="btn-action delete" data-action="delete" data-id="${m.id}" ${disabled}>Löschen</button>
               `
             }
           </td>
@@ -96,18 +101,18 @@ export async function loadMembers() {
       <tbody>${rows}</tbody>
     </table>`;
 
-  // Eventlistener für Buttons
+  // Aktionen anhängen
   document.querySelectorAll(".btn-action").forEach((btn) =>
     btn.addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
       const action = e.target.dataset.action;
       await handleAction(id, action);
-      await loadMembers();
+      await loadMembers(currentUser); // neu laden
     })
   );
 }
 
-// ⚓ Aktionen für Mitglieder (Status/Rolle/Delete)
+// ⚓ Aktionen für Benutzer
 async function handleAction(id, action) {
   let update = {};
 
@@ -119,15 +124,15 @@ async function handleAction(id, action) {
       update = { status: "blocked" };
       break;
     case "role":
-      const { data: current } = await supabase
+      const { data: user } = await supabase
         .from("members")
         .select("role")
         .eq("id", id)
         .single();
-      update = { role: current.role === "admin" ? "member" : "admin" };
+      update = { role: user.role === "admin" ? "member" : "admin" };
       break;
     case "delete":
-      if (!confirm("Benutzer wirklich entfernen? (Soft Delete)")) return;
+      if (!confirm("Benutzer wirklich entfernen (Soft Delete)?")) return;
       update = { deleted_at: new Date().toISOString() };
       break;
   }
