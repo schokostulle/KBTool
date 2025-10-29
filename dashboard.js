@@ -45,12 +45,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ---- News laden ----
   async function loadNews() {
     if (!newsList) return;
+
+console.log("📡 Lade News aus Supabase ...");
+
     newsList.textContent = "Lade Ankündigungen…";
 
     const { data, error } = await supabase
       .from("news")
       .select("id, title, content, author_id, author_name, created_at")
       .order("created_at", { ascending: false });
+
+console.log("🧾 News Query Result:", { data, error });
 
     if (error) {
       console.error("Fehler beim Laden der Ankündigungen:", error.message);
