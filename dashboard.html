@@ -2,17 +2,25 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Allianz-Dashboard</title>
+  <title><!-- Seitentitel hier --></title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <!-- Seiteninhalt -->
+  <!-- ⚓ WARTEBILDSCHIRM -->
+  <div id="loadingScreen">
+    <main style="text-align:center; padding:3rem;">
+      <h1>⚓ Lade Allianz-Daten...</h1>
+      <p>Bitte einen Moment Geduld.</p>
+    </main>
+  </div>
+
+  <!-- ⚓ SEITENINHALT -->
+  <div id="pageContent" style="display:none; height:100%;">
     <div class="container">
-      <!-- ======= Linkes Menü ======= -->
+
+      <!-- Linkes Menü -->
       <aside class="menu">
-        <a href="dashboard.html" class="active">🏠 Dashboard</a>
+        <a href="dashboard.html">🏠 Dashboard</a>
         <a href="reservations.html">🎯 Reservierungen</a>
         <a href="map.html">🗺️ Karte</a>
         <a href="attacks.html">⚔️ Angriffe</a>
@@ -23,41 +31,27 @@
         <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
         <a href="csv.html" data-admin>📂 CSV-Daten</a>
         <hr>
-        <button id="logoutBtn" class="btn">Logout</button>
+        <button id="logoutBtn">Logout</button>
       </aside>
 
-      <!-- ======= Hauptinhalt ======= -->
-      <section class="content">
-        <header class="page-header">
-          <div class="userinfo">
+      <!-- Hauptbereich -->
+      <main>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
             Eingeloggt als: <strong id="userName">–</strong>
             (<span id="userRole">–</span>)
           </div>
         </header>
 
-        <main>
-          <h1>Allianz-Dashboard</h1>
+        <h1 class="text-left">Ankündigungen & News</h1>
 
-          <!-- ======= News & Ankündigungen ======= -->
-          <section id="newsSection">
-            <h2>Aktuelle News &amp; Ankündigungen</h2>
-
-            <!-- Adminformular -->
-            <form id="newsForm" class="admin-form hidden">
-              <h3>Neue Ankündigung verfassen</h3>
-              <label for="newsText">Nachricht an die Allianz:</label>
-              <textarea id="newsText" rows="3" placeholder="Mitteilung eingeben..."></textarea>
-              <button type="submit" class="btn">Veröffentlichen</button>
-            </form>
-
-            <!-- News-Liste -->
-            <div id="newsList" class="news-list">Lade Ankündigungen...</div>
-          </section>
-        </main>
-      </section>
+        <section id="contentArea" style="margin-top:2rem;">
+                   
+        </section>
+      </main>
     </div>
   </div>
 
-  <script type="module" src="./dashboard.js"></script>
+  <script type="module" src="dashboard.js"></script>
 </body>
 </html>
