@@ -304,8 +304,8 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: rgba(231, 226, 208, 0.85); /* leicht transparentes Sandbeige */
-  border: 1px solid rgba(164, 156, 143, 0.6);
+  background-color: #d9cba3;
+  border: 1px solid #51565a;
   border-radius: 0.5rem;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
