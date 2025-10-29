@@ -304,29 +304,39 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #e1ddd2; /* weiches Grau mit leichtem Sandton */
-  border: 1px solid #b8b1a3;
+  background-color: #2a2e32; /* dunkler maritimer Grundton */
+  border: 1px solid #3c4348;
   border-radius: 0.5rem;
-  padding: 1rem 1.2rem;
+  padding: 1.2rem 1.4rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  color: #1d2a35; /* maritim-dunkles Blaugrau */
-  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: #d9cba3; /* Standard-Textfarbe (warm-sandfarben) */
+  line-height: 1.6;
 }
 
 .card h3 {
   margin-top: 0;
-  color: #1a242f;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #e8e0c5; /* helles Pergament-Gold für Überschriften */
+  letter-spacing: 0.05em;
+}
+
+.card p {
+  margin: 0.5rem 0 0.5rem 0;
+  color: #d9cba3; /* warmer Sandton für News-Text */
 }
 
 .card small {
   display: block;
-  margin-top: 0.5rem;
-  color: #4a5058;
+  margin-top: 0.8rem;
+  font-size: 0.85em;
+  color: #bfb292; /* etwas gedeckterer Sandton */
 }
 
 .card:hover {
-  background-color: #d8d3c6; /* etwas wärmerer Sand-Grau-Ton bei Hover */
+  background-color: #32373c; /* leicht heller bei Hover */
   transition: background-color 0.25s ease-in-out;
 }
 .news-list {
