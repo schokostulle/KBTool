@@ -133,6 +133,9 @@ console.log("🧾 News Query Result:", { data, error });
   });
 
   // ---- Initialer Ladevorgang ----
+
+console.log("⚙️ Initialer Aufruf von loadNews()");
+
   loadNews();
 
   // ---- Auto-Logout aktivieren ----
