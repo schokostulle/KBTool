@@ -70,70 +70,47 @@ async function loadMembers(container) {
 
 // Tabellenzeilen mit Buttons
 const rows = data
-  .map((m) => {
-    const deleted = m.deleted_at !== null;
-    const isActive = m.status === "active";
-    const isAdmin = m.role === "admin";
-    const isSelf = m.id === session.user.id;
-    const isFounder = m.id === "0d34739e-1719-4f19-b89d-25ffb8ea3bd3"; // Gründer-ID (Beispiel: Red)
+.map((m) => {
+const deleted = m.deleted_at !== null;
+const isActive = m.status === "active";
+const isAdmin = m.role === "admin";
 
-    // Kein Bearbeiten/Löschen bei Selbst oder Gründer
-    const canModify = !isSelf && !isFounder && !deleted;
+return `  
+    <tr ${deleted ? 'style="opacity:0.5;"' : ""}>  
+      <td>${m.username}${deleted ? " (gelöscht)" : ""}</td>  
+      <td>${m.role}</td>  
+      <td>${m.status}</td>  
+      <td>${new Date(m.created_at).toLocaleDateString()}</td>  
+      <td>  
+        ${  
+          deleted  
+            ? "-"  
+            : `  
+          <button class="btn-action" data-action="activate" data-id="${m.id}">Aktivieren</button>  
+          <button class="btn-action" data-action="block" data-id="${m.id}">Blockieren</button>  
+          <button class="btn-action" data-action="role" data-id="${m.id}">${  
+                isAdmin ? "Zu Member" : "Zu Admin"  
+              }</button>  
+          <button class="btn-action delete" data-action="delete" data-id="${m.id}">Löschen</button>  
+          `  
+        }  
+      </td>  
+    </tr>`;  
+})  
+.join("");
 
-    return `
-      <tr ${deleted ? 'style="opacity:0.5;"' : ""}>
-        <td>${m.username}${deleted ? " (gelöscht)" : ""}</td>
-        <td>${m.role}</td>
-        <td>${m.status}</td>
-        <td>${new Date(m.created_at).toLocaleDateString()}</td>
-        <td>
-          ${
-            !canModify
-              ? `<span style="color:#888;">—</span>`
-              : `
-              <button class="btn-action" data-action="activate" data-id="${m.id}">
-                Aktivieren
-              </button>
-              <button class="btn-action" data-action="block" data-id="${m.id}">
-                Blockieren
-              </button>
-              <button class="btn-action" data-action="role" data-id="${m.id}">
-                ${isAdmin ? "Zu Member" : "Zu Admin"}
-              </button>
-              <button class="btn-action delete" data-action="delete" data-id="${m.id}">
-                Löschen
-              </button>
-              `
-          }
-        </td>
-      </tr>`;
-  })
-  .join("");
-
-// Tabelle rendern
-container.innerHTML = `
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Benutzername</th>
-        <th>Rolle</th>
-        <th>Status</th>
-        <th>Registriert</th>
-        <th>Aktionen</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+container.innerHTML =    <table class="data-table">   <thead>   <tr>   <th>Benutzername</th>   <th>Rolle</th>   <th>Status</th>   <th>Registriert</th>   <th>Aktionen</th>   </tr>   </thead>   <tbody>${rows}</tbody>   </table>;
 
 // Eventlistener für Buttons
 document.querySelectorAll(".btn-action").forEach((btn) =>
-  btn.addEventListener("click", async (e) => {
-    const id = e.target.dataset.id;
-    const action = e.target.dataset.action;
-    await handleAction(id, action);
-    await loadMembers(container); // Tabelle neu laden
-  })
+btn.addEventListener("click", async (e) => {
+const id = e.target.dataset.id;
+const action = e.target.dataset.action;
+await handleAction(id, action);
+await loadMembers(container); // Tabelle neu laden
+})
 );
+}
 
 // ===========================================================
 // ⚙️ Aktionen: Aktivieren / Blockieren / Rolle ändern / Löschen
