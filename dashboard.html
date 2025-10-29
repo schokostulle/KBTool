@@ -69,5 +69,11 @@
   </div>
 
   <script type="module" src="./dashboard.js"></script>
+<script type="module">
+  console.log("✅ Inline Script läuft");
+  import("./dashboard.js").then(() => console.log("✅ dashboard.js importiert"));
+</script>
+</body>
+</html>
 </body>
 </html>
