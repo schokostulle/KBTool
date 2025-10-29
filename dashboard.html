@@ -2,45 +2,60 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Allianz-Dashboard </title>
+  <title>Allianz-Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ⚓ SEITENINHALT -->
-    <div class="container">
+  <div class="container">
+    <!-- Linkes Menü -->
+    <aside class="menu">
+      <a href="dashboard.html" class="active">🏠 Dashboard</a>
+      <a href="reservations.html">🎯 Reservierungen</a>
+      <a href="map.html">🗺️ Karte</a>
+      <a href="attacks.html">⚔️ Angriffe</a>
+      <a href="battle-reports.html">📜 Kriegsberichte</a>
+      <a href="fleet.html">🚢 Flotten</a>
+      <hr>
+      <a href="members.html" data-admin>👥 Mitglieder</a>
+      <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
+      <a href="csv.html" data-admin>📂 CSV-Daten</a>
+      <hr>
+      <button id="logoutBtn">Logout</button>
+    </aside>
 
-      <!-- Linkes Menü -->
-      <aside class="menu">
-        <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="reservations.html">🎯 Reservierungen</a>
-        <a href="map.html">🗺️ Karte</a>
-        <a href="attacks.html">⚔️ Angriffe</a>
-        <a href="battle-reports.html">📜 Kriegsberichte</a>
-        <a href="fleet.html">🚢 Flotten</a>
-        <hr>
-        <a href="members.html" data-admin>👥 Mitglieder</a>
-        <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
-        <a href="csv.html" data-admin>📂 CSV-Daten</a>
-        <hr>
-        <button id="logoutBtn">Logout</button>
-      </aside>
+    <!-- Hauptbereich -->
+    <main>
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          Eingeloggt als: <strong id="userName">–</strong>
+          (<span id="userRole">–</span>)
+        </div>
+      </header>
 
-      <!-- Hauptbereich -->
-      <main>
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <div>
-            Eingeloggt als: <strong id="userName">–</strong>
-            (<span id="userRole">–</span>)
-          </div>
-        </header>
+      <h1 class="text-left">Ankündigungen & News</h1>
 
-        <h1 class="text-left">Ankündigungen & News</h1>
+      <section id="newsArea" style="margin-top:2rem;">
 
-        <section id="contentArea" style="margin-top:2rem;">
-                   
-        </section>
-      </main>
-    </div>
+        <!-- 🧭 Admin: Neue News posten -->
+        <div id="adminNews" class="hidden" style="margin-bottom:2rem;">
+          <h2>Neue Ankündigung verfassen</h2>
+          <form id="newsForm">
+            <label for="newsTitle">Titel:</label>
+            <input id="newsTitle" type="text" placeholder="Titel der Nachricht" required>
+
+            <label for="newsText">Nachricht:</label>
+            <textarea id="newsText" rows="4" placeholder="Mitteilung an die Allianz..." required></textarea>
+
+            <button type="submit" class="btn">Veröffentlichen</button>
+          </form>
+        </div>
+
+        <!-- 📜 News-Liste -->
+        <div id="newsList" class="news-list">
+          <p>Lade Ankündigungen...</p>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script type="module" src="dashboard.js"></script>
