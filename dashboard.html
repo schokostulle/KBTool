@@ -8,62 +8,60 @@
 </head>
 
 <body>
-   <div class="container">
-    <!-- ======= Linkes Menü ======= -->
-    <aside class="menu">
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="reservations.html">🎯 Reservierungen</a>
-      <a href="map.html">🗺️ Karte</a>
-      <a href="template.html">⚔️ Angriffe</a>
-      <a href="battle-reports.html">📜 Kriegsberichte</a>
-      <a href="fleet.html">🚢 Flotten</a>
-      <hr>
-      <a href="members.html" data-admin>👥 Mitglieder</a>
-      <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
-      <a href="csv.html" data-admin>📂 CSV-Daten</a>
-      <hr>
-      <button id="logoutBtn" class="btn">Logout</button>
-    </aside>
+  <!-- Ladeanzeige -->
+  <div id="loadingScreen" style="text-align:center; padding:3rem;">
+    <h1>⚓ Lade Allianz-Daten...</h1>
+    <p>Bitte einen Moment Geduld.</p>
+  </div>
 
-    <!-- ======= Hauptinhalt ======= -->
-    <div class="content">
-      <main>
-        <!-- Header -->
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <div>
-          Eingeloggt als: <strong id="userName">–</strong>
-          (<span id="userRole">–</span>)
-        </div>
-      </header>
+  <!-- Seiteninhalt -->
+  <div id="pageContent" style="display:none; height:100%;">
+    <div class="container">
+      <!-- ======= Linkes Menü ======= -->
+      <aside class="menu">
+        <a href="dashboard.html" class="active">🏠 Dashboard</a>
+        <a href="reservations.html">🎯 Reservierungen</a>
+        <a href="map.html">🗺️ Karte</a>
+        <a href="attacks.html">⚔️ Angriffe</a>
+        <a href="battle-reports.html">📜 Kriegsberichte</a>
+        <a href="fleet.html">🚢 Flotten</a>
+        <hr>
+        <a href="members.html" data-admin>👥 Mitglieder</a>
+        <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
+        <a href="csv.html" data-admin>📂 CSV-Daten</a>
+        <hr>
+        <button id="logoutBtn" class="btn">Logout</button>
+      </aside>
 
-        <!-- Überschrift -->
-        <h1 class="text-left">Allianz-Dashboard</h1>
-
-        <!-- ======= News & Ankündigungen ======= -->
-        <section id="content-area" style="margin-top:2rem;">
-          <h2>Aktuelle News &amp; Ankündigungen</h2>
-
-          <!-- Adminformular -->
-          <form id="newsForm" style="display:none; margin-bottom:1.5rem;">
-            <h3 style="margin-top:0;">Neue Ankündigung verfassen</h3>
-            <label for="newsText" style="display:block; margin-bottom:0.5rem;">
-              Nachricht an die Allianz:
-            </label>
-            <textarea
-              id="newsText"
-              rows="3"
-              placeholder="Mitteilung eingeben..."
-              style="width:100%; resize:vertical; padding:0.5rem; border-radius:0.3rem; border:1px solid #bbb;">
-            </textarea>
-            <button type="submit" class="btn" style="margin-top:0.5rem;">Veröffentlichen</button>
-          </form>
-
-          <!-- News-Liste -->
-          <div id="newsList" style="margin-top:1rem;">
-            Lade Ankündigungen...
+      <!-- ======= Hauptinhalt ======= -->
+      <section class="content">
+        <header class="page-header">
+          <div class="userinfo">
+            Eingeloggt als: <strong id="userName">–</strong>
+            (<span id="userRole">–</span>)
           </div>
-        </section>
-      </main>
+        </header>
+
+        <main>
+          <h1>Allianz-Dashboard</h1>
+
+          <!-- ======= News & Ankündigungen ======= -->
+          <section id="newsSection">
+            <h2>Aktuelle News &amp; Ankündigungen</h2>
+
+            <!-- Adminformular -->
+            <form id="newsForm" class="admin-form hidden">
+              <h3>Neue Ankündigung verfassen</h3>
+              <label for="newsText">Nachricht an die Allianz:</label>
+              <textarea id="newsText" rows="3" placeholder="Mitteilung eingeben..."></textarea>
+              <button type="submit" class="btn">Veröffentlichen</button>
+            </form>
+
+            <!-- News-Liste -->
+            <div id="newsList" class="news-list">Lade Ankündigungen...</div>
+          </section>
+        </main>
+      </section>
     </div>
   </div>
 
