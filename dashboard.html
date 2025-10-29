@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Allianz-Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -22,15 +22,14 @@
       <a href="diplomacy.html" data-admin>🕊️ Diplomatie</a>
       <a href="csv.html" data-admin>📂 CSV-Daten</a>
       <hr>
-      <button id="logoutBtn" type="button" class="btn">Logout</button>
+      <button id="logoutBtn" class="btn">Logout</button>
     </aside>
 
-    <!-- ======= Hauptbereich ======= -->
+    <!-- ======= Hauptinhalt ======= -->
     <div class="content">
       <main>
         <!-- Header -->
-        <header
-          style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:1rem;">
+        <header style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:1rem;">
           <div>
             Eingeloggt als: <strong id="userName">–</strong>
             (<span id="userRole">–</span>)
@@ -40,15 +39,15 @@
         <!-- Überschrift -->
         <h1 class="text-left">Allianz-Dashboard</h1>
 
-        <!-- =================== NEWS & ANKÜNDIGUNGEN =================== -->
+        <!-- ======= News & Ankündigungen ======= -->
         <section id="newsSection" style="margin-top:2rem;">
           <h2>Aktuelle News &amp; Ankündigungen</h2>
 
-          <!-- Adminformular (nur sichtbar für Admins) -->
+          <!-- Adminformular -->
           <form id="newsForm" style="display:none; margin-bottom:1.5rem;">
             <h3 style="margin-top:0;">Neue Ankündigung verfassen</h3>
             <label for="newsText" style="display:block; margin-bottom:0.5rem;">
-              Nachricht an die Allianz
+              Nachricht an die Allianz:
             </label>
             <textarea
               id="newsText"
@@ -68,6 +67,6 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js"></script>
+  <script type="module" src="./dashboard.js"></script>
 </body>
 </html>
