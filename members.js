@@ -30,16 +30,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("userRole").textContent = currentUser.role;
 
   // Adminpflicht
-//  if (currentUser.role !== "admin") {
- //   document.querySelector("main").innerHTML = `
-//    <main style="text-align:center; padding:3rem;">
- //       <h1>⚓ Kein Zugriff</h1>
-//       <p>Nur Administratoren dürfen diese Seite aufrufen.</p>
+if (currentUser.role !== "admin") {
+   document.querySelector("main").innerHTML = `
+    <main style="text-align:center; padding:3rem;">
+       <h1>⚓ Kein Zugriff</h1>
+       <p>Nur Administratoren dürfen diese Seite aufrufen.</p>
 
-// Verstecke alle Admin-Bereiche für Member
-if (role !== "admin") {
-  document.querySelectorAll("[data-admin]").forEach(el => el.style.display = "none");
-}
       </main>`;
     return;
   }
