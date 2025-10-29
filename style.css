@@ -304,12 +304,14 @@ aside.menu a.active {
 
 /* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #faf8f2 !important;   /* sandfarben / Pergamentoptik */
-  border: 1px solid #a3a59b !important;   /* graugrüner Rahmen, maritim dezent */
-  border-radius: 0.6rem !important;
-  padding: 1rem 1.2rem !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  background-color: #e7e2d0; /* dunkler, wärmerer Sandton */
+  border: 1px solid #a49c8f;
+  border-radius: 0.5rem;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  color: #1a242f; /* dunkles Marineblaugrau für maximalen Kontrast */
+  line-height: 1.5;
 }
 
 /* Hover-Effekt: leicht aufgehellt */
