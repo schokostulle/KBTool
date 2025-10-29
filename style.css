@@ -302,40 +302,40 @@ aside.menu a.active {
   z-index: 1;
 }
 
-/* --- Kartenstil: News & Ankündigungen (Dashboard) --- */
+/* --- Dashboard: News & Ankündigungen (maritim, sandfarben) --- */
 .card {
-  background-color: #f5f4ef !important;     /* leicht aufgehellt – wirkt wie Papier */
-  border: 1px solid #b6b8b1 !important;     /* sanfter graugrüner Rahmen */
+  background-color: #e8e5d7 !important;   /* sandfarben / Pergamentoptik */
+  border: 1px solid #a3a59b !important;   /* graugrüner Rahmen, maritim dezent */
   border-radius: 0.6rem !important;
   padding: 1rem 1.2rem !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important; /* subtiler Schatten */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-/* Überschriften im Karteninhalt */
+/* Hover-Effekt: leicht aufgehellt */
+.card:hover {
+  background-color: #ede9db !important;
+  transform: translateY(-1px);
+}
+
+/* Titel */
 .card h3 {
   margin-top: 0;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   font-size: 1.05rem;
-  color: inherit !important;                 /* gleiche Textfarbe wie restlicher Content */
+  color: #002c40 !important;              /* Marineblau wie Überschriften */
   font-weight: 600;
 }
 
-/* Metainfos (Autor, Datum) */
+/* Untertitel (Autor, Datum) */
 .card .muted {
   font-size: 0.85rem;
-  color: #4a4a4a !important;                 /* gedämpft, aber gut lesbar */
+  color: #4a4a4a !important;              /* gedämpftes Grau-Blau */
 }
 
 /* Nachrichtentext */
 .card p {
-  color: inherit !important;                 /* exakt gleiche Farbe wie sonstiger Text */
+  color: #222 !important;
   line-height: 1.45;
   margin: 0.3rem 0 0;
-}
-
-/* dezente Hervorhebung bei Hover (nur optisch) */
-.card:hover {
-  background-color: #faf9f6 !important;      /* leicht heller */
-  transform: translateY(-1px);
-  transition: background-color 0.2s ease, transform 0.15s ease;
 }
