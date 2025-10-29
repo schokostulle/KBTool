@@ -370,6 +370,38 @@ aside.menu a.active {
   pointer-events: none;
 }
 
+.news-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+}
+
+/* Kartendesign bleibt unverändert */
+.news-wrapper .card {
+  flex: 1;
+}
+
+/* Admin-Delete-Button außerhalb rechts */
+.news-wrapper .btn-delete {
+  background: none;
+  border: none;
+  color: #c9b978;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-left: 0.6rem;
+  align-self: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.news-wrapper .btn-delete:hover {
+  color: #e0d59b;
+  transform: scale(1.2);
+}
+
+.news-wrapper .btn-delete:focus {
+  outline: none;
+}
 .news-list {
   display: flex;
   flex-direction: column;
