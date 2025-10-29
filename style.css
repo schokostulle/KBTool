@@ -326,6 +326,9 @@ aside.menu a.active {
 .card p {
   margin: 0.5rem 0 0.5rem 0;
   color: #d9cba3; /* warmer Sandton für News-Text */
+  font-size: 1.05rem; /* leicht vergrößert für bessere Lesbarkeit */
+  line-height: 1.7; /* angenehmer Zeilenabstand für Fließtext */
+  font-weight: 500; /* etwas kräftiger, aber kein Fett */
 }
 
 .card small {
