@@ -1,0 +1,45 @@
+// === status.js ===
+// Globale Status-/Toastmeldungen für alle Seiten
+
+// Container initialisieren
+function initStatusContainer() {
+  let container = document.getElementById("status-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "status-container";
+    document.body.appendChild(container);
+  }
+}
+
+// Hauptfunktion zum Anzeigen einer Meldung
+function showStatus(message, type = "info", duration = 4000) {
+  initStatusContainer();
+
+  const container = document.getElementById("status-container");
+  const msg = document.createElement("div");
+  msg.className = `status-message ${type}`;
+  msg.innerHTML = `
+    <span class="status-text">${message}</span>
+    <button class="status-close">×</button>
+  `;
+
+  container.appendChild(msg);
+
+  // Einblenden mit kleiner Animation
+  requestAnimationFrame(() => msg.classList.add("visible"));
+
+  // Automatisch entfernen nach Ablauf
+  const timeout = setTimeout(() => removeStatus(msg), duration);
+
+  // Manuell schließen
+  msg.querySelector(".status-close").addEventListener("click", () => {
+    clearTimeout(timeout);
+    removeStatus(msg);
+  });
+}
+
+// Meldung ausblenden und entfernen
+function removeStatus(el) {
+  el.classList.remove("visible");
+  setTimeout(() => el.remove(), 300);
+}
