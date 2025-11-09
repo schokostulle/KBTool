@@ -1,0 +1,107 @@
+/* === BASISLAYOUT: KOPF, NAVIGATION, INHALT === */
+
+/* --- Grundstruktur --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: #1e1e1e;
+  color: #eee;
+  display: flex;
+}
+
+/* --- Seitenmenü (Navigation) --- */
+.side-nav {
+  width: 220px;
+  background: #161616;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid #2a2a2a;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.side-nav .user-info {
+  padding: 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.side-nav a {
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #ccc;
+  display: block;
+}
+
+.side-nav a:hover,
+.side-nav a.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+/* --- Kopfbereich (Header) --- */
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 220px; /* exakt die Breite der Navigation */
+  right: 0;
+  background: #242424;
+  border-bottom: 2px solid #2e2e2e;
+  color: #eee;
+  padding: 6px 16px;
+  z-index: 10;
+}
+
+/* Zeile 1: Benutzerinformationen */
+.header-top {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+.header-top .session-time {
+  font-family: monospace;
+  margin-left: 6px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.status-dot.online  { background: #4caf50; }
+.status-dot.offline { background: #f44336; }
+
+/* Zeile 2: Titelbereich */
+.header-bottom h1 {
+  font-size: 1.2em;
+  font-weight: 500;
+  margin: 3px 0 0 0;
+}
+
+/* --- Inhaltsbereich (Content) --- */
+main {
+  margin-left: 220px; /* bündig zur Navigation */
+  margin-top: 70px;   /* Platz für den Kopfbereich */
+  padding: 20px;
+  background: #1e1e1e; /* gleiche Farbe wie Kopfbereich */
+  color: #eee;
+  min-height: calc(100vh - 70px);
+  box-sizing: border-box;
+}
+
+/* --- Feine visuelle Trennung (optional) --- */
+hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 10px 0;
+}
