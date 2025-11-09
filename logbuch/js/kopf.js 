@@ -1,0 +1,148 @@
+// === kopf.js ===
+// Globaler Seitenkopf mit Benutzerstatus & Seitentitel
+
+async function initHeader() {
+  // Header-Container erstellen
+  const header = document.createElement("header");
+  header.className = "page-header";
+
+  // Aktuelle Seite / Titel bestimmen
+  const pageName = window.location.pathname.split("/").pop().replace(".html", "");
+  const titles = {
+    "dashboard": "Dashboard",
+    "members": "Member Verwaltung",
+    "csv": "CSV Upload",
+    "reports": "Kampfberichte",
+    "fleets": "Flottenberichte",
+    "diplomacy": "Diplomatie",
+    "island-summary": "Inselanalyse",
+    "islands": "Inselreservierungen",
+    "analysis": "Flottenauswertung",
+    "attackcalc": "Angriffsrechner",
+    "news": "News / Portal"
+  };
+  const pageTitle = titles[pageName] || "Allianz-Portal";
+
+  // Session prüfen
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+
+  let username = "Unbekannt";
+  let role = "-";
+  let online = false;
+  let expiresIn = "--:--";
+
+  if (session) {
+    online = true;
+    const userId = session.user.id;
+
+    // Ablaufzeit berechnen
+    const exp = new Date(session.expires_at * 1000);
+    const diffMs = exp - Date.now();
+    const mins = Math.floor(diffMs / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
+    expiresIn = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+
+    // Profil abrufen
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, role")
+      .eq("id", userId)
+      .single();
+
+    if (profile) {
+      username = profile.username;
+      role = profile.role;
+    }
+  }
+
+  // Online-Icon
+  const statusIcon = online
+    ? `<span class="status-dot online"></span>`
+    : `<span class="status-dot offline"></span>`;
+
+  // HTML-Struktur
+  header.innerHTML = `
+    <div class="header-top">
+      <div class="header-right">
+        ${username} [${role}] ${statusIcon} <span class="session-time">[${expiresIn}]</span>
+      </div>
+    </div>
+    <div class="header-bottom">
+      <h1>${pageTitle}</h1>
+    </div>
+  `;
+
+  document.body.insertBefore(header, document.body.firstChild);
+
+  // Session-Timer aktualisieren
+  if (online) startSessionTimer(exp);
+}
+
+// Countdown für Sessionzeit
+function startSessionTimer(expiry) {
+  const timerEl = document.querySelector(".session-time");
+  const iconEl = document.querySelector(".status-dot");
+
+  const interval = setInterval(() => {
+    const diff = expiry - Date.now();
+    if (diff <= 0) {
+      iconEl.classList.remove("online");
+      iconEl.classList.add("offline");
+      timerEl.textContent = "[00:00]";
+      clearInterval(interval);
+      return;
+    }
+
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    timerEl.textContent = `[${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}]`;
+  }, 1000);
+}
+
+// Stil hinzufügen (optional, falls nicht im CSS)
+const style = document.createElement("style");
+style.textContent = `
+  .page-header {
+    position: relative;
+    margin-left: 200px; /* Platz für das Seitenmenü */
+    background: #1f1f1f;
+    color: #fff;
+    padding: 8px 16px;
+    border-bottom: 2px solid #444;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.9em;
+    color: #ccc;
+  }
+
+  .header-bottom h1 {
+    font-size: 1.4em;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 8px;
+    margin-right: 2px;
+  }
+
+  .status-dot.online { background-color: #4caf50; }
+  .status-dot.offline { background-color: #f44336; }
+
+  .session-time {
+    margin-left: 4px;
+    font-family: monospace;
+  }
+`;
+document.head.appendChild(style);
+
+// Initialisierung starten
+initHeader();
