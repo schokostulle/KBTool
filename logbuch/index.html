@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Allianz-Portal Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Minimalistische Styles -->
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/status.css">
+</head>
+
+<body>
+  <div id="login-container">
+    <h2>Allianz Login</h2>
+    <input type="text" id="username" placeholder="Benutzername" autocomplete="username">
+    <input type="password" id="password" placeholder="Passwort" autocomplete="current-password">
+    <button id="loginBtn">Login</button>
+    <p>Noch kein Konto? <a href="#" id="registerLink">Registrieren</a></p>
+  </div>
+
+  <div id="register-container" style="display:none;">
+    <h2>Registrierung</h2>
+    <input type="text" id="reg-username" placeholder="Benutzername" autocomplete="off">
+    <input type="password" id="reg-password" placeholder="Passwort" autocomplete="new-password">
+    <select id="reg-role">
+      <option value="member">Member</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button id="registerBtn">Konto erstellen</button>
+    <p><a href="#" id="backToLogin">Zurück zum Login</a></p>
+  </div>
+
+  <!-- ============================= -->
+  <!-- 🔗 SUPABASE & SYSTEM-SCRIPTS -->
+  <!-- ============================= -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/status.js"></script>
+
+  <!-- ============================= -->
+  <!-- 🔐 LOGIN-/REGISTER-LOGIK -->
+  <!-- ============================= -->
+  <script src="js/auth.js"></script>
+</body>
+</html>
