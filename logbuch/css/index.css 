@@ -1,0 +1,73 @@
+/* === Allianz-Portal: Minimal-Layout für Login & Registrierung === */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  background: #1e1e1e;
+  color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+h2 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+#login-container,
+#register-container {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  background: #242424;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+input, select {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background: #333;
+  color: #eee;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  padding: 10px;
+  background: #4caf50;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+p {
+  text-align: center;
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+a {
+  color: #4caf50;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
